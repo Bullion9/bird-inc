@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Text, Surface, Button } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import * as Haptics from 'expo-haptics';
+import { MotiView } from 'moti';
 
 import { tokens } from '../theme/tokens';
 import { SettingsStackParamList } from '../navigation/types';
@@ -13,6 +14,8 @@ type EditProfileNavigationProp = StackNavigationProp<SettingsStackParamList, 'Ed
 
 export const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileNavigationProp>();
+  const scrollY = useRef(0);
+  const [scrollPosition, setScrollPosition] = React.useState(0);
   
   const [profile, setProfile] = useState({
     name: 'John Doe',
@@ -24,6 +27,12 @@ export const EditProfileScreen: React.FC = () => {
 
   const [initialProfile] = useState(profile);
   const [isDirty, setIsDirty] = useState(false);
+
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    scrollY.current = currentScrollY;
+    setScrollPosition(currentScrollY);
+  }, []);
 
   useEffect(() => {
     const hasChanges = JSON.stringify(profile) !== JSON.stringify(initialProfile);
@@ -90,13 +99,31 @@ export const EditProfileScreen: React.FC = () => {
         title="Edit profile"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
+        scrollY={scrollPosition}
+        titleSize={20}
       />
       
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
+        {/* Large title at the top */}
+        <MotiView
+          animate={{
+            opacity: scrollPosition < 40 ? 1 : Math.max(0, (60 - scrollPosition) / 20),
+            translateY: scrollPosition < 40 ? 0 : Math.min(scrollPosition * 0.3, 20),
+          }}
+          transition={{
+            type: 'timing',
+            duration: 200,
+          }}
+        >
+          <Text style={styles.largeTitle}>Edit profile</Text>
+        </MotiView>
+        
         {/* Avatar Section */}
         <TouchableOpacity onPress={handleAvatarPress} style={styles.avatarContainer}>
           <Avatar
@@ -110,51 +137,57 @@ export const EditProfileScreen: React.FC = () => {
           <Text style={styles.avatarLabel}>Tap to change photo</Text>
         </TouchableOpacity>
 
-        {/* Profile Fields */}
+        {/* Profile Fields - iOS Style Cards */}
         <View style={styles.fieldsContainer}>
-          {/* Name Field - Navigates to Name Edit */}
-          <TouchableOpacity onPress={handleNamePress} style={styles.fieldTouchable}>
-            <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Name</Text>
-              <Text style={[styles.fieldValue, !profile.name && styles.fieldPlaceholder]}>
-                {profile.name || 'Add your name...'}
-              </Text>
+          {/* Personal Info Card */}
+          <View style={styles.iosCard}>
+            <TouchableOpacity onPress={handleNamePress} style={styles.iosCardItem}>
+              <View style={styles.fieldContent}>
+                <Text style={styles.fieldLabel}>Name</Text>
+                <Text style={[styles.fieldValue, !profile.name && styles.fieldPlaceholder]}>
+                  {profile.name || 'Add your name...'}
+                </Text>
+              </View>
               <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+            
+            <View style={styles.iosCardSeparator} />
+            
+            <TouchableOpacity onPress={handleUsernamePress} style={styles.iosCardItem}>
+              <View style={styles.fieldContent}>
+                <Text style={styles.fieldLabel}>Username</Text>
+                <Text style={[styles.fieldValue, !profile.username && styles.fieldPlaceholder]}>
+                  {profile.username ? `@${profile.username}` : 'Add a username...'}
+                </Text>
+              </View>
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+            </TouchableOpacity>
+            
+            <View style={styles.iosCardSeparator} />
+            
+            <TouchableOpacity onPress={handleBioPress} style={styles.iosCardItem}>
+              <View style={styles.fieldContent}>
+                <Text style={styles.fieldLabel}>Bio</Text>
+                <Text style={[styles.fieldValue, !profile.bio && styles.fieldPlaceholder]} numberOfLines={2}>
+                  {profile.bio || 'Add a bio...'}
+                </Text>
+              </View>
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+            </TouchableOpacity>
+          </View>
 
-          {/* Username Field - Navigates to Username Edit */}
-          <TouchableOpacity onPress={handleUsernamePress} style={styles.fieldTouchable}>
-            <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Username</Text>
-              <Text style={[styles.fieldValue, !profile.username && styles.fieldPlaceholder]}>
-                {profile.username ? `@${profile.username}` : 'Add a username...'}
-              </Text>
+          {/* Contact Info Card */}
+          <View style={styles.iosCard}>
+            <TouchableOpacity onPress={handlePhonePress} style={styles.iosCardItem}>
+              <View style={styles.fieldContent}>
+                <Text style={styles.fieldLabel}>Phone Number</Text>
+                <Text style={styles.fieldValue}>
+                  {profile.phoneNumber}
+                </Text>
+              </View>
               <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
-            </View>
-          </TouchableOpacity>
-
-          {/* Bio Field - Navigates to Bio Edit */}
-          <TouchableOpacity onPress={handleBioPress} style={styles.fieldTouchable}>
-            <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Bio</Text>
-              <Text style={[styles.fieldValue, !profile.bio && styles.fieldPlaceholder]} numberOfLines={2}>
-                {profile.bio || 'Add a bio...'}
-              </Text>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
-            </View>
-          </TouchableOpacity>
-
-          {/* Phone Number - Read Only, navigates to view */}
-          <TouchableOpacity onPress={handlePhonePress} style={styles.fieldTouchable}>
-            <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Phone Number</Text>
-              <Text style={styles.fieldValue}>
-                {profile.phoneNumber}
-              </Text>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
@@ -187,6 +220,15 @@ const styles = StyleSheet.create({
   content: {
     padding: tokens.spacing.m,
     paddingBottom: 100, // Space for sticky footer
+    paddingTop: 120, // Space for the large title under the header
+  },
+  largeTitle: {
+    ...tokens.typography.h1,
+    fontSize: 28, // Reduced from 36 to 28
+    fontWeight: '400', // Changed from '700' to '400' (unbold)
+    color: tokens.colors.onSurface,
+    marginBottom: tokens.spacing.l,
+    marginTop: 10, // Changed from -20 to 10 (bring text down)
   },
   avatarContainer: {
     alignItems: 'center',
@@ -215,6 +257,30 @@ const styles = StyleSheet.create({
   fieldsContainer: {
     gap: tokens.spacing.m,
   },
+  // iOS-style cards
+  iosCard: {
+    backgroundColor: tokens.colors.surface1,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
+  },
+  iosCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    minHeight: 56, // Slightly taller for form fields
+  },
+  iosCardSeparator: {
+    height: 0.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginLeft: 16,
+  },
+  fieldContent: {
+    flex: 1,
+    marginRight: tokens.spacing.s,
+  },
   fieldTouchable: {
     borderRadius: tokens.radius.s,
     borderWidth: 1,
@@ -232,16 +298,12 @@ const styles = StyleSheet.create({
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
     fontSize: 12,
-    position: 'absolute',
-    top: -tokens.spacing.s,
-    left: 0,
+    marginBottom: 2,
   },
   fieldValue: {
     ...tokens.typography.body,
     color: tokens.colors.onSurface,
-    flex: 1,
-    marginTop: tokens.spacing.xs,
-    marginRight: tokens.spacing.s,
+    fontSize: 16,
   },
   fieldPlaceholder: {
     color: tokens.colors.onSurface38,

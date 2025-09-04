@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -18,6 +18,7 @@ export const PhoneNumberViewScreen: React.FC = () => {
   const route = useRoute<PhoneNumberViewRouteProp>();
   
   const { phoneNumber } = route.params;
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   const handleChangeNumber = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -31,12 +32,17 @@ export const PhoneNumberViewScreen: React.FC = () => {
         title="Phone number"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
+        scrollY={scrollOffset}
       />
       
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        onScroll={(event) => {
+          setScrollOffset(event.nativeEvent.contentOffset.y);
+        }}
+        scrollEventThrottle={16}
       >
         <View style={styles.instructionContainer}>
           <Text style={styles.instructionTitle}>Your phone number</Text>
@@ -125,6 +131,7 @@ const styles = StyleSheet.create({
   content: {
     padding: tokens.spacing.m,
     paddingBottom: tokens.spacing.xl,
+    paddingTop: 150, // Space for header + generous top spacing for body
   },
   instructionContainer: {
     marginBottom: tokens.spacing.l,

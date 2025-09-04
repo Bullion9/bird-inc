@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent, TouchableOpacity } from 'react-native';
 import { Text, Switch, ProgressBar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import * as Haptics from 'expo-haptics';
+import { MotiView } from 'moti';
 
 import { tokens } from '../theme/tokens';
 import { SettingsStackParamList } from '../navigation/types';
-import { BirdCard, MaterialIcon, DynamicHeader } from '../components';
+import { MaterialIcon, DynamicHeader } from '../components';
 
 type StorageAndDataNavigationProp = StackNavigationProp<SettingsStackParamList, 'StorageAndData'>;
 
@@ -20,6 +21,8 @@ interface StorageItem {
 
 export const StorageAndDataScreen: React.FC = () => {
   const navigation = useNavigation<StorageAndDataNavigationProp>();
+  const scrollY = useRef(0);
+  const [scrollPosition, setScrollPosition] = React.useState(0);
   
   const [settings, setSettings] = useState({
     autoDownloadPhotos: true,
@@ -28,6 +31,12 @@ export const StorageAndDataScreen: React.FC = () => {
     compressImages: true,
     saveToGallery: true,
   });
+
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    scrollY.current = currentScrollY;
+    setScrollPosition(currentScrollY);
+  }, []);
 
   const storageBreakdown: StorageItem[] = [
     { label: 'Photos', size: '2.4 GB', percentage: 0.6, color: tokens.colors.primary },
@@ -60,178 +69,206 @@ export const StorageAndDataScreen: React.FC = () => {
         title="Storage & Data"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
+        scrollY={scrollPosition}
+        titleSize={20}
       />
       
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
-        {/* Storage Overview */}
-        <BirdCard style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
+        {/* Large title at the top */}
+        <MotiView
+          animate={{
+            opacity: scrollPosition < 40 ? 1 : Math.max(0, (60 - scrollPosition) / 20),
+            translateY: scrollPosition < 40 ? 0 : Math.min(scrollPosition * 0.3, 20),
+          }}
+          transition={{
+            type: 'timing',
+            duration: 200,
+          }}
+        >
+          <Text style={styles.largeTitle}>Storage & Data</Text>
+        </MotiView>
+        
+        {/* Storage Overview - iOS Style */}
+        <View style={styles.iosCard}>
+          <View style={styles.iosCardItem}>
             <MaterialIcon name="storage" size={24} color={tokens.colors.primary} />
-            <Text style={styles.sectionTitle}>Storage Usage</Text>
+            <Text style={styles.iosCardText}>Storage Usage</Text>
           </View>
           
-          <View style={styles.storageOverview}>
-            <Text style={styles.totalStorage}>
-              {totalStorage} <Text style={styles.storageLabel}>used</Text>
-            </Text>
-            
-            <View style={styles.storageBreakdown}>
-              {storageBreakdown.map((item, index) => (
-                <View key={index} style={styles.storageItem}>
-                  <View style={styles.storageItemHeader}>
-                    <View style={styles.storageItemLabel}>
-                      <View style={[styles.colorIndicator, { backgroundColor: item.color }]} />
-                      <Text style={styles.storageItemName}>{item.label}</Text>
+          <View style={styles.iosCardSeparator} />
+          
+          <View style={styles.iosCardItem}>
+            <View style={styles.storageOverview}>
+              <Text style={styles.totalStorage}>
+                {totalStorage} <Text style={styles.storageLabel}>used</Text>
+              </Text>
+              
+              <View style={styles.storageBreakdown}>
+                {storageBreakdown.map((item, index) => (
+                  <View key={index} style={styles.storageItem}>
+                    <View style={styles.storageItemHeader}>
+                      <View style={styles.storageItemLabel}>
+                        <View style={[styles.colorIndicator, { backgroundColor: item.color }]} />
+                        <Text style={styles.storageItemName}>{item.label}</Text>
+                      </View>
+                      <Text style={styles.storageItemSize}>{item.size}</Text>
                     </View>
-                    <Text style={styles.storageItemSize}>{item.size}</Text>
+                    <ProgressBar
+                      progress={item.percentage}
+                      color={item.color}
+                      style={styles.progressBar}
+                    />
                   </View>
-                  <ProgressBar
-                    progress={item.percentage}
-                    color={item.color}
-                    style={styles.progressBar}
-                  />
+                ))}
+              </View>
+              
+              <TouchableOpacity onPress={handleManageStorage} style={styles.manageButton}>
+                <View style={styles.manageButtonContent}>
+                  <Text style={styles.manageButtonText}>Manage Storage</Text>
+                  <MaterialIcon name="chevron_right" size={20} color={tokens.colors.primary} />
                 </View>
-              ))}
+              </TouchableOpacity>
             </View>
-            
-            <BirdCard onPress={handleManageStorage} style={styles.manageButton}>
-              <View style={styles.manageButtonContent}>
-                <Text style={styles.manageButtonText}>Manage Storage</Text>
-                <MaterialIcon name="chevron_right" size={20} color={tokens.colors.primary} />
-              </View>
-            </BirdCard>
           </View>
-        </BirdCard>
+        </View>
 
-        {/* Auto-Download Settings */}
-        <BirdCard style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
+        {/* Auto-Download Settings - iOS Style */}
+        <View style={styles.iosCard}>
+          <View style={styles.iosCardItem}>
             <MaterialIcon name="download" size={24} color={tokens.colors.primary} />
-            <Text style={styles.sectionTitle}>Auto-Download</Text>
+            <Text style={styles.iosCardText}>Auto-Download</Text>
           </View>
           
-          <View style={styles.settingsList}>
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Photos</Text>
-                <Text style={styles.settingDescription}>
-                  Automatically download photos in chats
-                </Text>
-              </View>
-              <Switch
-                value={settings.autoDownloadPhotos}
-                onValueChange={() => handleToggle('autoDownloadPhotos')}
-                thumbColor={settings.autoDownloadPhotos ? tokens.colors.primary : tokens.colors.onSurface60}
-                trackColor={{ 
-                  false: tokens.colors.surface3, 
-                  true: `${tokens.colors.primary}40` 
-                }}
-              />
+          <View style={styles.iosCardSeparator} />
+          
+          <View style={styles.iosCardItem}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Photos</Text>
+              <Text style={styles.settingDescription}>
+                Automatically download photos in chats
+              </Text>
             </View>
-            
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Videos</Text>
-                <Text style={styles.settingDescription}>
-                  Automatically download videos in chats
-                </Text>
-              </View>
-              <Switch
-                value={settings.autoDownloadVideos}
-                onValueChange={() => handleToggle('autoDownloadVideos')}
-                thumbColor={settings.autoDownloadVideos ? tokens.colors.primary : tokens.colors.onSurface60}
-                trackColor={{ 
-                  false: tokens.colors.surface3, 
-                  true: `${tokens.colors.primary}40` 
-                }}
-              />
-            </View>
-            
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Files</Text>
-                <Text style={styles.settingDescription}>
-                  Automatically download files and documents
-                </Text>
-              </View>
-              <Switch
-                value={settings.autoDownloadFiles}
-                onValueChange={() => handleToggle('autoDownloadFiles')}
-                thumbColor={settings.autoDownloadFiles ? tokens.colors.primary : tokens.colors.onSurface60}
-                trackColor={{ 
-                  false: tokens.colors.surface3, 
-                  true: `${tokens.colors.primary}40` 
-                }}
-              />
-            </View>
+            <Switch
+              value={settings.autoDownloadPhotos}
+              onValueChange={() => handleToggle('autoDownloadPhotos')}
+              thumbColor={settings.autoDownloadPhotos ? tokens.colors.primary : tokens.colors.onSurface60}
+              trackColor={{ 
+                false: tokens.colors.surface3, 
+                true: `${tokens.colors.primary}40` 
+              }}
+            />
           </View>
-        </BirdCard>
+          
+          <View style={styles.iosCardSeparator} />
+          
+          <View style={styles.iosCardItem}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Videos</Text>
+              <Text style={styles.settingDescription}>
+                Automatically download videos in chats
+              </Text>
+            </View>
+            <Switch
+              value={settings.autoDownloadVideos}
+              onValueChange={() => handleToggle('autoDownloadVideos')}
+              thumbColor={settings.autoDownloadVideos ? tokens.colors.primary : tokens.colors.onSurface60}
+              trackColor={{ 
+                false: tokens.colors.surface3, 
+                true: `${tokens.colors.primary}40` 
+              }}
+            />
+          </View>
+          
+          <View style={styles.iosCardSeparator} />
+          
+          <View style={styles.iosCardItem}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Files</Text>
+              <Text style={styles.settingDescription}>
+                Automatically download files and documents
+              </Text>
+            </View>
+            <Switch
+              value={settings.autoDownloadFiles}
+              onValueChange={() => handleToggle('autoDownloadFiles')}
+              thumbColor={settings.autoDownloadFiles ? tokens.colors.primary : tokens.colors.onSurface60}
+              trackColor={{ 
+                false: tokens.colors.surface3, 
+                true: `${tokens.colors.primary}40` 
+              }}
+            />
+          </View>
+        </View>
 
-        {/* Media Settings */}
-        <BirdCard style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
+        {/* Media Settings - iOS Style */}
+        <View style={styles.iosCard}>
+          <View style={styles.iosCardItem}>
             <MaterialIcon name="photo" size={24} color={tokens.colors.primary} />
-            <Text style={styles.sectionTitle}>Media Settings</Text>
+            <Text style={styles.iosCardText}>Media Settings</Text>
           </View>
           
-          <View style={styles.settingsList}>
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Compress Images</Text>
-                <Text style={styles.settingDescription}>
-                  Reduce image file sizes to save storage
-                </Text>
-              </View>
-              <Switch
-                value={settings.compressImages}
-                onValueChange={() => handleToggle('compressImages')}
-                thumbColor={settings.compressImages ? tokens.colors.primary : tokens.colors.onSurface60}
-                trackColor={{ 
-                  false: tokens.colors.surface3, 
-                  true: `${tokens.colors.primary}40` 
-                }}
-              />
+          <View style={styles.iosCardSeparator} />
+          
+          <View style={styles.iosCardItem}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Compress Images</Text>
+              <Text style={styles.settingDescription}>
+                Reduce image file sizes to save storage
+              </Text>
             </View>
-            
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Save to Gallery</Text>
-                <Text style={styles.settingDescription}>
-                  Save received photos and videos to device gallery
-                </Text>
-              </View>
-              <Switch
-                value={settings.saveToGallery}
-                onValueChange={() => handleToggle('saveToGallery')}
-                thumbColor={settings.saveToGallery ? tokens.colors.primary : tokens.colors.onSurface60}
-                trackColor={{ 
-                  false: tokens.colors.surface3, 
-                  true: `${tokens.colors.primary}40` 
-                }}
-              />
-            </View>
+            <Switch
+              value={settings.compressImages}
+              onValueChange={() => handleToggle('compressImages')}
+              thumbColor={settings.compressImages ? tokens.colors.primary : tokens.colors.onSurface60}
+              trackColor={{ 
+                false: tokens.colors.surface3, 
+                true: `${tokens.colors.primary}40` 
+              }}
+            />
           </View>
-        </BirdCard>
+          
+          <View style={styles.iosCardSeparator} />
+          
+          <View style={styles.iosCardItem}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Save to Gallery</Text>
+              <Text style={styles.settingDescription}>
+                Save received photos and videos to device gallery
+              </Text>
+            </View>
+            <Switch
+              value={settings.saveToGallery}
+              onValueChange={() => handleToggle('saveToGallery')}
+              thumbColor={settings.saveToGallery ? tokens.colors.primary : tokens.colors.onSurface60}
+              trackColor={{ 
+                false: tokens.colors.surface3, 
+                true: `${tokens.colors.primary}40` 
+              }}
+            />
+          </View>
+        </View>
 
-        {/* Cache Management */}
-        <BirdCard onPress={handleClearCache} style={styles.sectionCard}>
-          <View style={styles.clearCacheContent}>
-            <View style={styles.clearCacheInfo}>
+        {/* Cache Management - iOS Style */}
+        <TouchableOpacity onPress={handleClearCache}>
+          <View style={styles.iosCard}>
+            <View style={styles.iosCardItem}>
               <MaterialIcon name="cleaning_services" size={24} color={tokens.colors.primary} />
-              <View style={styles.clearCacheText}>
-                <Text style={styles.clearCacheTitle}>Clear Cache</Text>
-                <Text style={styles.clearCacheDescription}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Clear Cache</Text>
+                <Text style={styles.settingDescription}>
                   Free up space by clearing temporary files
                 </Text>
               </View>
+              <Text style={styles.cacheSize}>124 MB</Text>
             </View>
-            <Text style={styles.cacheSize}>124 MB</Text>
           </View>
-        </BirdCard>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -248,6 +285,15 @@ const styles = StyleSheet.create({
   content: {
     padding: tokens.spacing.m,
     paddingBottom: tokens.spacing.xl,
+    paddingTop: 120, // Space for the large title under the header
+  },
+  largeTitle: {
+    ...tokens.typography.h1,
+    fontSize: 28, // Reduced from 36 to 28
+    fontWeight: '400', // Changed from '700' to '400' (unbold)
+    color: tokens.colors.onSurface,
+    marginBottom: tokens.spacing.l,
+    marginTop: 10, // Changed from -20 to 10 (bring text down)
   },
   sectionCard: {
     marginBottom: tokens.spacing.m,
@@ -265,6 +311,7 @@ const styles = StyleSheet.create({
   },
   storageOverview: {
     gap: tokens.spacing.m,
+    flex: 1,
   },
   totalStorage: {
     ...tokens.typography.h2,
@@ -375,5 +422,33 @@ const styles = StyleSheet.create({
     ...tokens.typography.body,
     color: tokens.colors.onSurface60,
     fontWeight: '600',
+  },
+  // iOS-style cards
+  iosCard: {
+    backgroundColor: tokens.colors.surface1,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
+    marginBottom: tokens.spacing.m,
+  },
+  iosCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    minHeight: 48,
+  },
+  iosCardText: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    marginLeft: tokens.spacing.m,
+    flex: 1,
+    fontWeight: '600',
+  },
+  iosCardSeparator: {
+    height: 0.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginLeft: 56, // Align with text
   },
 });

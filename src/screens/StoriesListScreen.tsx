@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   View, 
   StyleSheet, 
   FlatList, 
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Animated,
+  ImageBackground,
+  Dimensions
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MotiView } from 'moti';
@@ -14,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 
 import { tokens } from '../theme/tokens';
 import { StoriesStackParamList } from '../navigation/types';
-import { DynamicHeader, BirdCard, Avatar, MaterialIcon } from '../components';
+import { DynamicHeader, Avatar, MaterialIcon } from '../components';
 
 type StoriesListNavigationProp = StackNavigationProp<StoriesStackParamList, 'StoriesList'>;
 
@@ -28,6 +31,20 @@ interface StoryItem {
 
 export const StoriesListScreen: React.FC = () => {
   const navigation = useNavigation<StoriesListNavigationProp>();
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const screenHeight = Dimensions.get('window').height;
+  
+  // Add listener to track scroll offset for dynamic header
+  React.useEffect(() => {
+    const listener = scrollY.addListener(({ value }) => {
+      setScrollOffset(value);
+    });
+
+    return () => {
+      scrollY.removeListener(listener);
+    };
+  }, [scrollY]);
   
   const [stories, setStories] = useState<StoryItem[]>([
     {
@@ -86,6 +103,55 @@ export const StoriesListScreen: React.FC = () => {
       timestamp: new Date(Date.now() - 86400000), // 1 day ago
       isViewed: true,
     },
+    {
+      id: '9',
+      userName: 'Sophie Garcia',
+      userAvatar: 'https://i.pravatar.cc/150?img=9',
+      timestamp: new Date(Date.now() - 32400000), // 9 hours ago
+      isViewed: false,
+    },
+    {
+      id: '10',
+      userName: 'Ryan Thompson',
+      userAvatar: 'https://i.pravatar.cc/150?img=10',
+      timestamp: new Date(Date.now() - 36000000), // 10 hours ago
+      isViewed: true,
+    },
+    {
+      id: '11',
+      userName: 'Maya Singh',
+      userAvatar: 'https://i.pravatar.cc/150?img=11',
+      timestamp: new Date(Date.now() - 43200000), // 12 hours ago
+      isViewed: false,
+    },
+    {
+      id: '12',
+      userName: 'Carlos Rodriguez',
+      userAvatar: 'https://i.pravatar.cc/150?img=12',
+      timestamp: new Date(Date.now() - 50400000), // 14 hours ago
+      isViewed: true,
+    },
+    {
+      id: '13',
+      userName: 'Elena Petrov',
+      userAvatar: 'https://i.pravatar.cc/150?img=13',
+      timestamp: new Date(Date.now() - 57600000), // 16 hours ago
+      isViewed: false,
+    },
+    {
+      id: '14',
+      userName: 'Kevin O\'Brien',
+      userAvatar: 'https://i.pravatar.cc/150?img=14',
+      timestamp: new Date(Date.now() - 64800000), // 18 hours ago
+      isViewed: true,
+    },
+    {
+      id: '15',
+      userName: 'Priya Sharma',
+      userAvatar: 'https://i.pravatar.cc/150?img=15',
+      timestamp: new Date(Date.now() - 72000000), // 20 hours ago
+      isViewed: false,
+    },
   ]);
 
   const formatTimeAgo = (date: Date) => {
@@ -138,23 +204,36 @@ export const StoriesListScreen: React.FC = () => {
 
   const StoryAvatar = ({ story }: { story: StoryItem }) => (
     <View style={styles.avatarContainer}>
-      {!story.isViewed && <View style={styles.storyRing} />}
-      <Avatar
-        source={story.userAvatar}
-        name={story.userName}
-        size={56}
-      />
+      <View style={[
+        styles.avatarBorder,
+        {
+          borderColor: story.isViewed ? 'rgba(156, 163, 175, 0.6)' : '#3B82F6',
+          borderWidth: 2,
+        }
+      ]}>
+        <View style={{ transform: [{ scale: 1.15 }] }}>
+          <Avatar
+            source={story.userAvatar}
+            name={story.userName}
+            size={56}
+          />
+        </View>
+      </View>
     </View>
   );
 
-  const renderStoryItem = ({ item }: { item: StoryItem }) => (
-    <MotiView
-      from={{ opacity: 0, translateY: 20 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: 'timing', duration: 300 }}
-    >
-      <BirdCard onPress={() => handleStoryPress(item)}>
-        <View style={styles.storyRow}>
+  const renderStoryItem = ({ item, index }: { item: StoryItem; index: number }) => (
+    <>
+      <MotiView
+        from={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 300 }}
+      >
+        <TouchableOpacity 
+          style={styles.storyRow}
+          onPress={() => handleStoryPress(item)}
+          activeOpacity={0.7}
+        >
           <StoryAvatar story={item} />
           
           <View style={styles.storyInfo}>
@@ -165,19 +244,70 @@ export const StoriesListScreen: React.FC = () => {
               {formatTimeAgo(item.timestamp)}
             </Text>
           </View>
-        </View>
-      </BirdCard>
-    </MotiView>
+        </TouchableOpacity>
+      </MotiView>
+      {index < stories.length - 1 && <View style={styles.listSeparator} />}
+    </>
   );
 
   return (
     <View style={styles.container}>
+      {/* Parallax Background */}
+      <Animated.View
+        style={[
+          styles.backgroundContainer,
+          {
+            transform: [
+              {
+                translateY: scrollY.interpolate({
+                  inputRange: [0, screenHeight],
+                  outputRange: [0, screenHeight * 0.1], // 10% parallax speed
+                  extrapolate: 'clamp',
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <ImageBackground
+          source={{
+            uri: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxwYXR0ZXJuIGlkPSJzdG9yaWVzIiB4PSIwIiB5PSIwIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8cGF0aCBkPSJNMjAgNUwxOCAyMEwyMiAyMFoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNCIvPgogICAgPC9wYXR0ZXJuPgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3N0b3JpZXMpIi8+Cjwvc3ZnPgo='
+          }}
+          style={styles.backgroundImage}
+          resizeMode="repeat"
+        />
+      </Animated.View>
+
+      {/* Header */}
       <DynamicHeader 
         title="Stories"
+        scrollY={scrollOffset}
         showBackButton={false}
       />
       
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <Animated.ScrollView 
+        style={styles.content} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+      >
+        {/* Large Title */}
+        <View style={styles.largeTitleContainer}>
+          <MotiView
+            animate={{
+              opacity: Math.max(0, Math.min(1, (60 - scrollOffset) / 20)),
+              translateY: Math.min(20, scrollOffset / 3),
+            }}
+            transition={{ type: 'timing', duration: 200 }}
+          >
+            <Text style={styles.largeTitle}>Stories</Text>
+          </MotiView>
+        </View>
+
         {/* My Story Section */}
         <View style={styles.myStorySection}>
           <MyStoryButton />
@@ -193,7 +323,7 @@ export const StoriesListScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
           />
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };
@@ -205,6 +335,22 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 100, // Space for header
+    paddingBottom: 100, // Space for bottom
+  },
+  largeTitleContainer: {
+    paddingHorizontal: tokens.spacing.s,
+    paddingTop: tokens.spacing.m,
+    paddingBottom: tokens.spacing.s,
+  },
+  largeTitle: {
+    ...tokens.typography.h1,
+    color: tokens.colors.onSurface,
+    fontSize: 34,
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
   myStorySection: {
     paddingHorizontal: tokens.spacing.m,
@@ -241,21 +387,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: tokens.spacing.s,
+    paddingHorizontal: tokens.spacing.s,
   },
   avatarContainer: {
     position: 'relative',
     marginRight: tokens.spacing.m,
-  },
-  storyRing: {
-    position: 'absolute',
-    width: 64, // 56 + 4px border + 4px padding
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: tokens.colors.primary,
-    top: -4,
-    left: -4,
-    zIndex: 1,
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   storyInfo: {
     flex: 1,
@@ -269,5 +409,28 @@ const styles = StyleSheet.create({
   timestamp: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
+  },
+  avatarBorder: {
+    borderRadius: 30,
+    padding: 2,
+    backgroundColor: 'transparent',
+  },
+  listSeparator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginLeft: 72, // Align with text content
+    marginRight: 16,
+  },
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+  },
+  backgroundImage: {
+    flex: 1,
+    opacity: 0.8,
   },
 });

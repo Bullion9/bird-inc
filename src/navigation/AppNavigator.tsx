@@ -17,13 +17,21 @@ import { PhoneAuthScreen } from '../screens/PhoneAuthScreen';
 import { ProfileCreateScreen } from '../screens/ProfileCreateScreen';
 import { ChatsListScreen } from '../screens/ChatsListScreen';
 import { ChatRoomScreen } from '../screens/ChatRoomScreen';
+import { GroupsScreen } from '../screens/GroupsScreen';
+import { GroupDetailsScreen } from '../screens/GroupDetailsScreen';
+import { CreateGroupScreen } from '../screens/CreateGroupScreen';
 import { CallsListScreen } from '../screens/CallsListScreen';
 import { CallScreen } from '../screens/CallScreen';
+import { VideoCallScreen } from '../screens/VideoCallScreen';
 import { StoriesListScreen } from '../screens/StoriesListScreen';
 import { StoryViewerScreen } from '../screens/StoryViewerScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { EditProfileScreen } from '../screens/EditProfileScreen';
 import { StorageAndDataScreen } from '../screens/StorageAndDataScreen';
+import { ChatsSettingsScreen } from '../screens/ChatsSettingsScreen';
+import { NotificationSettingsScreen } from '../screens/NotificationSettingsScreen';
+import { PrivacySettingsScreen } from '../screens/PrivacySettingsScreen';
+import { HelpSettingsScreen } from '../screens/HelpSettingsScreen';
 import { BioEditScreen } from '../screens/BioEditScreen';
 import { NameEditScreen } from '../screens/NameEditScreen';
 import { UsernameEditScreen } from '../screens/UsernameEditScreen';
@@ -70,6 +78,9 @@ const ChatsStackNavigator = () => {
     >
       <ChatsStack.Screen name="ChatsList" component={ChatsListScreen} />
       <ChatsStack.Screen name="ChatRoom" component={ChatRoomScreen} />
+      <ChatsStack.Screen name="Groups" component={GroupsScreen} />
+      <ChatsStack.Screen name="GroupDetails" component={GroupDetailsScreen} />
+      <ChatsStack.Screen name="CreateGroup" component={CreateGroupScreen} />
     </ChatsStack.Navigator>
   );
 };
@@ -100,6 +111,7 @@ const CallsStackNavigator = () => {
     >
       <CallsStack.Screen name="CallsList" component={CallsListScreen} />
       <CallsStack.Screen name="CallScreen" component={CallScreen} />
+      <CallsStack.Screen name="VideoCall" component={VideoCallScreen} />
     </CallsStack.Navigator>
   );
 };
@@ -161,6 +173,10 @@ const SettingsStackNavigator = () => {
       <SettingsStack.Screen name="Settings" component={SettingsScreen} />
       <SettingsStack.Screen name="EditProfile" component={EditProfileScreen} />
       <SettingsStack.Screen name="StorageAndData" component={StorageAndDataScreen} />
+      <SettingsStack.Screen name="ChatsSettings" component={ChatsSettingsScreen} />
+      <SettingsStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+      <SettingsStack.Screen name="PrivacySettings" component={PrivacySettingsScreen} />
+      <SettingsStack.Screen name="HelpSettings" component={HelpSettingsScreen} />
       <SettingsStack.Screen name="BioEdit" component={BioEditScreen} />
       <SettingsStack.Screen name="NameEdit" component={NameEditScreen} />
       <SettingsStack.Screen name="UsernameEdit" component={UsernameEditScreen} />

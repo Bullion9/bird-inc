@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Text, Button, Avatar as PaperAvatar } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { useNavigation } from '@react-navigation/native';
@@ -12,10 +12,18 @@ type ProfileCreateNavigationProp = StackNavigationProp<RootStackParamList, 'Prof
 
 export const ProfileCreateScreen: React.FC = () => {
   const navigation = useNavigation<ProfileCreateNavigationProp>();
+  const scrollYRef = useRef(0);
+  const [scrollPosition, setScrollPosition] = React.useState(0);
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
   const [avatar, setAvatar] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    scrollYRef.current = currentScrollY;
+    setScrollPosition(currentScrollY);
+  }, []);
 
   const handleContinue = async () => {
     if (!name.trim()) return;
@@ -38,13 +46,30 @@ export const ProfileCreateScreen: React.FC = () => {
         title="Create Profile"
         showBackButton
         onBackPress={handleBack}
+        scrollY={scrollPosition}
       />
 
       <ScrollView 
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
       >
+        {/* Large title at the top */}
+        <MotiView
+          animate={{
+            opacity: scrollPosition < 40 ? 1 : Math.max(0, (60 - scrollPosition) / 20),
+            translateY: scrollPosition < 40 ? 0 : Math.min(scrollPosition * 0.3, 20),
+          }}
+          transition={{
+            type: 'timing',
+            duration: 200,
+          }}
+        >
+          <Text style={styles.largeTitle}>Create Profile</Text>
+        </MotiView>
         <MotiView
           from={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -130,7 +155,15 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: tokens.spacing.xl,
-    paddingTop: tokens.spacing.l,
+    paddingTop: 120, // Space for the large title under the header
+  },
+  largeTitle: {
+    ...tokens.typography.h1,
+    fontSize: 28,
+    fontWeight: '400',
+    color: tokens.colors.onSurface,
+    marginBottom: tokens.spacing.l,
+    textAlign: 'center',
   },
   avatarSection: {
     alignItems: 'center',

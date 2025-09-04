@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Button, SegmentedButtons } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { tokens } from '../theme/tokens';
 import { RootStackParamList } from '../navigation/types';
+import { DynamicHeader } from '../components';
 
 type AuthDecisionNavigationProp = StackNavigationProp<RootStackParamList, 'AuthDecision'>;
 
 export const AuthDecisionScreen: React.FC = () => {
   const navigation = useNavigation<AuthDecisionNavigationProp>();
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  const scrollYRef = React.useRef(0);
+  const [scrollPosition, setScrollPosition] = React.useState(0);
+
+  const handleScroll = React.useCallback((event: any) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    scrollYRef.current = currentScrollY;
+    setScrollPosition(currentScrollY);
+  }, []);
 
   const handleContinue = () => {
     navigation.navigate('PhoneAuth');
@@ -19,18 +28,44 @@ export const AuthDecisionScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <MotiView
-        from={{ opacity: 0, translateY: -30 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 400 }}
-        style={styles.headerContainer}
+      <DynamicHeader
+        title="Welcome to bird"
+        showBackButton={false}
+        scrollY={scrollPosition}
+      />
+      
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.emoji}>🐦</Text>
-        <Text style={styles.title}>Welcome to bird</Text>
-        <Text style={styles.subtitle}>
-          Connect with friends and family through secure messaging
-        </Text>
-      </MotiView>
+        {/* Large title at the top */}
+        <MotiView
+          animate={{
+            opacity: scrollPosition < 40 ? 1 : Math.max(0, (60 - scrollPosition) / 20),
+            translateY: scrollPosition < 40 ? 0 : Math.min(scrollPosition * 0.3, 20),
+          }}
+          transition={{
+            type: 'timing',
+            duration: 200,
+          }}
+        >
+          <Text style={styles.largeTitle}>Welcome to bird</Text>
+        </MotiView>
+        
+        <MotiView
+          from={{ opacity: 0, translateY: -30 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400 }}
+          style={styles.headerContainer}
+        >
+          <Text style={styles.emoji}>🐦</Text>
+          <Text style={styles.subtitle}>
+            Connect with friends and family through secure messaging
+          </Text>
+        </MotiView>
 
       <MotiView
         from={{ opacity: 0, scale: 0.9 }}
@@ -85,6 +120,7 @@ export const AuthDecisionScreen: React.FC = () => {
           By continuing, you agree to our Terms of Service and Privacy Policy
         </Text>
       </MotiView>
+      </ScrollView>
     </View>
   );
 };
@@ -93,10 +129,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: tokens.colors.bg,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
     paddingHorizontal: tokens.spacing.xl,
     justifyContent: 'space-between',
-    paddingTop: 80,
+    paddingTop: 120,
     paddingBottom: tokens.spacing.xl,
+    minHeight: '100%',
+  },
+  largeTitle: {
+    ...tokens.typography.h1,
+    fontSize: 28,
+    fontWeight: '400',
+    color: tokens.colors.onSurface,
+    marginBottom: tokens.spacing.l,
+    textAlign: 'center',
   },
   headerContainer: {
     alignItems: 'center',
@@ -104,12 +154,6 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 64,
     marginBottom: tokens.spacing.m,
-  },
-  title: {
-    ...tokens.typography.h1,
-    color: tokens.colors.onSurface,
-    textAlign: 'center',
-    marginBottom: tokens.spacing.s,
   },
   subtitle: {
     ...tokens.typography.body,

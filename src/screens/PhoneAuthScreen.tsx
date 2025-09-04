@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { useNavigation } from '@react-navigation/native';
@@ -12,11 +12,19 @@ type PhoneAuthNavigationProp = StackNavigationProp<RootStackParamList, 'PhoneAut
 
 export const PhoneAuthScreen: React.FC = () => {
   const navigation = useNavigation<PhoneAuthNavigationProp>();
+  const scrollYRef = useRef(0);
+  const [scrollPosition, setScrollPosition] = React.useState(0);
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [countryCode, setCountryCode] = useState('+1');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    scrollYRef.current = currentScrollY;
+    setScrollPosition(currentScrollY);
+  }, []);
 
   const handleSendOTP = async () => {
     if (!phoneNumber) return;
@@ -54,13 +62,32 @@ export const PhoneAuthScreen: React.FC = () => {
         title={step === 'phone' ? 'Enter Phone Number' : 'Verify Code'}
         showBackButton
         onBackPress={handleBack}
+        scrollY={scrollPosition}
       />
 
       <ScrollView 
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
       >
+        {/* Large title at the top */}
+        <MotiView
+          animate={{
+            opacity: scrollPosition < 40 ? 1 : Math.max(0, (60 - scrollPosition) / 20),
+            translateY: scrollPosition < 40 ? 0 : Math.min(scrollPosition * 0.3, 20),
+          }}
+          transition={{
+            type: 'timing',
+            duration: 200,
+          }}
+        >
+          <Text style={styles.largeTitle}>
+            {step === 'phone' ? 'Enter Phone Number' : 'Verify Code'}
+          </Text>
+        </MotiView>
         {step === 'phone' ? (
           <MotiView
             from={{ opacity: 0, translateX: -20 }}
@@ -158,7 +185,15 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: tokens.spacing.xl,
-    paddingTop: tokens.spacing.l,
+    paddingTop: 120, // Space for the large title under the header
+  },
+  largeTitle: {
+    ...tokens.typography.h1,
+    fontSize: 28,
+    fontWeight: '400',
+    color: tokens.colors.onSurface,
+    marginBottom: tokens.spacing.l,
+    textAlign: 'center',
   },
   description: {
     ...tokens.typography.body,

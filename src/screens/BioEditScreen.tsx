@@ -20,6 +20,7 @@ export const BioEditScreen: React.FC = () => {
   
   const [bio, setBio] = useState(initialBio);
   const [isDirty, setIsDirty] = useState(false);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   useEffect(() => {
     setIsDirty(bio !== initialBio);
@@ -50,22 +51,14 @@ export const BioEditScreen: React.FC = () => {
         title="Bio"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
+        scrollY={scrollOffset}
+        rightIcons={[
+          {
+            icon: 'check',
+            onPress: handleSave,
+          },
+        ]}
       />
-      
-      {/* Save button in header area */}
-      <View style={styles.headerSaveContainer}>
-        <Button
-          mode="text"
-          onPress={handleSave}
-          disabled={!isDirty}
-          labelStyle={[
-            styles.saveHeaderButton,
-            { color: isDirty ? tokens.colors.primary : tokens.colors.onSurface38 }
-          ]}
-        >
-          Save
-        </Button>
-      </View>
       
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -75,6 +68,10 @@ export const BioEditScreen: React.FC = () => {
           style={styles.scrollView}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          onScroll={(event) => {
+            setScrollOffset(event.nativeEvent.contentOffset.y);
+          }}
+          scrollEventThrottle={16}
         >
           <View style={styles.instructionContainer}>
             <Text style={styles.instructionTitle}>About you</Text>
@@ -143,12 +140,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.colors.bg,
   },
-  headerSaveContainer: {
-    position: 'absolute',
-    top: tokens.spacing.l,
-    right: tokens.spacing.m,
-    zIndex: 10,
-  },
   keyboardView: {
     flex: 1,
   },
@@ -158,6 +149,7 @@ const styles = StyleSheet.create({
   content: {
     padding: tokens.spacing.m,
     paddingBottom: tokens.spacing.xl,
+    paddingTop: 150, // Space for header + generous top spacing for body
   },
   instructionContainer: {
     marginBottom: tokens.spacing.l,
@@ -205,9 +197,5 @@ const styles = StyleSheet.create({
     ...tokens.typography.body,
     textAlign: 'left',
     justifyContent: 'flex-start',
-  },
-  saveHeaderButton: {
-    ...tokens.typography.body,
-    fontWeight: '600',
   },
 });

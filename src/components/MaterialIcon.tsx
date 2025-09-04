@@ -102,6 +102,9 @@ export const MaterialIcon: React.FC<MaterialIconProps> = ({
   const mappedIconName = iconMap[name] || name;
   const iconWeight = active ? 600 : weight;
 
+  // Debug log
+  console.log(`MaterialIcon: ${name} -> ${mappedIconName}`);
+
   // For debugging - let's use a simple colored text approach to ensure color shows
   if (color === tokens.colors.success || color === tokens.colors.error) {
     const IconComponent = () => (

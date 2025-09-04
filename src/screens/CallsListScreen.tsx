@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   View, 
   StyleSheet, 
   FlatList, 
   TouchableOpacity,
-  Animated
+  Animated,
+  ImageBackground,
+  Dimensions
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MotiView } from 'moti';
@@ -14,7 +16,7 @@ import * as Haptics from 'expo-haptics';
 
 import { tokens } from '../theme/tokens';
 import { CallsStackParamList } from '../navigation/types';
-import { DynamicHeader, BirdCard, Avatar, MaterialIcon } from '../components';
+import { DynamicHeader, Avatar, MaterialIcon } from '../components';
 
 type CallsListNavigationProp = StackNavigationProp<CallsStackParamList, 'CallsList'>;
 
@@ -25,10 +27,26 @@ interface CallItem {
   type: 'outgoing' | 'incoming' | 'missed';
   timestamp: Date;
   duration?: string;
+  hasStory?: boolean;
+  storyViewed?: boolean;
 }
 
 export const CallsListScreen: React.FC = () => {
   const navigation = useNavigation<CallsListNavigationProp>();
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const screenHeight = Dimensions.get('window').height;
+  
+  // Add listener to track scroll offset for dynamic header
+  React.useEffect(() => {
+    const listener = scrollY.addListener(({ value }) => {
+      setScrollOffset(value);
+    });
+
+    return () => {
+      scrollY.removeListener(listener);
+    };
+  }, [scrollY]);
   
   const [calls, setCalls] = useState<CallItem[]>([
     {
@@ -38,6 +56,8 @@ export const CallsListScreen: React.FC = () => {
       type: 'outgoing',
       timestamp: new Date(Date.now() - 3600000), // 1 hour ago
       duration: '12:34',
+      hasStory: true,
+      storyViewed: false,
     },
     {
       id: '2',
@@ -46,6 +66,8 @@ export const CallsListScreen: React.FC = () => {
       type: 'incoming',
       timestamp: new Date(Date.now() - 7200000), // 2 hours ago
       duration: '05:21',
+      hasStory: false,
+      storyViewed: false,
     },
     {
       id: '3',
@@ -53,6 +75,8 @@ export const CallsListScreen: React.FC = () => {
       avatar: 'https://i.pravatar.cc/150?img=3',
       type: 'missed',
       timestamp: new Date(Date.now() - 10800000), // 3 hours ago
+      hasStory: true,
+      storyViewed: true,
     },
     {
       id: '4',
@@ -61,6 +85,8 @@ export const CallsListScreen: React.FC = () => {
       type: 'outgoing',
       timestamp: new Date(Date.now() - 14400000), // 4 hours ago
       duration: '23:45',
+      hasStory: true,
+      storyViewed: false,
     },
     {
       id: '5',
@@ -69,6 +95,8 @@ export const CallsListScreen: React.FC = () => {
       type: 'incoming',
       timestamp: new Date(Date.now() - 86400000), // 1 day ago
       duration: '01:12',
+      hasStory: false,
+      storyViewed: false,
     },
     {
       id: '6',
@@ -76,6 +104,8 @@ export const CallsListScreen: React.FC = () => {
       avatar: 'https://i.pravatar.cc/150?img=6',
       type: 'missed',
       timestamp: new Date(Date.now() - 172800000), // 2 days ago
+      hasStory: true,
+      storyViewed: true,
     },
     {
       id: '7',
@@ -84,6 +114,8 @@ export const CallsListScreen: React.FC = () => {
       type: 'outgoing',
       timestamp: new Date(Date.now() - 259200000), // 3 days ago
       duration: '08:33',
+      hasStory: true,
+      storyViewed: false,
     },
     {
       id: '8',
@@ -92,6 +124,76 @@ export const CallsListScreen: React.FC = () => {
       type: 'incoming',
       timestamp: new Date(Date.now() - 345600000), // 4 days ago
       duration: '15:07',
+      hasStory: false,
+      storyViewed: false,
+    },
+    {
+      id: '9',
+      name: 'Sophie Garcia',
+      avatar: 'https://i.pravatar.cc/150?img=9',
+      type: 'outgoing',
+      timestamp: new Date(Date.now() - 432000000), // 5 days ago
+      duration: '06:42',
+      hasStory: true,
+      storyViewed: true,
+    },
+    {
+      id: '10',
+      name: 'Ryan Thompson',
+      avatar: 'https://i.pravatar.cc/150?img=10',
+      type: 'missed',
+      timestamp: new Date(Date.now() - 518400000), // 6 days ago
+      hasStory: true,
+      storyViewed: false,
+    },
+    {
+      id: '11',
+      name: 'Maya Singh',
+      avatar: 'https://i.pravatar.cc/150?img=11',
+      type: 'incoming',
+      timestamp: new Date(Date.now() - 604800000), // 1 week ago
+      duration: '18:23',
+      hasStory: false,
+      storyViewed: false,
+    },
+    {
+      id: '12',
+      name: 'Carlos Rodriguez',
+      avatar: 'https://i.pravatar.cc/150?img=12',
+      type: 'outgoing',
+      timestamp: new Date(Date.now() - 691200000), // 8 days ago
+      duration: '03:17',
+      hasStory: true,
+      storyViewed: true,
+    },
+    {
+      id: '13',
+      name: 'Elena Petrov',
+      avatar: 'https://i.pravatar.cc/150?img=13',
+      type: 'incoming',
+      timestamp: new Date(Date.now() - 777600000), // 9 days ago
+      duration: '11:55',
+      hasStory: true,
+      storyViewed: false,
+    },
+    {
+      id: '14',
+      name: 'Kevin O\'Brien',
+      avatar: 'https://i.pravatar.cc/150?img=14',
+      type: 'missed',
+      timestamp: new Date(Date.now() - 864000000), // 10 days ago
+      hasStory: false,
+      storyViewed: false,
+    },
+    {
+      id: '15',
+      name: 'Priya Sharma',
+      avatar: 'https://i.pravatar.cc/150?img=15',
+      type: 'outgoing',
+      timestamp: new Date(Date.now() - 950400000), // 11 days ago
+      duration: '22:08',
+      hasStory: true,
+      storyViewed: true,
     },
   ]);
 
@@ -141,6 +243,13 @@ export const CallsListScreen: React.FC = () => {
   };
 
   const handleCallPress = (call: CallItem) => {
+    console.log('Navigating to CallScreen with params:', { 
+      contactName: call.name,
+      contactAvatar: call.avatar,
+      isIncoming: false,
+      callId: call.id,
+      isVideo: false
+    });
     navigation.navigate('CallScreen', { 
       contactName: call.name,
       contactAvatar: call.avatar,
@@ -151,30 +260,83 @@ export const CallsListScreen: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
+  const handleTestVideoCall = () => {
+    // Navigate to video call with test data
+    navigation.navigate('VideoCall', {
+      contactId: 'test-contact',
+      contactName: 'Test Contact',
+      contactAvatar: 'https://i.pravatar.cc/150?img=1',
+      isIncoming: false
+    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const handleVideoCallPress = (call: CallItem) => {
+    console.log('Navigating to VideoCall with params:', { 
+      contactId: call.id,
+      contactName: call.name,
+      contactAvatar: call.avatar,
+      isIncoming: false
+    });
+    navigation.navigate('VideoCall', { 
+      contactId: call.id,
+      contactName: call.name,
+      contactAvatar: call.avatar,
+      isIncoming: false
+    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
   const handleDelete = (callId: string) => {
     setCalls(prev => prev.filter(call => call.id !== callId));
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   };
 
-  const renderCallItem = ({ item }: { item: CallItem }) => {
+  const renderHeader = () => (
+    <View style={styles.largeTitleContainer}>
+      <MotiView
+        animate={{
+          opacity: Math.max(0, Math.min(1, (60 - scrollOffset) / 20)),
+          translateY: Math.min(20, scrollOffset / 3),
+        }}
+        transition={{ type: 'timing', duration: 200 }}
+      >
+        <Text style={styles.largeTitle}>Calls</Text>
+      </MotiView>
+    </View>
+  );
+
+  const renderCallItem = ({ item, index }: { item: CallItem; index: number }) => {
     const icon = getCallIcon(item.type);
     
     return (
-      <MotiView
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 300 }}
-      >
-        <BirdCard
-          onPress={() => handleCallPress(item)}
+      <>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 300 }}
         >
-          <View style={styles.callRow}>
+          <TouchableOpacity
+            style={styles.callRow}
+            onPress={() => handleCallPress(item)}
+            activeOpacity={0.7}
+          >
             <View style={styles.leftSection}>
-              <Avatar
-                source={item.avatar}
-                name={item.name}
-                size={48}
-              />
+              <View style={[
+                styles.avatarBorder,
+                item.hasStory && {
+                  borderColor: item.storyViewed ? 'rgba(156, 163, 175, 0.6)' : '#3B82F6',
+                  borderWidth: 2,
+                }
+              ]}>
+                <View style={{ transform: [{ scale: 1.15 }] }}>
+                  <Avatar
+                    source={item.avatar}
+                    name={item.name}
+                    size={48}
+                  />
+                </View>
+              </View>
             </View>
             
             <View style={styles.middleSection}>
@@ -211,31 +373,93 @@ export const CallsListScreen: React.FC = () => {
                 onPress={() => handleCallPress(item)}
               >
                 <MaterialIcon 
-                  name="call" 
+                  name="phone" 
                   size={24} 
-                  color={tokens.colors.success} 
+                  color={tokens.colors.onSurface60} 
+                />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.callButton}
+                onPress={() => handleVideoCallPress(item)}
+              >
+                <MaterialIcon 
+                  name="video" 
+                  size={24} 
+                  color={tokens.colors.primary} 
                 />
               </TouchableOpacity>
             </View>
-          </View>
-        </BirdCard>
-      </MotiView>
+          </TouchableOpacity>
+        </MotiView>
+        {index < calls.length - 1 && <View style={styles.listSeparator} />}
+      </>
     );
   };
 
   return (
     <View style={styles.container}>
+      {/* Parallax Background */}
+      <Animated.View
+        style={[
+          styles.backgroundContainer,
+          {
+            transform: [
+              {
+                translateY: scrollY.interpolate({
+                  inputRange: [0, screenHeight],
+                  outputRange: [0, screenHeight * 0.1], // 10% parallax speed
+                  extrapolate: 'clamp',
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <ImageBackground
+          source={{
+            uri: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxwYXR0ZXJuIGlkPSJjYWxsIiB4PSIwIiB5PSIwIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSI0IiBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDMiLz4KICAgIDwvcGF0dGVybj4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNjYWxsKSIvPgo8L3N2Zz4K'
+          }}
+          style={styles.backgroundImage}
+          resizeMode="repeat"
+        />
+      </Animated.View>
+
+      {/* Header */}
       <DynamicHeader 
         title="Calls"
+        scrollY={scrollOffset}
         showBackButton={false}
+        rightIcons={[
+          {
+            icon: 'phone',
+            onPress: () => handleCallPress({
+              id: 'test-voice',
+              name: 'Test Voice Call',
+              avatar: 'https://i.pravatar.cc/150?img=1',
+              type: 'outgoing',
+              timestamp: new Date()
+            })
+          },
+          {
+            icon: 'video',
+            onPress: handleTestVideoCall
+          }
+        ]}
       />
       
-      <FlatList
+      <Animated.FlatList
         data={calls}
         renderItem={renderCallItem}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
       />
     </View>
   );
@@ -246,9 +470,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.colors.bg,
   },
+  largeTitleContainer: {
+    paddingHorizontal: tokens.spacing.s,
+    paddingTop: tokens.spacing.m,
+    paddingBottom: tokens.spacing.s,
+  },
+  largeTitle: {
+    ...tokens.typography.h1,
+    color: tokens.colors.onSurface,
+    fontSize: 34,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
   listContainer: {
-    padding: tokens.spacing.m,
-    paddingBottom: tokens.spacing.xl,
+    paddingHorizontal: tokens.spacing.s,
+    paddingTop: 100, // Space for header
+    paddingBottom: 100, // Space for bottom
   },
   callRow: {
     flexDirection: 'row',
@@ -264,6 +501,9 @@ const styles = StyleSheet.create({
   },
   rightSection: {
     marginLeft: tokens.spacing.m,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 0,
   },
   contactName: {
     ...tokens.typography.body,
@@ -296,7 +536,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   callButton: {
-    padding: tokens.spacing.s,
+    padding: 6,
     borderRadius: tokens.radius.m,
+  },
+  avatarBorder: {
+    borderRadius: 24,
+    padding: 2,
+    backgroundColor: 'transparent',
+  },
+  listSeparator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginLeft: 72, // Align with text content
+    marginRight: 16,
+  },
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+  },
+  backgroundImage: {
+    flex: 1,
+    opacity: 0.8,
   },
 });

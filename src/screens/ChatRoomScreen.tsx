@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -10,10 +10,14 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
-  Image
+  Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView
 } from 'react-native';
 import { Text, IconButton, Surface } from 'react-native-paper';
 import { MotiView } from 'moti';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // Temporarily comment out gesture handler to test hooks
 // import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -46,6 +50,8 @@ export const ChatRoomScreen: React.FC = () => {
   const navigation = useNavigation<ChatRoomNavigationProp>();
   const route = useRoute<ChatRoomRouteProp>();
   const { userName } = route.params;
+  const scrollYRef = useRef(0);
+  const [scrollPosition, setScrollPosition] = React.useState(0);
   
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(true); // Demo typing indicator
@@ -57,6 +63,17 @@ export const ChatRoomScreen: React.FC = () => {
   const [selectedMediaUri, setSelectedMediaUri] = useState<string>('');
   const [selectedMediaCaption, setSelectedMediaCaption] = useState<string>('');
   const [isShaking, setIsShaking] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState(userName);
+  const [editedAbout, setEditedAbout] = useState("Passionate about technology and innovation. Love exploring new ideas and connecting with people.");
+  const animatedScrollPosition = useRef(new Animated.Value(0)).current;
+
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    scrollYRef.current = currentScrollY;
+    setScrollPosition(currentScrollY);
+  }, []);
   
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -210,7 +227,6 @@ export const ChatRoomScreen: React.FC = () => {
   ]);
   
   const flatListRef = useRef<FlatList>(null);
-  const scrollY = useRef(new Animated.Value(0)).current;
 
   // Typing indicator animation
   const TypingIndicator = () => (
@@ -281,6 +297,36 @@ export const ChatRoomScreen: React.FC = () => {
     setMediaViewerVisible(false);
     setSelectedMediaUri('');
     setSelectedMediaCaption('');
+  };
+
+  const handleVideoCall = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Navigate to CallsStack -> VideoCall
+    const parentNavigation = navigation.getParent();
+    parentNavigation?.navigate('CallsStack', {
+      screen: 'VideoCall',
+      params: {
+        contactId: route.params.chatId,
+        contactName: userName,
+        contactAvatar: 'https://via.placeholder.com/150',
+        isIncoming: false,
+      }
+    });
+  };
+
+  const handleVoiceCall = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Navigate to CallsStack -> CallScreen
+    const parentNavigation = navigation.getParent();
+    parentNavigation?.navigate('CallsStack', {
+      screen: 'CallScreen',
+      params: {
+        contactName: userName,
+        contactAvatar: 'https://via.placeholder.com/150',
+        isIncoming: false,
+        isVideo: false,
+      }
+    });
   };
 
   // Message component with swipe and long press (temporarily simplified)
@@ -407,6 +453,297 @@ export const ChatRoomScreen: React.FC = () => {
     </Modal>
   );
 
+  // Profile modal
+  const ProfileModal = () => {
+    const insets = useSafeAreaInsets();
+    const [profileScrollY, setProfileScrollY] = useState(0); // Start at 0 to show static content
+    
+    return (
+      <Modal
+        visible={showProfileModal}
+        transparent={false}
+        animationType="slide"
+        onRequestClose={() => setShowProfileModal(false)}
+      >
+        <View style={styles.fullPageModal}>
+          {/* Use DynamicHeader with contact info in static state, user name when scrolling */}
+          <DynamicHeader
+            title={userName}
+            subtitle="Last seen recently"
+            staticContent={
+              <Text style={styles.headerContactPhone}>Contact Info</Text>
+            }
+            showBackButton
+            onBackPress={() => {
+              console.log('Profile modal back button pressed');
+              setShowProfileModal(false);
+            }}
+            scrollY={profileScrollY}
+          />
+
+          {/* Scrollable content that starts below the header */}
+          <ScrollView 
+            style={[styles.profileScrollContainer, { marginTop: 60 + insets.top }]} // Same as ChatsListScreen
+            contentContainerStyle={styles.scrollContentContainer}
+            showsVerticalScrollIndicator={false}
+            onScroll={(event) => {
+              const offsetY = event.nativeEvent.contentOffset.y;
+              setProfileScrollY(offsetY);
+            }}
+            scrollEventThrottle={16}
+          >
+            <MotiView
+              from={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: 'timing', duration: 300 }}
+              style={styles.fullPageContent}
+            >
+              {/* Large Profile Header */}
+              <View style={styles.fullPageProfileHeader}>
+                <Avatar
+                  source={`https://i.pravatar.cc/150?img=${userName.length % 10}`}
+                  name={userName}
+                  size={120}
+                />
+                {isEditing ? (
+                  <TextInput
+                    style={styles.editableProfileName}
+                    value={editedName}
+                    onChangeText={setEditedName}
+                    placeholder="Enter name"
+                    textAlign="center"
+                    multiline={false}
+                  />
+                ) : (
+                  <Text style={styles.fullPageProfileName}>{editedName}</Text>
+                )}
+                <Text style={styles.fullPageProfileStatus}>Last seen recently</Text>
+                
+                {/* Edit/Save button in profile section */}
+                <TouchableOpacity 
+                  style={styles.profileEditButton}
+                  onPress={() => {
+                    console.log('Edit button pressed, current isEditing:', isEditing);
+                    if (isEditing) {
+                      // Save changes
+                      console.log('Saving changes...');
+                      setIsEditing(false);
+                    } else {
+                      // Enter edit mode
+                      console.log('Entering edit mode...');
+                      setIsEditing(true);
+                    }
+                  }}
+                >
+                  <Text style={styles.profileEditButtonText}>
+                    {isEditing ? 'Save Changes' : 'Edit Profile'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Quick Action Buttons - Call, Video, Info */}
+              <View style={styles.quickActions}>
+                <TouchableOpacity style={styles.quickActionButton}>
+                  <View style={styles.quickActionIconContainer}>
+                    <MaterialIcon name="phone" size={28} color="#4CAF50" />
+                  </View>
+                  <Text style={styles.quickActionText}>Call</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.quickActionButton}>
+                  <View style={styles.quickActionIconContainer}>
+                    <MaterialIcon name="videocam" size={28} color="#2196F3" />
+                  </View>
+                  <Text style={styles.quickActionText}>Video</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.quickActionButton}>
+                  <View style={styles.quickActionIconContainer}>
+                    <MaterialIcon name="account-box" size={28} color="#FF9800" />
+                  </View>
+                  <Text style={styles.quickActionText}>Info</Text>
+                </TouchableOpacity>
+              </View>
+
+          {/* Profile Details - iOS Style Grouped Cards */}
+          <View style={styles.profileDetailsContainer}>
+            {/* Contact Info Card */}
+            <View style={styles.iosCard}>
+              <View style={styles.iosCardItem}>
+                <MaterialIcon name="phone" size={20} color={tokens.colors.primary} />
+                <Text style={styles.iosCardText}>+1 (555) 123-4567</Text>
+              </View>
+              <View style={styles.iosCardSeparator} />
+              <View style={styles.iosCardItem}>
+                <MaterialIcon name="email" size={20} color={tokens.colors.primary} />
+                <Text style={styles.iosCardText}>{userName.toLowerCase().replace(' ', '.')}@example.com</Text>
+              </View>
+            </View>
+
+            {/* Details Card */}
+            <View style={styles.iosCard}>
+              <View style={styles.iosCardItem}>
+                <MaterialIcon name="calendar" size={20} color={tokens.colors.primary} />
+                <Text style={styles.iosCardText}>Member since 2023</Text>
+              </View>
+              <View style={styles.iosCardSeparator} />
+              <View style={styles.iosCardItem}>
+                <MaterialIcon name="map-marker" size={20} color={tokens.colors.primary} />
+                <Text style={styles.iosCardText}>San Francisco, CA</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Activity Status - iOS Style Card */}
+          <View style={styles.profileDetailsContainer}>
+            <View style={styles.iosCard}>
+              <View style={styles.iosCardItem}>
+                <MaterialIcon name="circle" size={12} color="#4CAF50" />
+                <Text style={styles.iosCardText}>Active now</Text>
+              </View>
+              <View style={styles.iosCardSeparator} />
+              <View style={styles.iosCardItem}>
+                <MaterialIcon name="message-text" size={16} color={tokens.colors.onSurface60} />
+                <Text style={[styles.iosCardText, { color: tokens.colors.onSurface60 }]}>Usually replies within an hour</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Shared Media - iOS Style */}
+          <View style={styles.profileDetailsContainer}>
+            <View style={styles.iosCard}>
+              <View style={styles.iosCardItem}>
+                <MaterialIcon name="image" size={20} color={tokens.colors.primary} />
+                <Text style={styles.iosCardText}>Shared Media</Text>
+                <TouchableOpacity>
+                  <Text style={styles.seeAllText}>See All</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.mediaGrid}>
+              {[1, 2, 3, 4].map((item) => (
+                <View key={item} style={styles.mediaItem}>
+                  <View style={styles.mediaPlaceholder}>
+                    <MaterialIcon name="image" size={24} color={tokens.colors.onSurface60} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Mutual Connections - iOS Style */}
+          <View style={styles.profileDetailsContainer}>
+            <View style={styles.iosCard}>
+              <View style={styles.iosCardItem}>
+                <MaterialIcon name="account-multiple" size={20} color={tokens.colors.primary} />
+                <Text style={styles.iosCardText}>Mutual Connections</Text>
+                <Text style={styles.mutualCount}>12 mutual</Text>
+              </View>
+            </View>
+            <View style={styles.mutualAvatars}>
+              {[1, 2, 3, 4, 5].map((item) => (
+                <View key={item} style={styles.mutualAvatar}>
+                  <Avatar
+                    source={`https://i.pravatar.cc/150?img=${item + 10}`}
+                    name={`Friend ${item}`}
+                    size={40}
+                  />
+                </View>
+              ))}
+              <View style={styles.moreMutual}>
+                <Text style={styles.moreText}>+7</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* About Section - iOS Style */}
+          <View style={styles.profileDetailsContainer}>
+            <View style={styles.iosCard}>
+              <View style={styles.iosCardItem}>
+                <MaterialIcon name="account-details" size={20} color={tokens.colors.primary} />
+                <View style={{ flex: 1, marginLeft: tokens.spacing.m }}>
+                  <Text style={[styles.iosCardText, { marginLeft: 0, marginBottom: 4 }]}>About</Text>
+                  {isEditing ? (
+                    <TextInput
+                      style={styles.editableAboutText}
+                      value={editedAbout}
+                      onChangeText={setEditedAbout}
+                      placeholder="Tell people about yourself"
+                      multiline={true}
+                      textAlignVertical="top"
+                    />
+                  ) : (
+                    <Text style={[styles.iosCardText, { marginLeft: 0, color: tokens.colors.onSurface60, fontSize: 14 }]}>
+                      {editedAbout || 'Available'}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Quick Stats */}
+          <View style={styles.statsSection}>
+            <Text style={styles.sectionTitle}>Quick Stats</Text>
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <MaterialIcon name="message-text" size={20} color={tokens.colors.primary} />
+                <Text style={styles.statNumber}>1,247</Text>
+                <Text style={styles.statLabel}>Messages</Text>
+              </View>
+              <View style={styles.statItem}>
+                <MaterialIcon name="image" size={20} color={tokens.colors.primary} />
+                <Text style={styles.statNumber}>89</Text>
+                <Text style={styles.statLabel}>Photos</Text>
+              </View>
+              <View style={styles.statItem}>
+                <MaterialIcon name="calendar" size={20} color={tokens.colors.primary} />
+                <Text style={styles.statNumber}>2 years</Text>
+                <Text style={styles.statLabel}>Friends</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Social Links */}
+          <View style={styles.socialSection}>
+            <Text style={styles.sectionTitle}>Social Links</Text>
+            <View style={styles.socialLinks}>
+              <TouchableOpacity style={styles.socialButton}>
+                <MaterialIcon name="instagram" size={24} color="#E4405F" />
+                <Text style={styles.socialText}>Instagram</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.socialButton}>
+                <MaterialIcon name="twitter" size={24} color="#1DA1F2" />
+                <Text style={styles.socialText}>Twitter</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.socialButton}>
+                <MaterialIcon name="linkedin" size={24} color="#0077B5" />
+                <Text style={styles.socialText}>LinkedIn</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Quick Settings */}
+          <View style={styles.profileSettings}>
+            <TouchableOpacity style={styles.profileSettingItem}>
+              <MaterialIcon name="bell-off" size={20} color={tokens.colors.onSurface60} />
+              <Text style={styles.profileSettingText}>Mute notifications</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.profileSettingItem}>
+              <MaterialIcon name="block-helper" size={20} color={tokens.colors.error} />
+              <Text style={[styles.profileSettingText, { color: tokens.colors.error }]}>Block user</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.profileSettingItem}>
+              <MaterialIcon name="report" size={20} color={tokens.colors.error} />
+              <Text style={[styles.profileSettingText, { color: tokens.colors.error }]}>Report user</Text>
+            </TouchableOpacity>
+          </View>
+        </MotiView>
+        </ScrollView>
+      </View>
+    </Modal>
+    );
+  };
+
   // Input toolbar
   const InputToolbar = () => {
     const hasText = message.length > 0;
@@ -512,10 +849,15 @@ export const ChatRoomScreen: React.FC = () => {
       <DynamicHeader
         title={userName}
         showBackButton
-        onBackPress={() => navigation.goBack()}
+        onBackPress={() => {
+          console.log('Main ChatRoom back button pressed');
+          navigation.goBack();
+        }}
+        onTitlePress={() => setShowProfileModal(true)}
+        scrollY={scrollPosition}
         rightIcons={[
-          { icon: 'phone', onPress: () => {} },
-          { icon: 'video', onPress: () => {} },
+          { icon: 'phone', onPress: handleVoiceCall },
+          { icon: 'video', onPress: handleVideoCall },
         ]}
       />
 
@@ -526,21 +868,17 @@ export const ChatRoomScreen: React.FC = () => {
         keyExtractor={(item) => item.id}
         style={styles.messagesList}
         contentContainerStyle={styles.messagesContainer}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { 
-            useNativeDriver: false,
-            listener: (event: any) => {
-              const offsetY = event.nativeEvent.contentOffset.y;
-              const contentHeight = event.nativeEvent.contentSize.height;
-              const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
-              
-              setShowScrollToBottom(
-                offsetY < contentHeight - scrollViewHeight - 100
-              );
-            }
-          }
-        )}
+        onScroll={(event) => {
+          handleScroll(event);
+          const offsetY = event.nativeEvent.contentOffset.y;
+          const contentHeight = event.nativeEvent.contentSize.height;
+          const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
+          
+          setShowScrollToBottom(
+            offsetY < contentHeight - scrollViewHeight - 100
+          );
+        }}
+        scrollEventThrottle={16}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
         showsVerticalScrollIndicator={false}
         ListFooterComponent={isTyping ? TypingIndicator : null}
@@ -549,6 +887,7 @@ export const ChatRoomScreen: React.FC = () => {
       <ScrollToBottomButton />
       <InputToolbar />
       <ReactionsModal />
+      <ProfileModal />
       
       <MediaViewer
         visible={mediaViewerVisible}
@@ -571,6 +910,7 @@ const styles = StyleSheet.create({
   messagesContainer: {
     padding: tokens.spacing.m,
     paddingBottom: tokens.spacing.l,
+    paddingTop: 120, // Increased from 80 to 120 to push messages below header
   },
   messageContainer: {
     marginVertical: tokens.spacing.xs,
@@ -795,5 +1135,406 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     ...tokens.typography.caption,
     fontSize: 12,
+  },
+  // Profile modal styles
+  profileModal: {
+    backgroundColor: tokens.colors.surface1,
+    borderTopLeftRadius: tokens.radius.xl,
+    borderTopRightRadius: tokens.radius.xl,
+    marginTop: 'auto',
+    paddingTop: tokens.spacing.l,
+    paddingHorizontal: tokens.spacing.l,
+    paddingBottom: tokens.spacing.xl,
+    maxHeight: '80%',
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: tokens.spacing.l,
+  },
+  profileInfo: {
+    marginLeft: tokens.spacing.m,
+    flex: 1,
+  },
+  profileName: {
+    ...tokens.typography.h2,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+  },
+  profileStatus: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface60,
+    marginTop: 2,
+  },
+  profileDetails: {
+    marginBottom: tokens.spacing.l,
+  },
+  profileDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: tokens.spacing.s,
+  },
+  profileDetailText: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    marginLeft: tokens.spacing.m,
+  },
+  profileSettings: {
+    paddingTop: tokens.spacing.s, // Reduced padding
+  },
+  profileSettingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: tokens.spacing.m,
+  },
+  profileSettingText: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    marginLeft: tokens.spacing.m,
+  },
+  // Full page modal styles
+  fullPageModal: {
+    flex: 1,
+    backgroundColor: tokens.colors.bg,
+  },
+  profileScrollContainer: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    flexGrow: 1,
+    paddingBottom: tokens.spacing.m, // Reduced from xl to m
+  },
+  fullPageContent: {
+    paddingHorizontal: tokens.spacing.l,
+    paddingTop: tokens.spacing.l,
+  },
+  fullPageProfileHeader: {
+    alignItems: 'center',
+    marginBottom: tokens.spacing.xl,
+  },
+  fullPageProfileName: {
+    ...tokens.typography.h1,
+    color: tokens.colors.onSurface,
+    fontWeight: '700',
+    marginTop: tokens.spacing.m,
+    textAlign: 'center',
+  },
+  fullPageProfileStatus: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface60,
+    marginTop: tokens.spacing.xs,
+    textAlign: 'center',
+  },
+  // Header contact info styles
+  headerContactInfo: {
+    alignItems: 'center',
+    paddingVertical: tokens.spacing.s,
+  },
+  headerContactName: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  headerContactStatus: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface60,
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  headerContactPhone: {
+    ...tokens.typography.body,
+    color: tokens.colors.primary,
+    textAlign: 'center',
+    marginTop: 2,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  // New profile features styles
+  sectionTitle: {
+    ...tokens.typography.h2,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+    marginBottom: tokens.spacing.m,
+  },
+  activitySection: {
+    marginBottom: tokens.spacing.l,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: tokens.spacing.xs,
+  },
+  activityText: {
+    ...tokens.typography.body,
+    color: '#4CAF50',
+    marginLeft: tokens.spacing.s,
+    fontWeight: '500',
+  },
+  activitySubtext: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface60,
+    marginLeft: tokens.spacing.s,
+  },
+  mediaSection: {
+    marginBottom: tokens.spacing.l,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: tokens.spacing.m,
+  },
+  seeAllText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.primary,
+    fontWeight: '500',
+  },
+  mediaGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: tokens.spacing.s,
+  },
+  mediaItem: {
+    width: '23%',
+    aspectRatio: 1,
+  },
+  mediaPlaceholder: {
+    flex: 1,
+    backgroundColor: tokens.colors.surface2,
+    borderRadius: tokens.radius.s,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Additional profile features styles
+  mutualSection: {
+    marginBottom: tokens.spacing.l,
+  },
+  mutualCount: {
+    ...tokens.typography.caption,
+    color: tokens.colors.primary,
+    fontWeight: '500',
+  },
+  mutualAvatars: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  mutualAvatar: {
+    marginRight: -8,
+  },
+  moreMutual: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: tokens.colors.surface2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  moreText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+  },
+  aboutSection: {
+    marginBottom: tokens.spacing.l,
+  },
+  aboutText: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    lineHeight: 20,
+    marginBottom: tokens.spacing.m,
+  },
+  interestTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: tokens.spacing.s,
+  },
+  tag: {
+    backgroundColor: tokens.colors.surface2,
+    borderRadius: tokens.radius.l,
+    paddingHorizontal: tokens.spacing.m,
+    paddingVertical: tokens.spacing.xs,
+  },
+  tagText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.primary,
+    fontWeight: '500',
+  },
+  statsSection: {
+    marginBottom: tokens.spacing.l,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
+    ...tokens.typography.h2,
+    color: tokens.colors.onSurface,
+    fontWeight: '700',
+    marginTop: tokens.spacing.xs,
+  },
+  statLabel: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface60,
+    marginTop: 2,
+  },
+  socialSection: {
+    marginBottom: tokens.spacing.l,
+  },
+  socialLinks: {
+    gap: tokens.spacing.m,
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.surface2,
+    borderRadius: tokens.radius.m,
+    paddingHorizontal: tokens.spacing.m,
+    paddingVertical: tokens.spacing.s,
+  },
+  socialText: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    marginLeft: tokens.spacing.s,
+    fontWeight: '500',
+  },
+    // Quick Actions Styles
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: tokens.spacing.xl,
+    paddingVertical: tokens.spacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.surface2,
+    marginBottom: tokens.spacing.l,
+    backgroundColor: 'transparent',
+  },
+  quickActionButton: {
+    alignItems: 'center',
+    paddingVertical: tokens.spacing.m,
+    paddingHorizontal: tokens.spacing.s,
+    borderRadius: tokens.radius.l,
+    minWidth: 80,
+    backgroundColor: 'transparent',
+  },
+  quickActionIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: tokens.colors.surface2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: tokens.spacing.s,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  quickActionText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  quickActionButtonDanger: {
+    alignItems: 'center',
+    paddingVertical: tokens.spacing.s,
+    paddingHorizontal: tokens.spacing.s,
+    backgroundColor: '#DC3545', // Red/danger color
+    borderRadius: tokens.radius.l,
+    minWidth: 60,
+    flex: 1,
+    marginHorizontal: 2,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  quickActionTextDanger: {
+    ...tokens.typography.caption,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    marginTop: tokens.spacing.xs,
+  },
+  // Header Edit Button Styles
+  profileEditButton: {
+    backgroundColor: tokens.colors.primary,
+    borderRadius: tokens.radius.m,
+    paddingHorizontal: tokens.spacing.l,
+    paddingVertical: tokens.spacing.s,
+    marginTop: tokens.spacing.m,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  profileEditButtonText: {
+    ...tokens.typography.body,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  // Editable fields styles
+  editableProfileName: {
+    ...tokens.typography.h1,
+    color: tokens.colors.onSurface,
+    fontWeight: '700',
+    marginTop: tokens.spacing.m,
+    textAlign: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.primary,
+    paddingBottom: tokens.spacing.xs,
+    minWidth: 200,
+  },
+  editableAboutText: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    lineHeight: 20,
+    marginBottom: tokens.spacing.m,
+    borderWidth: 1,
+    borderColor: tokens.colors.primary,
+    borderRadius: tokens.radius.s,
+    padding: tokens.spacing.m,
+    minHeight: 80,
+  },
+  // iOS-style profile cards
+  profileDetailsContainer: {
+    marginBottom: tokens.spacing.l,
+    gap: tokens.spacing.m,
+  },
+  iosCard: {
+    backgroundColor: tokens.colors.surface1,
+    borderRadius: 12, // iOS-style rounded corners
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
+  },
+  iosCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    minHeight: 48,
+  },
+  iosCardText: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    marginLeft: tokens.spacing.m,
+    flex: 1,
+  },
+  iosCardSeparator: {
+    height: 0.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginLeft: 52, // Align with text
   },
 });

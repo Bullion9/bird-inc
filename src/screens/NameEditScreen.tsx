@@ -20,6 +20,7 @@ export const NameEditScreen: React.FC = () => {
   
   const [name, setName] = useState(initialName);
   const [isDirty, setIsDirty] = useState(false);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   useEffect(() => {
     setIsDirty(name !== initialName && name.trim().length > 0);
@@ -49,22 +50,14 @@ export const NameEditScreen: React.FC = () => {
         title="Name"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
+        scrollY={scrollOffset}
+        rightIcons={[
+          {
+            icon: 'check',
+            onPress: handleSave,
+          },
+        ]}
       />
-      
-      {/* Save button in header area */}
-      <View style={styles.headerSaveContainer}>
-        <Button
-          mode="text"
-          onPress={handleSave}
-          disabled={!isDirty}
-          labelStyle={[
-            styles.saveHeaderButton,
-            { color: isDirty ? tokens.colors.primary : tokens.colors.onSurface38 }
-          ]}
-        >
-          Save
-        </Button>
-      </View>
       
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -74,6 +67,10 @@ export const NameEditScreen: React.FC = () => {
           style={styles.scrollView}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          onScroll={(event) => {
+            setScrollOffset(event.nativeEvent.contentOffset.y);
+          }}
+          scrollEventThrottle={16}
         >
           <View style={styles.instructionContainer}>
             <Text style={styles.instructionTitle}>Your name</Text>
@@ -117,12 +114,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.colors.bg,
   },
-  headerSaveContainer: {
-    position: 'absolute',
-    top: tokens.spacing.l,
-    right: tokens.spacing.m,
-    zIndex: 10,
-  },
   keyboardView: {
     flex: 1,
   },
@@ -132,6 +123,7 @@ const styles = StyleSheet.create({
   content: {
     padding: tokens.spacing.m,
     paddingBottom: tokens.spacing.xl,
+    paddingTop: 150, // Space for header + generous top spacing for body
   },
   instructionContainer: {
     marginBottom: tokens.spacing.l,
@@ -165,9 +157,5 @@ const styles = StyleSheet.create({
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
     lineHeight: 18,
-  },
-  saveHeaderButton: {
-    ...tokens.typography.body,
-    fontWeight: '600',
   },
 });

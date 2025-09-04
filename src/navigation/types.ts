@@ -23,6 +23,9 @@ export type ChatsStackParamList = {
   ChatsList: undefined;
   ChatRoom: { chatId: string; userName: string };
   MediaViewer: { mediaUri: string; type: 'image' | 'video' };
+  Groups: undefined;
+  GroupDetails: { groupId: string; groupName: string };
+  CreateGroup: undefined;
 };
 
 export type CallsStackParamList = {
@@ -33,6 +36,12 @@ export type CallsStackParamList = {
     isIncoming: boolean;
     callId?: string; 
     isVideo?: boolean; 
+  };
+  VideoCall: {
+    contactId: string;
+    contactName: string;
+    contactAvatar?: string;
+    isIncoming?: boolean;
   };
 };
 
@@ -45,19 +54,12 @@ export type SettingsStackParamList = {
   Settings: undefined;
   EditProfile: undefined;
   StorageAndData: undefined;
-  BioEdit: {
-    initialBio: string;
-    onBioChange: (bio: string) => void;
-  };
-  NameEdit: {
-    initialName: string;
-    onNameChange: (name: string) => void;
-  };
-  UsernameEdit: {
-    initialUsername: string;
-    onUsernameChange: (username: string) => void;
-  };
-  PhoneNumberView: {
-    phoneNumber: string;
-  };
+  ChatsSettings: undefined;
+  NotificationSettings: undefined;
+  PrivacySettings: undefined;
+  HelpSettings: undefined;
+  BioEdit: { initialBio: string; onBioChange: (bio: string) => void };
+  NameEdit: { initialName: string; onNameChange: (name: string) => void };
+  UsernameEdit: { initialUsername: string; onUsernameChange: (username: string) => void };
+  PhoneNumberView: { phoneNumber: string };
 };
