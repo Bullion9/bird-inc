@@ -1,0 +1,248 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Text } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+
+import { tokens } from '../theme/tokens';
+import { RootStackParamList, HomeTabParamList, ChatsStackParamList, CallsStackParamList, StoriesStackParamList, SettingsStackParamList } from './types';
+import { CustomTabBar } from '../components';
+
+// Screens
+import { SplashScreen } from '../screens/SplashScreen';
+import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { AuthDecisionScreen } from '../screens/AuthDecisionScreen';
+import { PhoneAuthScreen } from '../screens/PhoneAuthScreen';
+import { ProfileCreateScreen } from '../screens/ProfileCreateScreen';
+import { ChatsListScreen } from '../screens/ChatsListScreen';
+import { ChatRoomScreen } from '../screens/ChatRoomScreen';
+import { CallsListScreen } from '../screens/CallsListScreen';
+import { CallScreen } from '../screens/CallScreen';
+import { StoriesListScreen } from '../screens/StoriesListScreen';
+import { StoryViewerScreen } from '../screens/StoryViewerScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { EditProfileScreen } from '../screens/EditProfileScreen';
+import { StorageAndDataScreen } from '../screens/StorageAndDataScreen';
+import { BioEditScreen } from '../screens/BioEditScreen';
+import { NameEditScreen } from '../screens/NameEditScreen';
+import { UsernameEditScreen } from '../screens/UsernameEditScreen';
+import { PhoneNumberViewScreen } from '../screens/PhoneNumberViewScreen';
+import { MaterialIcon } from '../components';
+
+const Stack = createStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<HomeTabParamList>();
+const ChatsStack = createStackNavigator<ChatsStackParamList>();
+const CallsStack = createStackNavigator<CallsStackParamList>();
+const StoriesStack = createStackNavigator<StoriesStackParamList>();
+const SettingsStack = createStackNavigator<SettingsStackParamList>();
+
+// Placeholder screens
+const PlaceholderScreen = ({ title }: { title: string }) => (
+  <View style={styles.placeholder}>
+    <Text style={styles.placeholderText}>{title}</Text>
+  </View>
+);
+
+// Chats Stack Navigator
+const ChatsStackNavigator = () => {
+  return (
+    <ChatsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: tokens.colors.bg },
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+        transitionSpec: {
+          open: {
+            animation: 'timing',
+            config: {
+              duration: 250,
+            },
+          },
+          close: {
+            animation: 'timing',
+            config: {
+              duration: 250,
+            },
+          },
+        },
+      }}
+    >
+      <ChatsStack.Screen name="ChatsList" component={ChatsListScreen} />
+      <ChatsStack.Screen name="ChatRoom" component={ChatRoomScreen} />
+    </ChatsStack.Navigator>
+  );
+};
+
+// Calls Stack Navigator
+const CallsStackNavigator = () => {
+  return (
+    <CallsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: tokens.colors.bg },
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+        transitionSpec: {
+          open: {
+            animation: 'timing',
+            config: {
+              duration: 250,
+            },
+          },
+          close: {
+            animation: 'timing',
+            config: {
+              duration: 250,
+            },
+          },
+        },
+      }}
+    >
+      <CallsStack.Screen name="CallsList" component={CallsListScreen} />
+      <CallsStack.Screen name="CallScreen" component={CallScreen} />
+    </CallsStack.Navigator>
+  );
+};
+
+// Stories Stack Navigator
+const StoriesStackNavigator = () => {
+  return (
+    <StoriesStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: tokens.colors.bg },
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+        transitionSpec: {
+          open: {
+            animation: 'timing',
+            config: {
+              duration: 250,
+            },
+          },
+          close: {
+            animation: 'timing',
+            config: {
+              duration: 250,
+            },
+          },
+        },
+      }}
+    >
+      <StoriesStack.Screen name="StoriesList" component={StoriesListScreen} />
+      <StoriesStack.Screen name="StoryViewer" component={StoryViewerScreen} />
+    </StoriesStack.Navigator>
+  );
+};
+
+// Settings Stack Navigator
+const SettingsStackNavigator = () => {
+  return (
+    <SettingsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: tokens.colors.bg },
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+        transitionSpec: {
+          open: {
+            animation: 'timing',
+            config: {
+              duration: 250,
+            },
+          },
+          close: {
+            animation: 'timing',
+            config: {
+              duration: 250,
+            },
+          },
+        },
+      }}
+    >
+      <SettingsStack.Screen name="Settings" component={SettingsScreen} />
+      <SettingsStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <SettingsStack.Screen name="StorageAndData" component={StorageAndDataScreen} />
+      <SettingsStack.Screen name="BioEdit" component={BioEditScreen} />
+      <SettingsStack.Screen name="NameEdit" component={NameEditScreen} />
+      <SettingsStack.Screen name="UsernameEdit" component={UsernameEditScreen} />
+      <SettingsStack.Screen name="PhoneNumberView" component={PhoneNumberViewScreen} />
+    </SettingsStack.Navigator>
+  );
+};
+
+// Tab Navigator
+const HomeTabNavigator = () => {
+  return (
+    <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen
+        name="ChatsStack"
+        component={ChatsStackNavigator}
+      />
+      <Tab.Screen
+        name="CallsStack"
+        component={CallsStackNavigator}
+      />
+      <Tab.Screen
+        name="StoriesStack"
+        component={StoriesStackNavigator}
+      />
+      <Tab.Screen
+        name="SettingsStack"
+        component={SettingsStackNavigator}
+      />
+    </Tab.Navigator>
+  );
+};
+
+// Root Navigator
+export const AppNavigator = () => {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          cardStyle: { backgroundColor: tokens.colors.bg },
+          cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+          transitionSpec: {
+            open: {
+              animation: 'timing',
+              config: {
+                duration: 250,
+              },
+            },
+            close: {
+              animation: 'timing',
+              config: {
+                duration: 250,
+              },
+            },
+          },
+        }}
+      >
+        <Stack.Screen name="Splash" component={SplashScreen} />
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="AuthDecision" component={AuthDecisionScreen} />
+        <Stack.Screen name="PhoneAuth" component={PhoneAuthScreen} />
+        <Stack.Screen name="ProfileCreate" component={ProfileCreateScreen} />
+        <Stack.Screen name="Home" component={HomeTabNavigator} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
+
+const styles = StyleSheet.create({
+  placeholder: {
+    flex: 1,
+    backgroundColor: tokens.colors.bg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    ...tokens.typography.h2,
+    color: tokens.colors.onSurface60,
+  },
+});
