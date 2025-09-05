@@ -213,8 +213,8 @@ const styles = StyleSheet.create({
   },
   largeTitle: {
     ...tokens.typography.h1,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: 28,
+    fontWeight: '600',
     color: tokens.colors.onSurface,
     marginBottom: tokens.spacing.l,
     textAlign: 'center',
@@ -253,13 +253,13 @@ const styles = StyleSheet.create({
     color: tokens.colors.onSurface,
     marginLeft: tokens.spacing.s,
     flex: 1,
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: '500',
   },
   dropdownArrow: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
-    fontSize: 12,
+    fontSize: 14,
   },
   phoneNumberContainer: {
     flex: 1,

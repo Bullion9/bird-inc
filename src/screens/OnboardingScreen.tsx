@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing.l,
   },
   emoji: {
-    fontSize: 12,
+    fontSize: 72,
     marginBottom: tokens.spacing.xl,
   },
   title: {
@@ -121,6 +121,8 @@ const styles = StyleSheet.create({
     color: tokens.colors.onSurface,
     textAlign: 'center',
     marginBottom: tokens.spacing.m,
+    fontSize: 28,
+    fontWeight: '600',
   },
   subtitle: {
     ...tokens.typography.body,

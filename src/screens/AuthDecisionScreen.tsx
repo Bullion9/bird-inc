@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
   },
   largeTitle: {
     ...tokens.typography.h1,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: 28,
+    fontWeight: '600',
     color: tokens.colors.onSurface,
     marginBottom: tokens.spacing.l,
     textAlign: 'center',
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emoji: {
-    fontSize: 12,
+    fontSize: 48,
     marginBottom: tokens.spacing.m,
   },
   subtitle: {
