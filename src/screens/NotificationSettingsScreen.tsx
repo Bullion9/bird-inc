@@ -40,10 +40,6 @@ export const NotificationSettingsScreen: React.FC = () => {
     console.log(`Action pressed: ${action}`);
   };
 
-  const ArrowIcon = () => (
-    <Text style={styles.arrowIcon}>›</Text>
-  );
-
   return (
     <View style={styles.container}>
       <DynamicHeader 
@@ -69,7 +65,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="notifications" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="notifications_active" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Show Notifications</Text>
               </View>
@@ -86,7 +82,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="volume_on" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="volume_up" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Sound</Text>
               </View>
@@ -103,7 +99,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="phone" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="vibration" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Vibration</Text>
               </View>
@@ -120,7 +116,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="visibility" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="preview" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Show Previews</Text>
               </View>
@@ -141,7 +137,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="chat" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="message" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Messages</Text>
               </View>
@@ -158,7 +154,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="chat" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="group" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Group Messages</Text>
               </View>
@@ -192,7 +188,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="heart" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="favorite" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Reactions</Text>
               </View>
@@ -209,7 +205,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="email" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="alternate_email" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Mentions</Text>
               </View>
@@ -234,14 +230,14 @@ export const NotificationSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="notifications" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="music_note" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Notification Sound</Text>
                   <Text style={styles.settingSubtitle}>Default</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -253,14 +249,14 @@ export const NotificationSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="phone" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="ring_volume" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Ringtone</Text>
                   <Text style={styles.settingSubtitle}>Default</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -272,14 +268,14 @@ export const NotificationSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="circle" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="lightbulb" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>LED Color</Text>
                   <Text style={styles.settingSubtitle}>Blue</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -295,7 +291,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="timer" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="schedule" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Quiet Hours</Text>
@@ -315,7 +311,7 @@ export const NotificationSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="circle" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="weekend" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Weekend Quiet Mode</Text>
               </View>
@@ -344,7 +340,7 @@ export const NotificationSettingsScreen: React.FC = () => {
                 </View>
                 <Text style={styles.settingTitle}>Notification History</Text>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -356,11 +352,11 @@ export const NotificationSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="lock" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="security" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>App Permissions</Text>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -372,14 +368,14 @@ export const NotificationSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="refresh" size={20} color={tokens.colors.secondary} />
+                  <MaterialIcon name="restore" size={20} color={tokens.colors.secondary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Reset to Defaults</Text>
                   <Text style={styles.settingSubtitle}>Restore original settings</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -408,7 +404,7 @@ const styles = StyleSheet.create({
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
     fontWeight: '600',
-    fontSize: 13,
+    fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: tokens.spacing.s,
@@ -450,16 +446,11 @@ const styles = StyleSheet.create({
   settingSubtitle: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
-    fontSize: 13,
+    fontSize: 12,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: tokens.colors.surface3,
     marginLeft: 52, // Align with text after icon
-  },
-  arrowIcon: {
-    fontSize: 20,
-    color: tokens.colors.onSurface60,
-    fontWeight: '300',
   },
 });

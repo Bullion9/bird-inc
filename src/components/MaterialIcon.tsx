@@ -22,8 +22,10 @@ const iconMap: Record<string, string> = {
   'more_vert': 'dots-vertical',
   'chevron_right': 'chevron-right',
   'done': 'check',
+  'done_all': 'check-all',
   'error': 'alert-circle',
   'close': 'close',
+  'filter_list': 'filter-variant',
   
   // Communication
   'phone': 'phone',
@@ -49,6 +51,11 @@ const iconMap: Record<string, string> = {
   'emoji_emotions': 'emoticon-happy',
   'emoticon-outline': 'emoticon-happy-outline',
   'message': 'message-text',
+  'message-text': 'message-text',
+  
+  // Stories & Books
+  'book-open-variant': 'book-open-variant',
+  'story': 'image-multiple',
   
   // Security & Visibility
   'visibility': 'eye',
@@ -56,27 +63,38 @@ const iconMap: Record<string, string> = {
   'shield_spark': 'shield-check',
   'sparkle': 'star',
   'lock': 'lock',
+  'preview': 'eye',
   
   // User & Social
   'person_add': 'account-plus',
   'login': 'login',
   'account_circle': 'account-circle',
+  'group': 'account-group',
+  'admin_panel_settings': 'shield-account',
+  'mark_as_unread': 'email-mark-as-unread',
   
   // Actions
   'delete': 'delete',
   'add': 'plus',
   'share': 'share-variant',
   'download': 'download',
+  'file_download': 'download',
+  'backup': 'backup-restore',
+  'archive': 'archive',
+  'clear_all': 'notification-clear-all',
   
   // Camera & Photo
   'camera_alt': 'camera',
   'photo': 'image',
   'photo_camera': 'camera',
+  'image': 'image',
+  'wallpaper': 'wallpaper',
   
   // Interface Elements
   'insert_emoticon': 'emoticon-happy',
   'forum': 'forum',
   'circle': 'circle',
+  'radio_button_checked': 'radiobox-marked',
   'check_circle': 'check-circle',
   'keyboard_arrow_up': 'chevron-up',
   'keyboard_arrow_down': 'chevron-down',
@@ -84,10 +102,39 @@ const iconMap: Record<string, string> = {
   // Settings & Configuration
   'settings': 'cog',
   'notifications': 'bell',
+  'notifications_active': 'bell-ring',
   'storage': 'database',
   'help': 'help-circle-outline',
   'cleaning_services': 'broom',
   'chat_bubble': 'chat',
+  'schedule': 'clock-outline',
+  'palette': 'palette',
+  'format_size': 'format-size',
+  'vibration': 'vibrate',
+  'music_note': 'music-note',
+  'ring_volume': 'phone-ring',
+  'lightbulb': 'lightbulb',
+  'weekend': 'calendar-weekend',
+  'history': 'history',
+  'security': 'security',
+  'restore': 'backup-restore',
+  'refresh': 'refresh',
+  'alternate_email': 'at',
+  'favorite': 'heart',
+  'info': 'information',
+  'auto_delete': 'clock-outline',
+  'location_on': 'map-marker',
+  'screen_lock_portrait': 'cellphone-lock',
+  'fingerprint': 'fingerprint',
+  'verified_user': 'shield-check',
+  'assessment': 'chart-line',
+  'block': 'block-helper',
+  
+  // Video & Tutorials
+  'play_circle': 'play-circle',
+  'smart_display': 'monitor-cellphone',
+  'video_library': 'video-box',
+  'ondemand_video': 'play-box',
 };
 
 export const MaterialIcon: React.FC<MaterialIconProps> = ({

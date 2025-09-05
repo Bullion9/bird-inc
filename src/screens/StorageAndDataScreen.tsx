@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   },
   largeTitle: {
     ...tokens.typography.h1,
-    fontSize: 28, // Reduced from 36 to 28
+    fontSize: 12, // Reduced from 36 to 28
     fontWeight: '400', // Changed from '700' to '400' (unbold)
     color: tokens.colors.onSurface,
     marginBottom: tokens.spacing.l,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   totalStorage: {
     ...tokens.typography.h2,
     color: tokens.colors.onSurface,
-    fontWeight: '700',
+    fontWeight: '400',
     textAlign: 'center',
   },
   storageLabel: {

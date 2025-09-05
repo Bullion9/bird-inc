@@ -9,7 +9,7 @@ import {
   Animated
 } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import { Text, FAB, Searchbar } from 'react-native-paper';
+import { Text, Searchbar } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -616,7 +616,7 @@ const ChatRowItem: React.FC<{
                         color: tokens.colors.secondary, 
                         fontSize: 12, 
                         marginLeft: 4,
-                        fontWeight: 'bold'
+                        fontWeight: '400'
                       }}>★</Text>
                     )}
                   </View>
@@ -694,12 +694,8 @@ export const ChatsListScreen: React.FC = () => {
 
   const handleNewChatPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // TODO: Navigate to new chat screen
-  };
-
-  const handleFABPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // TODO: Navigate to new message screen
+    // Navigate to CreateGroup screen for new chat/group creation
+    navigation.navigate('CreateGroup');
   };
 
   const handlePinChat = (chatId: string) => {
@@ -935,26 +931,6 @@ export const ChatsListScreen: React.FC = () => {
           </View>
         )}
       </Animated.ScrollView>
-
-      {/* FAB */}
-      <MotiView
-        from={{ scale: 0, rotate: '0deg' }}
-        animate={{ scale: 1, rotate: '45deg' }}
-        transition={{
-          type: 'spring',
-          damping: 12,
-          stiffness: 150,
-          delay: 300,
-        }}
-        style={styles.fabContainer}
-      >
-        <FAB
-          icon="pencil"
-          onPress={handleFABPress}
-          style={[styles.fab, { backgroundColor: tokens.colors.primary }]}
-          customSize={56}
-        />
-      </MotiView>
     </View>
   );
 };
@@ -999,7 +975,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: tokens.spacing.xs,
     paddingTop: 100, // Space for header
-    paddingBottom: 100, // Space for FAB
+    paddingBottom: tokens.spacing.xl, // Bottom padding
   },
   section: {
     marginBottom: 0,
@@ -1025,7 +1001,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...tokens.typography.h2,
-    fontSize: 16,
+    fontSize: 12,
     color: tokens.colors.onSurface,
     fontWeight: '600',
   },
@@ -1115,7 +1091,7 @@ const styles = StyleSheet.create({
   unreadText: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   emptyState: {
@@ -1134,14 +1110,6 @@ const styles = StyleSheet.create({
     color: tokens.colors.onSurface38,
     marginTop: tokens.spacing.xs,
   },
-  fabContainer: {
-    position: 'absolute',
-    right: tokens.spacing.m,
-    bottom: tokens.spacing.m,
-  },
-  fab: {
-    elevation: tokens.elevation.fab,
-  },
   largeTitleContainer: {
     paddingHorizontal: tokens.spacing.s,
     paddingTop: tokens.spacing.l,
@@ -1150,7 +1118,7 @@ const styles = StyleSheet.create({
   largeTitle: {
     ...tokens.typography.h1,
     color: tokens.colors.onSurface,
-    fontSize: 34,
+    fontSize: 12,
     fontWeight: '700',
     letterSpacing: -0.5,
   },
@@ -1178,7 +1146,7 @@ const styles = StyleSheet.create({
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
     fontWeight: '500',
-    fontSize: 13,
+    fontSize: 12,
   },
   filterChipTextActive: {
     color: tokens.colors.onSurface,
@@ -1253,8 +1221,8 @@ const styles = StyleSheet.create({
     marginRight: tokens.spacing.s,
   },
   swipeIconText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 12,
+    fontWeight: '400',
     color: '#FFFFFF',
   },
 });

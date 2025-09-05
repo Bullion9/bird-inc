@@ -24,30 +24,30 @@ export const tokens = {
 
   // Typography
   typography: {
-    fontFamily: 'SF-Pro-Rounded',
+    fontFamily: 'System',
     h1: {
-      fontSize: 28,
-      lineHeight: 34,
-      fontWeight: '600' as const,
-      fontFamily: 'SF-Pro-Rounded',
+      fontSize: 24,
+      lineHeight: 30,
+      fontWeight: '400' as const,
+      fontFamily: 'System',
     },
     h2: {
-      fontSize: 22,
-      lineHeight: 28,
-      fontWeight: '600' as const,
-      fontFamily: 'SF-Pro-Rounded',
+      fontSize: 18,
+      lineHeight: 24,
+      fontWeight: '400' as const,
+      fontFamily: 'System',
     },
     body: {
-      fontSize: 16,
-      lineHeight: 22,
+      fontSize: 14,
+      lineHeight: 20,
       fontWeight: '400' as const,
-      fontFamily: 'SF-Pro-Rounded',
+      fontFamily: 'System',
     },
     caption: {
-      fontSize: 13,
-      lineHeight: 18,
-      fontWeight: '500' as const,
-      fontFamily: 'SF-Pro-Rounded',
+      fontSize: 11,
+      lineHeight: 16,
+      fontWeight: '400' as const,
+      fontFamily: 'System',
     },
   },
 

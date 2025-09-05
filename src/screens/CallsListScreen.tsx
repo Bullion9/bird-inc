@@ -478,8 +478,8 @@ const styles = StyleSheet.create({
   largeTitle: {
     ...tokens.typography.h1,
     color: tokens.colors.onSurface,
-    fontSize: 34,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '400',
     letterSpacing: -0.5,
   },
   listContainer: {

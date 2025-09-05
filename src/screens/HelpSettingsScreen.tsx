@@ -20,10 +20,6 @@ export const HelpSettingsScreen: React.FC = () => {
     console.log(`Action pressed: ${action}`);
   };
 
-  const ArrowIcon = () => (
-    <Text style={styles.arrowIcon}>›</Text>
-  );
-
   return (
     <View style={styles.container}>
       <DynamicHeader 
@@ -60,7 +56,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Learn the basics of Bird Chat</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -72,14 +68,14 @@ export const HelpSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="description" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="play_circle" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Video Tutorials</Text>
                   <Text style={styles.settingSubtitle}>Step-by-step walkthroughs</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -98,7 +94,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Discover what's new</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -121,7 +117,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Troubleshoot network issues</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -140,7 +136,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Fix delivery problems</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -159,7 +155,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Not receiving alerts</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -178,7 +174,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Improve performance</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -201,7 +197,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Regain access to your account</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -220,7 +216,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Keep your account safe</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -232,14 +228,14 @@ export const HelpSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <Text style={{ fontSize: 20, color: tokens.colors.primary }}>🚫</Text>
+                  <Text style={{ fontSize: 12, color: tokens.colors.primary }}>🚫</Text>
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Managing Blocked Users</Text>
                   <Text style={styles.settingSubtitle}>Block and unblock contacts</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -262,7 +258,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Frequently asked questions</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -281,7 +277,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Get help from our team</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -300,7 +296,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Help us improve the app</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -319,7 +315,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Share your thoughts</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -339,7 +335,7 @@ export const HelpSettingsScreen: React.FC = () => {
                 </View>
                 <Text style={styles.settingTitle}>Terms of Service</Text>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -355,7 +351,7 @@ export const HelpSettingsScreen: React.FC = () => {
                 </View>
                 <Text style={styles.settingTitle}>Privacy Policy</Text>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -371,7 +367,7 @@ export const HelpSettingsScreen: React.FC = () => {
                 </View>
                 <Text style={styles.settingTitle}>Open Source Licenses</Text>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -408,7 +404,7 @@ export const HelpSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Latest updates and features</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -437,7 +433,7 @@ const styles = StyleSheet.create({
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
     fontWeight: '600',
-    fontSize: 13,
+    fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: tokens.spacing.s,
@@ -479,16 +475,11 @@ const styles = StyleSheet.create({
   settingSubtitle: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
-    fontSize: 13,
+    fontSize: 12,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: tokens.colors.surface3,
     marginLeft: 52, // Align with text after icon
-  },
-  arrowIcon: {
-    fontSize: 20,
-    color: tokens.colors.onSurface60,
-    fontWeight: '300',
   },
 });

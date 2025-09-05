@@ -41,10 +41,6 @@ export const PrivacySettingsScreen: React.FC = () => {
     console.log(`Action pressed: ${action}`);
   };
 
-  const ArrowIcon = () => (
-    <Text style={styles.arrowIcon}>›</Text>
-  );
-
   return (
     <View style={styles.container}>
       <DynamicHeader 
@@ -74,14 +70,14 @@ export const PrivacySettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="visibility" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="schedule" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Last Seen</Text>
                   <Text style={styles.settingSubtitle}>Everyone</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -93,14 +89,14 @@ export const PrivacySettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="image" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="account_circle" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Profile Photo</Text>
                   <Text style={styles.settingSubtitle}>Everyone</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -112,14 +108,14 @@ export const PrivacySettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="circle" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="info" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Status</Text>
                   <Text style={styles.settingSubtitle}>My Contacts</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -127,7 +123,7 @@ export const PrivacySettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="check" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="done_all" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Read Receipts</Text>
               </View>
@@ -152,14 +148,14 @@ export const PrivacySettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="chat" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="group" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Groups</Text>
                   <Text style={styles.settingSubtitle}>Everyone</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -178,7 +174,7 @@ export const PrivacySettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Everyone</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -194,14 +190,14 @@ export const PrivacySettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="visibility_off" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="auto_delete" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Disappearing Messages</Text>
                   <Text style={styles.settingSubtitle}>Off</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -213,14 +209,14 @@ export const PrivacySettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="circle" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="location_on" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Live Location</Text>
                   <Text style={styles.settingSubtitle}>None</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -236,7 +232,7 @@ export const PrivacySettingsScreen: React.FC = () => {
                 </View>
                 <Text style={styles.settingTitle}>Blocked Contacts</Text>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -248,7 +244,7 @@ export const PrivacySettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="lock" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="screen_lock_portrait" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Screen Security</Text>
               </View>
@@ -265,7 +261,7 @@ export const PrivacySettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="lock" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="fingerprint" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>App Lock</Text>
               </View>
@@ -286,14 +282,14 @@ export const PrivacySettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="lock" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="verified_user" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Two-Step Verification</Text>
                   <Text style={styles.settingSubtitle}>Disabled</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -309,11 +305,11 @@ export const PrivacySettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="visibility" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="assessment" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Privacy Report</Text>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -325,11 +321,11 @@ export const PrivacySettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="download" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="file_download" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Request Account Info</Text>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -348,7 +344,7 @@ export const PrivacySettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>This action cannot be undone</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -377,7 +373,7 @@ const styles = StyleSheet.create({
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
     fontWeight: '600',
-    fontSize: 13,
+    fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: tokens.spacing.s,
@@ -419,16 +415,11 @@ const styles = StyleSheet.create({
   settingSubtitle: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
-    fontSize: 13,
+    fontSize: 12,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: tokens.colors.surface3,
     marginLeft: 52, // Align with text after icon
-  },
-  arrowIcon: {
-    fontSize: 20,
-    color: tokens.colors.onSurface60,
-    fontWeight: '300',
   },
 });

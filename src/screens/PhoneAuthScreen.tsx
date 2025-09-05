@@ -1,9 +1,10 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { View, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent, TouchableOpacity } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import CountryPicker, { Country, CountryCode } from 'react-native-country-picker-modal';
 import { tokens } from '../theme/tokens';
 import { RootStackParamList } from '../navigation/types';
 import { DynamicHeader, AnimatedFloatingLabel } from '../components';
@@ -16,7 +17,10 @@ export const PhoneAuthScreen: React.FC = () => {
   const [scrollPosition, setScrollPosition] = React.useState(0);
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+1');
+  const [countryCode, setCountryCode] = useState<CountryCode>('US');
+  const [callingCode, setCallingCode] = useState('1');
+  const [country, setCountry] = useState<Country | null>(null);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +29,13 @@ export const PhoneAuthScreen: React.FC = () => {
     scrollYRef.current = currentScrollY;
     setScrollPosition(currentScrollY);
   }, []);
+
+  const onSelectCountry = (selectedCountry: Country) => {
+    setCountryCode(selectedCountry.cca2);
+    setCallingCode(selectedCountry.callingCode[0]);
+    setCountry(selectedCountry);
+    setShowCountryPicker(false);
+  };
 
   const handleSendOTP = async () => {
     if (!phoneNumber) return;
@@ -99,14 +110,27 @@ export const PhoneAuthScreen: React.FC = () => {
             </Text>
 
             <View style={styles.phoneContainer}>
-              <View style={styles.countryCodeContainer}>
-                <AnimatedFloatingLabel
-                  label="Country"
-                  value={countryCode}
-                  onChangeText={setCountryCode}
-                  keyboardType="phone-pad"
-                />
-              </View>
+              <TouchableOpacity 
+                style={styles.countryCodeContainer}
+                onPress={() => setShowCountryPicker(true)}
+              >
+                <View style={styles.countryPickerButton}>
+                  <CountryPicker
+                    countryCode={countryCode}
+                    withFilter
+                    withFlag
+                    withCallingCode
+                    withAlphaFilter
+                    onSelect={onSelectCountry}
+                    visible={showCountryPicker}
+                    onClose={() => setShowCountryPicker(false)}
+                  />
+                  <Text style={styles.callingCodeText} numberOfLines={1} adjustsFontSizeToFit>
+                    +{callingCode}
+                  </Text>
+                  <Text style={styles.dropdownArrow}>▼</Text>
+                </View>
+              </TouchableOpacity>
               
               <View style={styles.phoneNumberContainer}>
                 <AnimatedFloatingLabel
@@ -137,7 +161,7 @@ export const PhoneAuthScreen: React.FC = () => {
             transition={{ type: 'timing', duration: 300 }}
           >
             <Text style={styles.description}>
-              Enter the 6-digit code sent to {countryCode} {phoneNumber}
+              Enter the 6-digit code sent to +{callingCode} {phoneNumber}
             </Text>
 
             <AnimatedFloatingLabel
@@ -189,7 +213,7 @@ const styles = StyleSheet.create({
   },
   largeTitle: {
     ...tokens.typography.h1,
-    fontSize: 28,
+    fontSize: 12,
     fontWeight: '400',
     color: tokens.colors.onSurface,
     marginBottom: tokens.spacing.l,
@@ -205,10 +229,37 @@ const styles = StyleSheet.create({
   phoneContainer: {
     flexDirection: 'row',
     marginBottom: tokens.spacing.xl,
+    alignItems: 'flex-start',
   },
   countryCodeContainer: {
-    width: 100,
+    minWidth: 120,
+    maxWidth: 150,
     marginRight: tokens.spacing.m,
+  },
+  countryPickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.surface1,
+    borderRadius: tokens.radius.m,
+    paddingHorizontal: tokens.spacing.m,
+    paddingVertical: tokens.spacing.l,
+    borderWidth: 1,
+    borderColor: tokens.colors.surface2,
+    minHeight: 56,
+    flex: 1,
+  },
+  callingCodeText: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    marginLeft: tokens.spacing.s,
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  dropdownArrow: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface60,
+    fontSize: 12,
   },
   phoneNumberContainer: {
     flex: 1,

@@ -197,7 +197,7 @@ export const VideoCallScreen: React.FC = () => {
               style={styles.expandButton}
               onPress={handleMinimize}
             >
-              <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 'bold' }}>⛶</Text>
+              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: '400' }}>⛶</Text>
             </TouchableOpacity>
           )}
         </Animated.View>
@@ -213,7 +213,7 @@ export const VideoCallScreen: React.FC = () => {
                 style={[styles.callButton, styles.declineButton]}
                 onPress={handleDeclineCall}
               >
-                <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: 'bold' }}>✕</Text>
+                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '400' }}>✕</Text>
               </TouchableOpacity>
             </Animated.View>
             
@@ -222,7 +222,7 @@ export const VideoCallScreen: React.FC = () => {
                 style={[styles.callButton, styles.acceptButton]}
                 onPress={handleAcceptCall}
               >
-                <Text style={{ color: '#FFFFFF', fontSize: 32, fontWeight: 'bold' }}>✓</Text>
+                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '400' }}>✓</Text>
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -240,8 +240,8 @@ export const VideoCallScreen: React.FC = () => {
               >
                 <Text style={{ 
                   color: isMuted ? "#F44336" : "#FFFFFF", 
-                  fontSize: 24, 
-                  fontWeight: 'bold' 
+                  fontSize: 12, 
+                  fontWeight: '400' 
                 }}>
                   {isMuted ? "⊗" : "●"}
                 </Text>
@@ -257,7 +257,7 @@ export const VideoCallScreen: React.FC = () => {
                 style={styles.endCallButton}
                 onPress={handleEndCall}
               >
-                <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: 'bold' }}>✕</Text>
+                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '400' }}>✕</Text>
               </TouchableOpacity>
             </MotiView>
 
@@ -272,8 +272,8 @@ export const VideoCallScreen: React.FC = () => {
               >
                 <Text style={{ 
                   color: !isVideoEnabled ? "#F44336" : "#FFFFFF", 
-                  fontSize: 24, 
-                  fontWeight: 'bold' 
+                  fontSize: 12, 
+                  fontWeight: '400' 
                 }}>
                   {isVideoEnabled ? "▶" : "◼"}
                 </Text>
@@ -289,7 +289,7 @@ export const VideoCallScreen: React.FC = () => {
                 style={styles.controlButton}
                 onPress={handleFlipCamera}
               >
-                <Text style={{ color: "#FFFFFF", fontSize: 24, fontWeight: 'bold' }}>↻</Text>
+                <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: '400' }}>↻</Text>
               </TouchableOpacity>
             </MotiView>
 
@@ -302,7 +302,7 @@ export const VideoCallScreen: React.FC = () => {
                 style={styles.controlButton}
                 onPress={handleMinimize}
               >
-                <Text style={{ color: "#FFFFFF", fontSize: 20, fontWeight: 'bold' }}>
+                <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: '400' }}>
                   {isMinimized ? "⛶" : "⊟"}
                 </Text>
               </TouchableOpacity>
@@ -358,19 +358,19 @@ const styles = StyleSheet.create({
     ...tokens.typography.body,
     color: '#FFFFFF',
     marginTop: tokens.spacing.s,
-    fontSize: 16,
+    fontSize: 12,
   },
   incomingText: {
     ...tokens.typography.body,
     color: '#FFFFFF',
     marginTop: tokens.spacing.s,
-    fontSize: 16,
+    fontSize: 12,
   },
   connectingText: {
     ...tokens.typography.body,
     color: '#FFFFFF',
     marginTop: tokens.spacing.s,
-    fontSize: 16,
+    fontSize: 12,
   },
   localVideo: {
     position: 'absolute',
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   },
   permissionButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
   },
 });

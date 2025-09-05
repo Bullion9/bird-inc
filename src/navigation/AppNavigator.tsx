@@ -16,7 +16,7 @@ import { AuthDecisionScreen } from '../screens/AuthDecisionScreen';
 import { PhoneAuthScreen } from '../screens/PhoneAuthScreen';
 import { ProfileCreateScreen } from '../screens/ProfileCreateScreen';
 import { ChatsListScreen } from '../screens/ChatsListScreen';
-import { ChatRoomScreen } from '../screens/ChatRoomScreen';
+import ChatRoomScreen from '../screens/ChatRoomScreen';
 import { GroupsScreen } from '../screens/GroupsScreen';
 import { GroupDetailsScreen } from '../screens/GroupDetailsScreen';
 import { CreateGroupScreen } from '../screens/CreateGroupScreen';

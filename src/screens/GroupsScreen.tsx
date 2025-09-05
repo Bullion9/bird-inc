@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Dimensions, Animated } from 'react-native';
 import { Text, FAB, Searchbar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -10,6 +10,8 @@ import { ChatsStackParamList } from '../navigation/types';
 import { DynamicHeader, MaterialIcon, Avatar } from '../components';
 
 type GroupsNavigationProp = StackNavigationProp<ChatsStackParamList, 'Groups'>;
+
+const { height: screenHeight } = Dimensions.get('window');
 
 interface Group {
   id: string;
@@ -84,11 +86,51 @@ export const GroupsScreen: React.FC = () => {
   const [scrollOffset, setScrollOffset] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [groups, setGroups] = useState(mockGroups);
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-  const filteredGroups = groups.filter(group =>
-    group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    group.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filterOptions = [
+    { id: 'all', label: 'All Groups', icon: 'group' },
+    { id: 'admin', label: 'Admin Groups', icon: 'admin_panel_settings' },
+    { id: 'unread', label: 'Unread Messages', icon: 'mark_as_unread' },
+    { id: 'recent', label: 'Recent Activity', icon: 'schedule' },
+  ];
+
+  const getFilteredGroups = () => {
+    let filtered = groups;
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(group =>
+        group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        group.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Apply selected filter
+    switch (selectedFilter) {
+      case 'admin':
+        filtered = filtered.filter(group => group.isAdmin);
+        break;
+      case 'unread':
+        filtered = filtered.filter(group => group.unreadCount && group.unreadCount > 0);
+        break;
+      case 'recent':
+        // Sort by recent activity (groups with messages today)
+        filtered = filtered.filter(group => 
+          group.lastMessageTime.includes('PM') || group.lastMessageTime.includes('AM')
+        );
+        break;
+      default:
+        // 'all' - no additional filtering
+        break;
+    }
+
+    return filtered;
+  };
+
+  const filteredGroups = getFilteredGroups();
 
   const handleGroupPress = (group: Group) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -159,12 +201,55 @@ export const GroupsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* Parallax Background */}
+      <Animated.View
+        style={[
+          styles.backgroundContainer,
+          {
+            transform: [
+              {
+                translateY: scrollY.interpolate({
+                  inputRange: [0, screenHeight],
+                  outputRange: [0, screenHeight * 0.1], // 10% parallax speed
+                  extrapolate: 'clamp',
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <View style={styles.backgroundImage}>
+          {/* Create a subtle pattern with dots */}
+          {Array.from({ length: 20 }).map((_, row) =>
+            Array.from({ length: 10 }).map((_, col) => (
+              <View
+                key={`${row}-${col}`}
+                style={[
+                  styles.backgroundDot,
+                  {
+                    top: row * 60 + (col % 2) * 30,
+                    left: col * 40,
+                  },
+                ]}
+              />
+            ))
+          )}
+        </View>
+      </Animated.View>
+
       <DynamicHeader 
         title="Groups"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         scrollY={scrollOffset}
         rightIcons={[
+          {
+            icon: 'filter_list',
+            onPress: () => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setShowFilters(!showFilters);
+            },
+          },
           {
             icon: 'search',
             onPress: () => {
@@ -188,15 +273,70 @@ export const GroupsScreen: React.FC = () => {
           />
         </View>
 
-        <FlatList
+        {/* Filter Options */}
+        {showFilters && (
+          <View style={styles.filterContainer}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterScrollContent}
+            >
+              {filterOptions.map((filter) => (
+                <TouchableOpacity
+                  key={filter.id}
+                  style={[
+                    styles.filterChip,
+                    selectedFilter === filter.id && styles.filterChipSelected
+                  ]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedFilter(filter.id);
+                  }}
+                >
+                  <MaterialIcon 
+                    name={filter.icon} 
+                    size={16} 
+                    color={selectedFilter === filter.id ? tokens.colors.onSurface : tokens.colors.onSurface60} 
+                  />
+                  <Text style={[
+                    styles.filterChipText,
+                    selectedFilter === filter.id && styles.filterChipTextSelected
+                  ]}>
+                    {filter.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Results Count */}
+        <View style={styles.resultsContainer}>
+          <Text style={styles.resultsText}>
+            {filteredGroups.length} {filteredGroups.length === 1 ? 'group' : 'groups'}
+            {selectedFilter !== 'all' && (
+              <Text style={styles.resultsFilter}>
+                {' '}• {filterOptions.find(f => f.id === selectedFilter)?.label}
+              </Text>
+            )}
+          </Text>
+        </View>
+
+        <Animated.FlatList
           data={filteredGroups}
           renderItem={renderGroupItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
-          onScroll={(event) => {
-            setScrollOffset(event.nativeEvent.contentOffset.y);
-          }}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { 
+              useNativeDriver: false,
+              listener: (event: any) => {
+                setScrollOffset(event.nativeEvent.contentOffset.y);
+              }
+            }
+          )}
           scrollEventThrottle={16}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
@@ -229,6 +369,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.colors.bg,
   },
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: screenHeight * 1.3, // Extra height for parallax
+    zIndex: 0,
+  },
+  backgroundImage: {
+    flex: 1,
+    backgroundColor: 'rgba(138, 43, 226, 0.02)', // Very subtle purple tint
+  },
+  backgroundPattern: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  backgroundDot: {
+    position: 'absolute',
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
   content: {
     flex: 1,
     paddingTop: 135, // Space for header
@@ -244,7 +407,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     color: tokens.colors.onSurface,
-    fontSize: 16,
+    fontSize: 12,
   },
   listContent: {
     paddingBottom: 80, // Space for FAB
@@ -315,7 +478,7 @@ const styles = StyleSheet.create({
   groupDescription: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
-    fontSize: 13,
+    fontSize: 12,
   },
   lastMessageContainer: {
     flexDirection: 'row',
@@ -326,7 +489,7 @@ const styles = StyleSheet.create({
   lastMessage: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface,
-    fontSize: 13,
+    fontSize: 12,
     flex: 1,
     marginRight: tokens.spacing.s,
   },
@@ -360,5 +523,49 @@ const styles = StyleSheet.create({
     right: tokens.spacing.m,
     backgroundColor: tokens.colors.primary,
     borderRadius: 28,
+  },
+  filterContainer: {
+    paddingHorizontal: tokens.spacing.m,
+    paddingBottom: tokens.spacing.s,
+  },
+  filterScrollContent: {
+    paddingRight: tokens.spacing.m,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: tokens.spacing.m,
+    paddingVertical: tokens.spacing.s,
+    marginRight: tokens.spacing.s,
+    borderRadius: tokens.radius.l,
+    backgroundColor: tokens.colors.surface1,
+    borderWidth: 1,
+    borderColor: tokens.colors.surface2,
+  },
+  filterChipSelected: {
+    backgroundColor: tokens.colors.primary,
+    borderColor: tokens.colors.primary,
+  },
+  filterChipText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface60,
+    marginLeft: tokens.spacing.xs,
+    fontSize: 12,
+  },
+  filterChipTextSelected: {
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+  },
+  resultsContainer: {
+    paddingHorizontal: tokens.spacing.m,
+    paddingBottom: tokens.spacing.s,
+  },
+  resultsText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface60,
+    fontSize: 12,
+  },
+  resultsFilter: {
+    color: tokens.colors.primary,
   },
 });

@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
     fontWeight: '600',
-    fontSize: 13,
+    fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: tokens.spacing.s,

@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   largeTitle: {
     ...tokens.typography.h1,
-    fontSize: 28, // Reduced from 36 to 28
+    fontSize: 12, // Reduced from 36 to 28
     fontWeight: '400', // Changed from '700' to '400' (unbold)
     color: tokens.colors.onSurface,
     marginBottom: tokens.spacing.l,
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   fieldValue: {
     ...tokens.typography.body,
     color: tokens.colors.onSurface,
-    fontSize: 16,
+    fontSize: 12,
   },
   fieldPlaceholder: {
     color: tokens.colors.onSurface38,

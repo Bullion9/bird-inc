@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing.l,
   },
   emoji: {
-    fontSize: 80,
+    fontSize: 12,
     marginBottom: tokens.spacing.xl,
   },
   title: {

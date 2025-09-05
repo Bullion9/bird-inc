@@ -38,10 +38,6 @@ export const ChatsSettingsScreen: React.FC = () => {
     console.log(`Action pressed: ${action}`);
   };
 
-  const ArrowIcon = () => (
-    <Text style={styles.arrowIcon}>›</Text>
-  );
-
   return (
     <View style={styles.container}>
       <DynamicHeader 
@@ -67,7 +63,7 @@ export const ChatsSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="check" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="done_all" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Read Receipts</Text>
               </View>
@@ -84,7 +80,7 @@ export const ChatsSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="timer" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="schedule" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Last Seen</Text>
               </View>
@@ -101,7 +97,7 @@ export const ChatsSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="circle" size={20} color={tokens.colors.success} />
+                  <MaterialIcon name="radio_button_checked" size={20} color={tokens.colors.success} />
                 </View>
                 <Text style={styles.settingTitle}>Online Status</Text>
               </View>
@@ -122,7 +118,7 @@ export const ChatsSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="keyboard" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="send" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Enter to Send</Text>
               </View>
@@ -139,7 +135,7 @@ export const ChatsSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="notifications" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="volume_up" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Sound Effects</Text>
               </View>
@@ -156,7 +152,7 @@ export const ChatsSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="visibility" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="preview" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Message Preview</Text>
               </View>
@@ -181,14 +177,14 @@ export const ChatsSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="storage" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="backup" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Backup Chats</Text>
                   <Text style={styles.settingSubtitle}>Last backup: 2 days ago</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -200,11 +196,11 @@ export const ChatsSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="download" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="file_download" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Export Chat History</Text>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -212,7 +208,7 @@ export const ChatsSettingsScreen: React.FC = () => {
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="folder" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="archive" size={20} color={tokens.colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>Auto-Archive Chats</Text>
               </View>
@@ -237,14 +233,14 @@ export const ChatsSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="image" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="palette" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Chat Theme</Text>
                   <Text style={styles.settingSubtitle}>Dark</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -256,14 +252,14 @@ export const ChatsSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="image" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="wallpaper" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Chat Wallpaper</Text>
                   <Text style={styles.settingSubtitle}>Default</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -275,14 +271,14 @@ export const ChatsSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="add" size={20} color={tokens.colors.primary} />
+                  <MaterialIcon name="format_size" size={20} color={tokens.colors.primary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Font Size</Text>
                   <Text style={styles.settingSubtitle}>Medium</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -298,14 +294,14 @@ export const ChatsSettingsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={styles.iconContainer}>
-                  <MaterialIcon name="phone" size={20} color={tokens.colors.secondary} />
+                  <MaterialIcon name="clear_all" size={20} color={tokens.colors.secondary} />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Clear Chat Cache</Text>
                   <Text style={styles.settingSubtitle}>Free up storage space</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -324,7 +320,7 @@ export const ChatsSettingsScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>This action cannot be undone</Text>
                 </View>
               </View>
-              <ArrowIcon />
+              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
             </TouchableOpacity>
           </View>
         </View>
@@ -353,7 +349,7 @@ const styles = StyleSheet.create({
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
     fontWeight: '600',
-    fontSize: 13,
+    fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: tokens.spacing.s,
@@ -395,16 +391,11 @@ const styles = StyleSheet.create({
   settingSubtitle: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
-    fontSize: 13,
+    fontSize: 12,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: tokens.colors.surface3,
     marginLeft: 52, // Align with text after icon
-  },
-  arrowIcon: {
-    fontSize: 20,
-    color: tokens.colors.onSurface60,
-    fontWeight: '300',
   },
 });

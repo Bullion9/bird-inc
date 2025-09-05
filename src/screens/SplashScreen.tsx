@@ -65,14 +65,14 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.xl,
   },
   logo: {
-    fontSize: 64,
+    fontSize: 12,
     marginBottom: tokens.spacing.m,
   },
   title: {
     ...tokens.typography.h1,
     color: tokens.colors.primary,
-    fontSize: 36,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '400',
   },
   subtitleContainer: {
     position: 'absolute',

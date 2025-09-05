@@ -167,7 +167,7 @@ export const SettingsScreen: React.FC = () => {
               </View>
               <View style={{ flex: 1, marginLeft: tokens.spacing.m }}>
                 <Text style={[styles.iosCardText, { marginLeft: 0, marginBottom: 2 }]}>Version</Text>
-                <Text style={[styles.iosCardText, { marginLeft: 0, color: tokens.colors.onSurface60, fontSize: 14, fontWeight: '400' }]}>
+                <Text style={[styles.iosCardText, { marginLeft: 0, color: tokens.colors.onSurface60, fontSize: 12, fontWeight: '400' }]}>
                   Bird Chat v1.0.0
                 </Text>
               </View>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   },
   largeTitle: {
     ...tokens.typography.h1,
-    fontSize: 36,
+    fontSize: 12,
     fontWeight: '400', // Changed from '700' to '400' (unbold)
     color: tokens.colors.onSurface,
     marginBottom: tokens.spacing.l,

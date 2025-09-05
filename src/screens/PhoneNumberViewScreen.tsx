@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     ...tokens.typography.body,
     color: tokens.colors.onSurface,
     fontWeight: '600',
-    fontSize: 16,
+    fontSize: 12,
   },
   lockIconContainer: {
     padding: tokens.spacing.s,

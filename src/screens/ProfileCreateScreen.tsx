@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   largeTitle: {
     ...tokens.typography.h1,
-    fontSize: 28,
+    fontSize: 12,
     fontWeight: '400',
     color: tokens.colors.onSurface,
     marginBottom: tokens.spacing.l,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.m,
   },
   avatarLabel: {
-    fontSize: 36,
+    fontSize: 12,
     color: tokens.colors.onSurface,
   },
   avatarButton: {

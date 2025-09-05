@@ -30,7 +30,7 @@ export const DynamicHeader: React.FC<DynamicHeaderProps> = ({
   onTitlePress,
   rightIcons = [],
   scrollY = 0,
-  titleSize = 24, // Default title size
+  titleSize = 16, // Default title size
 }) => {
   const insets = useSafeAreaInsets();
   
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 56,
+    height: 64,
     paddingHorizontal: 16,
     position: 'relative',
     zIndex: 1,
@@ -205,8 +205,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '400',
     color: tokens.colors.onSurface,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '400',
     color: tokens.colors.onSurface60,
     marginTop: 2,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    top: 28, // Moved up from 35 to 28
+    top: 32, // Moved up from 28 to 32 for better spacing
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: tokens.spacing.m,

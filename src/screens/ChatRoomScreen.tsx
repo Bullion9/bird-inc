@@ -1,1540 +1,1733 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  FlatList, 
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
   TextInput,
-  KeyboardAvoidingView, 
-  Platform,
-  Animated,
   TouchableOpacity,
-  Modal,
-  Pressable,
-  Image,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView
+  TouchableWithoutFeedback,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  SafeAreaView,
+  Dimensions,
+  Keyboard,
+  Alert,
+  RefreshControl,
 } from 'react-native';
-import { Text, IconButton, Surface } from 'react-native-paper';
-import { MotiView } from 'moti';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-// Temporarily comment out gesture handler to test hooks
-// import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import { Audio } from 'expo-av';
 import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { MotiView } from 'moti';
+import {
+  GestureHandlerRootView,
+  PanGestureHandler,
+  LongPressGestureHandler,
+  TapGestureHandler,
+  PinchGestureHandler,
+  State,
+  PanGestureHandlerGestureEvent,
+  LongPressGestureHandlerGestureEvent,
+  TapGestureHandlerGestureEvent,
+  PinchGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  runOnJS,
+  interpolate,
+  clamp,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-
+import { MaterialIcon } from '../components/MaterialIcon';
+import { DynamicHeader } from '../components/DynamicHeader';
 import { tokens } from '../theme/tokens';
 import { ChatsStackParamList } from '../navigation/types';
-import { DynamicHeader, BirdCard, Avatar, AnimatedFloatingLabel, MaterialIcon, MediaViewer } from '../components';
 
-type ChatRoomNavigationProp = StackNavigationProp<ChatsStackParamList, 'ChatRoom'>;
-type ChatRoomRouteProp = RouteProp<ChatsStackParamList, 'ChatRoom'>;
+type ChatRoomScreenRouteProp = RouteProp<ChatsStackParamList, 'ChatRoom'>;
+type ChatRoomScreenNavigationProp = StackNavigationProp<ChatsStackParamList, 'ChatRoom'>;
+
+interface Props {
+  route: ChatRoomScreenRouteProp;
+  navigation: ChatRoomScreenNavigationProp;
+}
 
 interface Message {
   id: string;
-  text: string;
+  text?: string;
+  sticker?: string;
   timestamp: Date;
-  isOwn: boolean;
-  status: 'sending' | 'sent' | 'delivered' | 'read';
-  reactions: string[];
-  replyTo?: string;
-  imageUri?: string;
-  imageCaption?: string;
+  isSent: boolean;
+  isDelivered?: boolean;
+  isRead?: boolean;
+  fileUri?: string;
+  fileType?: 'image' | 'document' | 'video' | 'audio';
 }
 
-const reactionEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡'];
+const { width: screenWidth } = Dimensions.get('window');
 
-export const ChatRoomScreen: React.FC = () => {
-  const navigation = useNavigation<ChatRoomNavigationProp>();
-  const route = useRoute<ChatRoomRouteProp>();
-  const { userName } = route.params;
-  const scrollYRef = useRef(0);
-  const [scrollPosition, setScrollPosition] = React.useState(0);
-  
+// MessageBubble component with individual gesture handling
+interface MessageBubbleProps {
+  message: Message;
+  onLongPress: () => void;
+  onDoubleTap: () => void;
+  formatTime: (date: Date) => string;
+}
+
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onDoubleTap, formatTime }) => {
+  const messageSwipeX = useSharedValue(0);
+  const messagePinchScale = useSharedValue(1);
+
+  const messageSwipeGestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
+    onStart: () => {
+      // Only trigger haptic if it's a strong swipe gesture
+    },
+    onActive: (event) => {
+      // Only respond to significant horizontal swipes to avoid interfering with vertical scrolling
+      if (Math.abs(event.translationX) > Math.abs(event.translationY) * 2) {
+        if (event.translationX < 0) {
+          messageSwipeX.value = clamp(event.translationX, -80, 0);
+        } else {
+          messageSwipeX.value = clamp(event.translationX, 0, 80);
+        }
+      }
+    },
+    onEnd: (event) => {
+      // Require more significant swipe to trigger action
+      if (Math.abs(event.translationX) > 80 && Math.abs(event.translationX) > Math.abs(event.translationY) * 2) {
+        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+        runOnJS(onLongPress)();
+      }
+      messageSwipeX.value = withSpring(0);
+    },
+  });
+
+  const messagePinchGestureHandler = useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>({
+    onActive: (event) => {
+      messagePinchScale.value = clamp(event.scale, 0.5, 3);
+    },
+    onEnd: () => {
+      messagePinchScale.value = withSpring(1);
+    },
+  });
+
+  const messageSwipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: messageSwipeX.value }],
+  }));
+
+  const messagePinchStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: messagePinchScale.value }],
+  }));
+
+  return (
+    <PanGestureHandler 
+      onGestureEvent={messageSwipeGestureHandler}
+      activeOffsetX={[-15, 15]}
+      failOffsetY={[-10, 10]}
+    >
+      <Animated.View style={messageSwipeStyle}>
+        <LongPressGestureHandler
+          minDurationMs={800}
+          maxDist={20}
+          onHandlerStateChange={(event) => {
+            if (event.nativeEvent.state === State.ACTIVE) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              onLongPress();
+            }
+          }}
+        >
+          <Animated.View>
+            <TapGestureHandler
+              numberOfTaps={2}
+              maxDist={30}
+              onHandlerStateChange={(event) => {
+                if (event.nativeEvent.state === State.ACTIVE) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  onDoubleTap();
+                }
+              }}
+            >
+              <Animated.View>
+                <PinchGestureHandler 
+                  onGestureEvent={messagePinchGestureHandler}
+                >
+                  <Animated.View style={messagePinchStyle}>
+                    <MotiView
+                      from={{ opacity: 0, translateY: 20 }}
+                      animate={{ opacity: 1, translateY: 0 }}
+                      transition={{ duration: 300 }}
+                      style={[
+                        styles.messageContainer,
+                        message.isSent ? styles.sentMessage : styles.receivedMessage,
+                      ]}
+                    >
+                      {message.sticker ? (
+                        <View style={[
+                          styles.stickerContainer,
+                          message.isSent ? styles.sentSticker : styles.receivedSticker,
+                        ]}>
+                          <Text style={styles.stickerText}>{message.sticker}</Text>
+                        </View>
+                      ) : (
+                        <View style={[
+                          styles.messageBubble,
+                          message.isSent ? styles.sentBubble : styles.receivedBubble,
+                        ]}>
+                          {message.text?.startsWith('Forwarded:') && (
+                            <View style={styles.forwardedIndicator}>
+                              <MaterialIcon name="share" size={12} color={tokens.colors.onSurface60} />
+                              <Text style={styles.forwardedText}>Forwarded</Text>
+                            </View>
+                          )}
+                          {message.text?.startsWith('Replying to') && (
+                            <View style={styles.replyIndicator}>
+                              <MaterialIcon name="reply" size={12} color={tokens.colors.primary} />
+                              <Text style={styles.replyIndicatorText}>Reply</Text>
+                            </View>
+                          )}
+                          <Text style={[
+                            styles.messageText,
+                            message.isSent ? styles.sentText : styles.receivedText,
+                          ]}>
+                            {message.text}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={[
+                        styles.messageInfo,
+                        message.isSent ? styles.sentInfo : styles.receivedInfo,
+                      ]}>
+                        <Text style={styles.timeText}>{formatTime(message.timestamp)}</Text>
+                        {message.isSent && (
+                          <View style={styles.statusContainer}>
+                            {message.isRead ? (
+                              <MaterialIcon name="check-all" size={12} color={tokens.colors.primary} />
+                            ) : message.isDelivered ? (
+                              <MaterialIcon name="check-all" size={12} color={tokens.colors.onSurface60} />
+                            ) : (
+                              <MaterialIcon name="check" size={12} color={tokens.colors.onSurface60} />
+                            )}
+                          </View>
+                        )}
+                      </View>
+                    </MotiView>
+                  </Animated.View>
+                </PinchGestureHandler>
+              </Animated.View>
+            </TapGestureHandler>
+          </Animated.View>
+        </LongPressGestureHandler>
+      </Animated.View>
+    </PanGestureHandler>
+  );
+};const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
+  const { userName, chatId } = route.params;
   const [message, setMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(true); // Demo typing indicator
-  const [showReactions, setShowReactions] = useState(false);
-  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
-  const [replyTo, setReplyTo] = useState<string | null>(null);
-  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-  const [mediaViewerVisible, setMediaViewerVisible] = useState(false);
-  const [selectedMediaUri, setSelectedMediaUri] = useState<string>('');
-  const [selectedMediaCaption, setSelectedMediaCaption] = useState<string>('');
-  const [isShaking, setIsShaking] = useState(false);
-    const [showProfileModal, setShowProfileModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState(userName);
-  const [editedAbout, setEditedAbout] = useState("Passionate about technology and innovation. Love exploring new ideas and connecting with people.");
-  const animatedScrollPosition = useRef(new Animated.Value(0)).current;
-
-  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const currentScrollY = event.nativeEvent.contentOffset.y;
-    scrollYRef.current = currentScrollY;
-    setScrollPosition(currentScrollY);
-  }, []);
-  
+  const [showEmojiKeyboard, setShowEmojiKeyboard] = useState(false);
+  const [showStickerPack, setShowStickerPack] = useState(false);
+  const [keyboardMode, setKeyboardMode] = useState<'text' | 'emoji' | 'sticker'>('text');
+  const [showUploadMenu, setShowUploadMenu] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const textInputRef = useRef<TextInput>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hey! How are you doing?',
-      timestamp: new Date(Date.now() - 7200000), // 2 hours ago
-      isOwn: false,
-      status: 'read',
-      reactions: ['👍'],
+      text: 'Hey there! How are you doing?',
+      timestamp: new Date(Date.now() - 1000 * 60 * 10),
+      isSent: false,
     },
     {
       id: '2',
-      text: "I'm doing great! Thanks for asking 😊",
-      timestamp: new Date(Date.now() - 7000000),
-      isOwn: true,
-      status: 'read',
-      reactions: [],
+      text: 'I\'m doing great! Just working on some projects. How about you?',
+      timestamp: new Date(Date.now() - 1000 * 60 * 8),
+      isSent: true,
+      isDelivered: true,
+      isRead: true,
     },
     {
       id: '3',
-      text: 'Want to grab coffee this weekend?',
-      timestamp: new Date(Date.now() - 6800000),
-      isOwn: false,
-      status: 'read',
-      reactions: ['☕', '❤️'],
-    },
-    {
-      id: '4',
-      text: 'Absolutely! I know this amazing new place downtown',
-      timestamp: new Date(Date.now() - 6600000),
-      isOwn: true,
-      status: 'read',
-      reactions: [],
-    },
-    {
-      id: '5',
-      text: 'Perfect! What time works for you? I was thinking around 10 AM?',
-      timestamp: new Date(Date.now() - 6400000),
-      isOwn: false,
-      status: 'read',
-      reactions: [],
-    },
-    {
-      id: '6',
-      text: 'That sounds perfect! See you there 👋',
-      timestamp: new Date(Date.now() - 6200000),
-      isOwn: true,
-      status: 'read',
-      reactions: ['👋'],
-    },
-    {
-      id: '6.5',
-      text: 'Check out this cool cafe I found!',
-      imageUri: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400',
-      imageCaption: 'This new coffee shop downtown looks amazing!',
-      timestamp: new Date(Date.now() - 6100000),
-      isOwn: false,
-      status: 'read',
-      reactions: ['😍', '☕'],
-    },
-    {
-      id: '7',
-      text: 'By the way, did you see the new movie that came out last week?',
-      timestamp: new Date(Date.now() - 3600000), // 1 hour ago
-      isOwn: false,
-      status: 'read',
-      reactions: [],
-    },
-    {
-      id: '8',
-      text: 'Not yet! Is it good? I was planning to watch it this weekend',
-      timestamp: new Date(Date.now() - 3400000),
-      isOwn: true,
-      status: 'read',
-      reactions: [],
-    },
-    {
-      id: '9',
-      text: 'It\'s amazing! The plot twists are incredible. No spoilers though 🤐',
-      timestamp: new Date(Date.now() - 3200000),
-      isOwn: false,
-      status: 'read',
-      reactions: ['😂', '🤐'],
-    },
-    {
-      id: '10',
-      text: 'Haha thanks for not spoiling it! Maybe we can discuss it after coffee on Saturday?',
-      timestamp: new Date(Date.now() - 3000000),
-      isOwn: true,
-      status: 'read',
-      reactions: [],
-    },
-    {
-      id: '11',
-      text: 'Deal! I love discussing movies. This one really made me think',
-      timestamp: new Date(Date.now() - 2800000),
-      isOwn: false,
-      status: 'read',
-      reactions: [],
-    },
-    {
-      id: '12',
-      text: 'Same here! I love films that challenge your perspective',
-      timestamp: new Date(Date.now() - 2600000),
-      isOwn: true,
-      status: 'read',
-      reactions: ['🎬'],
-    },
-    {
-      id: '13',
-      text: 'Oh, and bring your camera! The coffee shop has this gorgeous wall mural',
-      timestamp: new Date(Date.now() - 1800000), // 30 min ago
-      isOwn: false,
-      status: 'read',
-      reactions: [],
-    },
-    {
-      id: '14',
-      text: 'Good idea! I\'ve been wanting to take more photos lately 📸',
-      timestamp: new Date(Date.now() - 1600000),
-      isOwn: true,
-      status: 'read',
-      reactions: ['📸'],
-    },
-    {
-      id: '14.5',
-      text: 'Here\'s a preview of my latest shot!',
-      imageUri: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
-      imageCaption: 'Golden hour at the park yesterday - loving these warm tones!',
-      timestamp: new Date(Date.now() - 1500000),
-      isOwn: true,
-      status: 'read',
-      reactions: ['😍', '📸', '🌅'],
-    },
-    {
-      id: '15',
-      text: 'Perfect! It\'s going to be such a fun day. Can\'t wait! 🌟',
-      timestamp: new Date(Date.now() - 1400000),
-      isOwn: false,
-      status: 'read',
-      reactions: ['🌟', '❤️'],
-    },
-    {
-      id: '16',
-      text: 'Me too! Thanks for planning this out 😊',
-      timestamp: new Date(Date.now() - 900000), // 15 min ago
-      isOwn: true,
-      status: 'read',
-      reactions: [],
+      text: 'That sounds exciting! What kind of projects are you working on?',
+      timestamp: new Date(Date.now() - 1000 * 60 * 5),
+      isSent: false,
     },
   ]);
-  
+
   const flatListRef = useRef<FlatList>(null);
 
-  // Typing indicator animation
-  const TypingIndicator = () => (
-    <View style={styles.typingContainer}>
-      <View style={styles.typingBubble}>
-        <View style={styles.typingDots}>
-          {[0, 1, 2].map((index) => (
-            <MotiView
-              key={index}
-              style={styles.typingDot}
-              from={{ translateY: 0 }}
-              animate={{ translateY: -4 }}
-              transition={{
-                type: 'timing',
-                duration: 600,
-                delay: index * 200,
-                repeatReverse: true,
-                loop: true,
-              }}
-            />
-          ))}
-        </View>
-      </View>
-    </View>
-  );
+  // Gesture state variables
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+  const [forwardedMessages, setForwardedMessages] = useState<string[]>([]);
+  const [showHeaderDropdown, setShowHeaderDropdown] = useState(false);
+  
+  // Animated values for gestures
+  const pullToRefreshY = useSharedValue(0);
+  const keyboardSwipeY = useSharedValue(0);
 
-  const handleSend = () => {
-    if (!message.trim()) return;
-    
-    // Trigger shake animation
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 200); // 2 loops * 100ms each
-    
+  useEffect(() => {
+    // Scroll to bottom when new messages are added
+    if (flatListRef.current && messages.length > 0) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    // Listen for keyboard events
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setShowEmojiKeyboard(false);
+      setShowStickerPack(false);
+      setKeyboardMode('text');
+    });
+
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      // Keep emoji/sticker keyboard state when regular keyboard hides
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
+
+  // Upload functions
+  const toggleUploadMenu = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowUploadMenu(!showUploadMenu);
+    setShowEmojiKeyboard(false);
+    setShowStickerPack(false);
+  };
+
+  const handleImagePicker = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setShowUploadMenu(false);
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const newMessage: Message = {
+          id: Date.now().toString(),
+          text: `📷 Image: ${result.assets[0].fileName || 'image.jpg'}`,
+          timestamp: new Date(),
+          isSent: true,
+          isDelivered: false,
+          fileUri: result.assets[0].uri,
+          fileType: 'image',
+        };
+        setMessages(prev => [...prev, newMessage]);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const handleCamera = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setShowUploadMenu(false);
+
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Camera access is needed to take photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const newMessage: Message = {
+          id: Date.now().toString(),
+          text: `📷 Camera Photo: ${result.assets[0].fileName || 'photo.jpg'}`,
+          timestamp: new Date(),
+          isSent: true,
+          isDelivered: false,
+          fileUri: result.assets[0].uri,
+          fileType: 'image',
+        };
+        setMessages(prev => [...prev, newMessage]);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to take photo');
+    }
+  };
+
+  const handleDocumentPicker = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setShowUploadMenu(false);
+
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const file = result.assets[0];
+        const newMessage: Message = {
+          id: Date.now().toString(),
+          text: `📄 ${file.name} (${(file.size! / 1024 / 1024).toFixed(2)} MB)`,
+          timestamp: new Date(),
+          isSent: true,
+          isDelivered: false,
+          fileUri: file.uri,
+          fileType: 'document',
+        };
+        setMessages(prev => [...prev, newMessage]);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick document');
+    }
+  };
+
+  // Voice recording functions
+  const startRecording = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      
+      // Request audio permissions
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Microphone access is needed to record audio');
+        return;
+      }
+
+      // Set audio mode for recording
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      
+      setRecording(recording);
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      // Start timer for recording duration
+      const timer = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+
+      // Store timer reference for cleanup
+      (recording as any).timer = timer;
+
+    } catch (error) {
+      Alert.alert('Error', 'Failed to start recording');
+      console.error('Recording error:', error);
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      if (!recording) return;
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      // Clear timer
+      if ((recording as any).timer) {
+        clearInterval((recording as any).timer);
+      }
+
+      setIsRecording(false);
+      await recording.stopAndUnloadAsync();
+      
+      const uri = recording.getURI();
+      if (uri) {
+        const duration = recordingDuration;
+        const newMessage: Message = {
+          id: Date.now().toString(),
+          text: `🎙️ Voice message (${formatDuration(duration)})`,
+          timestamp: new Date(),
+          isSent: true,
+          isDelivered: false,
+          fileUri: uri,
+          fileType: 'audio',
+        };
+        setMessages(prev => [...prev, newMessage]);
+      }
+
+      setRecording(null);
+      setRecordingDuration(0);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to stop recording');
+      console.error('Stop recording error:', error);
+    }
+  };
+
+  const cancelRecording = async () => {
+    try {
+      if (!recording) return;
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+      // Clear timer
+      if ((recording as any).timer) {
+        clearInterval((recording as any).timer);
+      }
+
+      setIsRecording(false);
+      await recording.stopAndUnloadAsync();
+      setRecording(null);
+      setRecordingDuration(0);
+    } catch (error) {
+      console.error('Cancel recording error:', error);
+    }
+  };
+
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const toggleEmojiKeyboard = () => {
+    if (keyboardMode === 'emoji') {
+      // Hide emoji keyboard and show regular keyboard
+      setShowEmojiKeyboard(false);
+      setShowStickerPack(false);
+      setKeyboardMode('text');
+      textInputRef.current?.focus();
+    } else {
+      // Hide regular keyboard and show emoji keyboard
+      Keyboard.dismiss();
+      setTimeout(() => {
+        setShowEmojiKeyboard(true);
+        setShowStickerPack(false);
+        setKeyboardMode('emoji');
+      }, 100);
+    }
+  };
+
+  const toggleStickerPack = () => {
+    if (keyboardMode === 'sticker') {
+      // Hide sticker pack and show regular keyboard
+      setShowEmojiKeyboard(false);
+      setShowStickerPack(false);
+      setKeyboardMode('text');
+      textInputRef.current?.focus();
+    } else {
+      // Hide regular keyboard and show sticker pack
+      Keyboard.dismiss();
+      setTimeout(() => {
+        setShowEmojiKeyboard(false);
+        setShowStickerPack(true);
+        setKeyboardMode('sticker');
+      }, 100);
+    }
+  };
+
+  const insertEmoji = (emoji: string) => {
+    setMessage(prev => prev + emoji);
+  };
+
+  const insertSticker = (sticker: string) => {
     const newMessage: Message = {
       id: Date.now().toString(),
-      text: message.trim(),
+      sticker,
       timestamp: new Date(),
-      isOwn: true,
-      status: 'sending',
-      reactions: [],
-      replyTo: replyTo || undefined,
+      isSent: true,
+      isDelivered: true,
     };
-    
+
     setMessages(prev => [...prev, newMessage]);
-    setMessage('');
-    setReplyTo(null);
-    
-    // Simulate message status updates
+
+    // Simulate message delivery after a short delay
     setTimeout(() => {
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === newMessage.id ? { ...msg, status: 'sent' } : msg
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === newMessage.id ? { ...msg, isRead: true } : msg
         )
       );
     }, 1000);
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Hide sticker pack after sending
+    setShowStickerPack(false);
+    setKeyboardMode('text');
   };
 
-  const handleImagePress = (imageUri: string, caption?: string) => {
-    setSelectedMediaUri(imageUri);
-    setSelectedMediaCaption(caption || '');
-    setMediaViewerVisible(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const sendMessage = () => {
+    if (message.trim()) {
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        text: replyToMessage 
+          ? `Replying to "${replyToMessage.sticker || replyToMessage.text}": ${message.trim()}`
+          : message.trim(),
+        timestamp: new Date(),
+        isSent: true,
+        isDelivered: true,
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+      setMessage('');
+      setReplyToMessage(null); // Clear reply after sending
+
+      // Simulate message delivery after a short delay
+      setTimeout(() => {
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === newMessage.id ? { ...msg, isRead: true } : msg
+          )
+        );
+      }, 1000);
+    }
   };
 
-  const closeMediaViewer = () => {
-    setMediaViewerVisible(false);
-    setSelectedMediaUri('');
-    setSelectedMediaCaption('');
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const handleVideoCall = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // Navigate to CallsStack -> VideoCall
-    const parentNavigation = navigation.getParent();
-    parentNavigation?.navigate('CallsStack', {
-      screen: 'VideoCall',
-      params: {
-        contactId: route.params.chatId,
-        contactName: userName,
-        contactAvatar: 'https://via.placeholder.com/150',
-        isIncoming: false,
-      }
-    });
-  };
-
-  const handleVoiceCall = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // Navigate to CallsStack -> CallScreen
-    const parentNavigation = navigation.getParent();
-    parentNavigation?.navigate('CallsStack', {
-      screen: 'CallScreen',
-      params: {
-        contactName: userName,
-        contactAvatar: 'https://via.placeholder.com/150',
-        isIncoming: false,
-        isVideo: false,
-      }
-    });
-  };
-
-  // Message component with swipe and long press (temporarily simplified)
-  const MessageItem = ({ item }: { item: Message }) => {
-    const onLongPress = () => {
-      setSelectedMessageId(item.id);
-      setShowReactions(true);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    };
-
-    return (
-      <MotiView
-        from={{ opacity: 0, translateY: 20, scale: 0.9 }}
-        animate={{ opacity: 1, translateY: 0, scale: 1 }}
-        transition={{ type: 'timing', duration: 300 }}
-        style={[
-          styles.messageContainer,
-          item.isOwn ? styles.ownMessage : styles.otherMessage,
-        ]}
-      >
-        {!item.isOwn && (
-          <View style={styles.messageAvatar}>
-            <Avatar
-              source="https://i.pravatar.cc/150?img=1"
-              name={userName}
-              size={40}
-            />
-          </View>
-        )}
-        <Pressable onLongPress={onLongPress} style={{ flex: 1 }}>
-          <Surface style={[
-            styles.messageBubble,
-            item.isOwn ? styles.ownBubble : styles.otherBubble,
-          ]}>
-            {item.replyTo && (
-              <View style={styles.replyIndicator}>
-                <Text style={styles.replyText}>Replying to message</Text>
-              </View>
-            )}
-            {item.text && (
-              <Text style={[
-                styles.messageText,
-                item.isOwn ? styles.ownText : styles.otherText,
-              ]}>
-                {item.text}
-              </Text>
-            )}
-            {item.imageUri && (
-              <TouchableOpacity 
-                onPress={() => handleImagePress(item.imageUri!, item.imageCaption)}
-                style={styles.imageContainer}
-              >
-                <Image
-                  source={{ uri: item.imageUri }}
-                  style={styles.messageImage}
-                  resizeMode="cover"
-                />
-                {item.imageCaption && (
-                  <View style={styles.imageCaptionOverlay}>
-                    <Text style={styles.imageCaptionText} numberOfLines={2}>
-                      {item.imageCaption}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            )}
-            <Text style={[
-              styles.timestamp,
-              item.isOwn ? styles.ownTimestamp : styles.otherTimestamp,
-            ]}>
-              {item.timestamp.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-              })}
-            </Text>
-            {item.reactions.length > 0 && (
-              <View style={styles.reactionsContainer}>
-                {item.reactions.map((emoji, index) => (
-                  <Text key={index} style={styles.reaction}>
-                    {emoji}
-                  </Text>
-                ))}
-              </View>
-            )}
-          </Surface>
-        </Pressable>
-      </MotiView>
-    );
-  };
-
-  // Reactions modal
-  const ReactionsModal = () => (
-    <Modal
-      visible={showReactions}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setShowReactions(false)}
-    >
-      <Pressable 
-        style={styles.modalOverlay}
-        onPress={() => setShowReactions(false)}
-      >
-        <MotiView
-          style={styles.reactionsModal}
-          from={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', damping: 15 }}
-        >
-          {reactionEmojis.map((emoji, index) => (
-            <TouchableOpacity
-              key={emoji}
-              style={styles.reactionButton}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setShowReactions(false);
-                // Add reaction logic here
-              }}
-            >
-              <Text style={styles.reactionEmoji}>{emoji}</Text>
-            </TouchableOpacity>
-          ))}
-        </MotiView>
-      </Pressable>
-    </Modal>
+  const renderEmojiCategory = ({ item }: { item: typeof emojiCategories[0] }) => (
+    <View style={styles.emojiCategoryContainer}>
+      <Text style={styles.emojiCategoryTitle}>{item.category}</Text>
+      <View style={styles.emojiGrid}>
+        {item.emojis.map((emoji, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.emojiPickerButton}
+            onPress={() => insertEmoji(emoji)}
+            activeOpacity={0.6}
+          >
+            <Text style={styles.emojiText}>{emoji}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
   );
 
-  // Profile modal
-  const ProfileModal = () => {
-    const insets = useSafeAreaInsets();
-    const [profileScrollY, setProfileScrollY] = useState(0); // Start at 0 to show static content
-    
-    return (
-      <Modal
-        visible={showProfileModal}
-        transparent={false}
-        animationType="slide"
-        onRequestClose={() => setShowProfileModal(false)}
-      >
-        <View style={styles.fullPageModal}>
-          {/* Use DynamicHeader with contact info in static state, user name when scrolling */}
-          <DynamicHeader
-            title={userName}
-            subtitle="Last seen recently"
-            staticContent={
-              <Text style={styles.headerContactPhone}>Contact Info</Text>
-            }
-            showBackButton
-            onBackPress={() => {
-              console.log('Profile modal back button pressed');
-              setShowProfileModal(false);
-            }}
-            scrollY={profileScrollY}
-          />
-
-          {/* Scrollable content that starts below the header */}
-          <ScrollView 
-            style={[styles.profileScrollContainer, { marginTop: 60 + insets.top }]} // Same as ChatsListScreen
-            contentContainerStyle={styles.scrollContentContainer}
-            showsVerticalScrollIndicator={false}
-            onScroll={(event) => {
-              const offsetY = event.nativeEvent.contentOffset.y;
-              setProfileScrollY(offsetY);
-            }}
-            scrollEventThrottle={16}
+  const renderStickerPack = ({ item }: { item: typeof stickerPacks[0] }) => (
+    <View style={styles.stickerPackContainer}>
+      <Text style={styles.stickerPackTitle}>{item.name}</Text>
+      <View style={styles.stickerGrid}>
+        {item.stickers.map((sticker, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.stickerButton}
+            onPress={() => insertSticker(sticker)}
+            activeOpacity={0.6}
           >
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: 'timing', duration: 300 }}
-              style={styles.fullPageContent}
-            >
-              {/* Large Profile Header */}
-              <View style={styles.fullPageProfileHeader}>
-                <Avatar
-                  source={`https://i.pravatar.cc/150?img=${userName.length % 10}`}
-                  name={userName}
-                  size={120}
-                />
-                {isEditing ? (
-                  <TextInput
-                    style={styles.editableProfileName}
-                    value={editedName}
-                    onChangeText={setEditedName}
-                    placeholder="Enter name"
-                    textAlign="center"
-                    multiline={false}
-                  />
-                ) : (
-                  <Text style={styles.fullPageProfileName}>{editedName}</Text>
-                )}
-                <Text style={styles.fullPageProfileStatus}>Last seen recently</Text>
-                
-                {/* Edit/Save button in profile section */}
-                <TouchableOpacity 
-                  style={styles.profileEditButton}
-                  onPress={() => {
-                    console.log('Edit button pressed, current isEditing:', isEditing);
-                    if (isEditing) {
-                      // Save changes
-                      console.log('Saving changes...');
-                      setIsEditing(false);
-                    } else {
-                      // Enter edit mode
-                      console.log('Entering edit mode...');
-                      setIsEditing(true);
-                    }
-                  }}
-                >
-                  <Text style={styles.profileEditButtonText}>
-                    {isEditing ? 'Save Changes' : 'Edit Profile'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Quick Action Buttons - Call, Video, Info */}
-              <View style={styles.quickActions}>
-                <TouchableOpacity style={styles.quickActionButton}>
-                  <View style={styles.quickActionIconContainer}>
-                    <MaterialIcon name="phone" size={28} color="#4CAF50" />
-                  </View>
-                  <Text style={styles.quickActionText}>Call</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quickActionButton}>
-                  <View style={styles.quickActionIconContainer}>
-                    <MaterialIcon name="videocam" size={28} color="#2196F3" />
-                  </View>
-                  <Text style={styles.quickActionText}>Video</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quickActionButton}>
-                  <View style={styles.quickActionIconContainer}>
-                    <MaterialIcon name="account-box" size={28} color="#FF9800" />
-                  </View>
-                  <Text style={styles.quickActionText}>Info</Text>
-                </TouchableOpacity>
-              </View>
-
-          {/* Profile Details - iOS Style Grouped Cards */}
-          <View style={styles.profileDetailsContainer}>
-            {/* Contact Info Card */}
-            <View style={styles.iosCard}>
-              <View style={styles.iosCardItem}>
-                <MaterialIcon name="phone" size={20} color={tokens.colors.primary} />
-                <Text style={styles.iosCardText}>+1 (555) 123-4567</Text>
-              </View>
-              <View style={styles.iosCardSeparator} />
-              <View style={styles.iosCardItem}>
-                <MaterialIcon name="email" size={20} color={tokens.colors.primary} />
-                <Text style={styles.iosCardText}>{userName.toLowerCase().replace(' ', '.')}@example.com</Text>
-              </View>
-            </View>
-
-            {/* Details Card */}
-            <View style={styles.iosCard}>
-              <View style={styles.iosCardItem}>
-                <MaterialIcon name="calendar" size={20} color={tokens.colors.primary} />
-                <Text style={styles.iosCardText}>Member since 2023</Text>
-              </View>
-              <View style={styles.iosCardSeparator} />
-              <View style={styles.iosCardItem}>
-                <MaterialIcon name="map-marker" size={20} color={tokens.colors.primary} />
-                <Text style={styles.iosCardText}>San Francisco, CA</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Activity Status - iOS Style Card */}
-          <View style={styles.profileDetailsContainer}>
-            <View style={styles.iosCard}>
-              <View style={styles.iosCardItem}>
-                <MaterialIcon name="circle" size={12} color="#4CAF50" />
-                <Text style={styles.iosCardText}>Active now</Text>
-              </View>
-              <View style={styles.iosCardSeparator} />
-              <View style={styles.iosCardItem}>
-                <MaterialIcon name="message-text" size={16} color={tokens.colors.onSurface60} />
-                <Text style={[styles.iosCardText, { color: tokens.colors.onSurface60 }]}>Usually replies within an hour</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Shared Media - iOS Style */}
-          <View style={styles.profileDetailsContainer}>
-            <View style={styles.iosCard}>
-              <View style={styles.iosCardItem}>
-                <MaterialIcon name="image" size={20} color={tokens.colors.primary} />
-                <Text style={styles.iosCardText}>Shared Media</Text>
-                <TouchableOpacity>
-                  <Text style={styles.seeAllText}>See All</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.mediaGrid}>
-              {[1, 2, 3, 4].map((item) => (
-                <View key={item} style={styles.mediaItem}>
-                  <View style={styles.mediaPlaceholder}>
-                    <MaterialIcon name="image" size={24} color={tokens.colors.onSurface60} />
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* Mutual Connections - iOS Style */}
-          <View style={styles.profileDetailsContainer}>
-            <View style={styles.iosCard}>
-              <View style={styles.iosCardItem}>
-                <MaterialIcon name="account-multiple" size={20} color={tokens.colors.primary} />
-                <Text style={styles.iosCardText}>Mutual Connections</Text>
-                <Text style={styles.mutualCount}>12 mutual</Text>
-              </View>
-            </View>
-            <View style={styles.mutualAvatars}>
-              {[1, 2, 3, 4, 5].map((item) => (
-                <View key={item} style={styles.mutualAvatar}>
-                  <Avatar
-                    source={`https://i.pravatar.cc/150?img=${item + 10}`}
-                    name={`Friend ${item}`}
-                    size={40}
-                  />
-                </View>
-              ))}
-              <View style={styles.moreMutual}>
-                <Text style={styles.moreText}>+7</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* About Section - iOS Style */}
-          <View style={styles.profileDetailsContainer}>
-            <View style={styles.iosCard}>
-              <View style={styles.iosCardItem}>
-                <MaterialIcon name="account-details" size={20} color={tokens.colors.primary} />
-                <View style={{ flex: 1, marginLeft: tokens.spacing.m }}>
-                  <Text style={[styles.iosCardText, { marginLeft: 0, marginBottom: 4 }]}>About</Text>
-                  {isEditing ? (
-                    <TextInput
-                      style={styles.editableAboutText}
-                      value={editedAbout}
-                      onChangeText={setEditedAbout}
-                      placeholder="Tell people about yourself"
-                      multiline={true}
-                      textAlignVertical="top"
-                    />
-                  ) : (
-                    <Text style={[styles.iosCardText, { marginLeft: 0, color: tokens.colors.onSurface60, fontSize: 14 }]}>
-                      {editedAbout || 'Available'}
-                    </Text>
-                  )}
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Quick Stats */}
-          <View style={styles.statsSection}>
-            <Text style={styles.sectionTitle}>Quick Stats</Text>
-            <View style={styles.statsGrid}>
-              <View style={styles.statItem}>
-                <MaterialIcon name="message-text" size={20} color={tokens.colors.primary} />
-                <Text style={styles.statNumber}>1,247</Text>
-                <Text style={styles.statLabel}>Messages</Text>
-              </View>
-              <View style={styles.statItem}>
-                <MaterialIcon name="image" size={20} color={tokens.colors.primary} />
-                <Text style={styles.statNumber}>89</Text>
-                <Text style={styles.statLabel}>Photos</Text>
-              </View>
-              <View style={styles.statItem}>
-                <MaterialIcon name="calendar" size={20} color={tokens.colors.primary} />
-                <Text style={styles.statNumber}>2 years</Text>
-                <Text style={styles.statLabel}>Friends</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Social Links */}
-          <View style={styles.socialSection}>
-            <Text style={styles.sectionTitle}>Social Links</Text>
-            <View style={styles.socialLinks}>
-              <TouchableOpacity style={styles.socialButton}>
-                <MaterialIcon name="instagram" size={24} color="#E4405F" />
-                <Text style={styles.socialText}>Instagram</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
-                <MaterialIcon name="twitter" size={24} color="#1DA1F2" />
-                <Text style={styles.socialText}>Twitter</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
-                <MaterialIcon name="linkedin" size={24} color="#0077B5" />
-                <Text style={styles.socialText}>LinkedIn</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Quick Settings */}
-          <View style={styles.profileSettings}>
-            <TouchableOpacity style={styles.profileSettingItem}>
-              <MaterialIcon name="bell-off" size={20} color={tokens.colors.onSurface60} />
-              <Text style={styles.profileSettingText}>Mute notifications</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.profileSettingItem}>
-              <MaterialIcon name="block-helper" size={20} color={tokens.colors.error} />
-              <Text style={[styles.profileSettingText, { color: tokens.colors.error }]}>Block user</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.profileSettingItem}>
-              <MaterialIcon name="report" size={20} color={tokens.colors.error} />
-              <Text style={[styles.profileSettingText, { color: tokens.colors.error }]}>Report user</Text>
-            </TouchableOpacity>
-          </View>
-        </MotiView>
-        </ScrollView>
+            <Text style={styles.stickerItemText}>{sticker}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
-    </Modal>
+    </View>
+  );
+
+  // Gesture handlers
+  const handlePullToRefresh = async () => {
+    setIsRefreshing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Simulate loading older messages
+    setTimeout(() => {
+      const olderMessages: Message[] = [
+        {
+          id: `older-${Date.now()}`,
+          text: 'This is an older message loaded from history',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60),
+          isSent: Math.random() > 0.5,
+          isDelivered: true,
+          isRead: true,
+        },
+      ];
+      setMessages(prev => [...olderMessages, ...prev]);
+      setIsRefreshing(false);
+    }, 1500);
+  };
+
+  const showMessageActions = (messageId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectedMessageId(messageId);
+    
+    const message = messages.find(msg => msg.id === messageId);
+    if (!message) return;
+    
+    Alert.alert(
+      'Message Actions',
+      'Choose an action',
+      [
+        { text: 'Reply', onPress: () => replyToMessage_func(message) },
+        { text: 'Forward', onPress: () => forwardMessage(message) },
+        { text: 'Copy', onPress: () => copyMessage(message) },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteMessage(messageId) },
+        { text: 'Cancel', style: 'cancel' },
+      ]
     );
   };
 
-  // Input toolbar
-  const InputToolbar = () => {
-    const hasText = message.length > 0;
+  const replyToMessage_func = (message: Message) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setReplyToMessage(message);
+    textInputRef.current?.focus();
+    
+    // Dismiss any open keyboards
+    setShowEmojiKeyboard(false);
+    setShowStickerPack(false);
+    setKeyboardMode('text');
+  };
 
-    return (
-      <MotiView
-        animate={{
-          translateX: isShaking ? [-4, 4, -4, 4, 0] : 0,
-        }}
-        transition={{
-          type: 'timing',
-          duration: 200,
-        }}
-      >
-        <Surface style={styles.inputToolbar}>
-        {replyTo && (
-          <View style={styles.replyStrip}>
-            <Text style={styles.replyStripText}>Replying to message</Text>
-            <TouchableOpacity onPress={() => setReplyTo(null)}>
-              <MaterialIcon name="close" size={16} color={tokens.colors.onSurface60} />
-            </TouchableOpacity>
-          </View>
-        )}
-        
-        <View style={styles.inputContainer}>
-          <TouchableOpacity style={styles.toolbarButton}>
-            <MaterialIcon name="attachment" size={24} color={tokens.colors.onSurface60} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.toolbarButton}>
-            <MaterialIcon name="emoticon-outline" size={24} color={tokens.colors.onSurface60} />
-          </TouchableOpacity>
-          
-          <TextInput
-            style={styles.textInput}
-            placeholder="Message"
-            placeholderTextColor={tokens.colors.onSurface38}
-            value={message}
-            onChangeText={setMessage}
-            multiline
-            maxLength={1000}
-            blurOnSubmit={false}
-            returnKeyType="default"
-            enablesReturnKeyAutomatically={false}
-          />
-          
-          <MotiView
-            animate={{
-              scale: hasText ? 1 : 0.8,
-              backgroundColor: hasText ? tokens.colors.primary : tokens.colors.surface3,
-            }}
-            transition={{ type: 'spring', damping: 15 }}
-            style={styles.sendButtonContainer}
-          >
-            <TouchableOpacity 
-              style={styles.sendButton}
-              onPress={handleSend}
-            >
-              <MaterialIcon 
-                name={hasText ? "send" : "microphone"} 
-                size={20} 
-                color={hasText ? '#FFFFFF' : tokens.colors.onSurface60} 
-              />
-            </TouchableOpacity>
-          </MotiView>
-        </View>
-      </Surface>
-      </MotiView>
+  const forwardMessage = (message: Message) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    Alert.alert(
+      'Forward Message',
+      'Message will be forwarded to your chat history',
+      [
+        {
+          text: 'Forward',
+          onPress: () => {
+            const forwardedMessage: Message = {
+              id: Date.now().toString(),
+              text: message.sticker ? undefined : `Forwarded: ${message.text}`,
+              sticker: message.sticker,
+              timestamp: new Date(),
+              isSent: true,
+              isDelivered: true,
+            };
+
+            setMessages(prev => [...prev, forwardedMessage]);
+            setForwardedMessages(prev => [...prev, message.id]);
+
+            // Simulate message delivery
+            setTimeout(() => {
+              setMessages(prev =>
+                prev.map(msg =>
+                  msg.id === forwardedMessage.id ? { ...msg, isRead: true } : msg
+                )
+              );
+            }, 1000);
+          }
+        },
+        { text: 'Cancel', style: 'cancel' }
+      ]
     );
   };
 
-  // Scroll to bottom button
-  const ScrollToBottomButton = () => (
-    <MotiView
-      style={styles.scrollToBottomContainer}
-      animate={{
-        opacity: showScrollToBottom ? 1 : 0,
-        scale: showScrollToBottom ? 1 : 0.8,
-      }}
-      transition={{ type: 'spring', damping: 15 }}
-    >
-      <TouchableOpacity
-        style={styles.scrollToBottomButton}
-        onPress={() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }}
-      >
-        <MaterialIcon 
-          name="keyboard_arrow_down" 
-          size={24} 
-          color={tokens.colors.onSurface} 
-        />
-      </TouchableOpacity>
-    </MotiView>
+  const copyMessage = async (message: Message) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    try {
+      const textToCopy = message.sticker ? message.sticker : message.text || '';
+      await Clipboard.setStringAsync(textToCopy);
+      
+      Alert.alert(
+        'Copied!',
+        'Message copied to clipboard',
+        [{ text: 'OK' }],
+        { cancelable: true }
+      );
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to copy message',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const clearReply = () => {
+    setReplyToMessage(null);
+  };
+
+  const toggleHeaderDropdown = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowHeaderDropdown(!showHeaderDropdown);
+  };
+
+  const handleContactInfo = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowHeaderDropdown(false);
+    Alert.alert(
+      'Contact Info',
+      `Name: ${userName}\nStatus: Online\nLast seen: Now`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleMuteChat = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowHeaderDropdown(false);
+    Alert.alert(
+      'Mute Chat',
+      'Mute notifications for this chat?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: '1 Hour', onPress: () => console.log('Mute 1 hour') },
+        { text: '8 Hours', onPress: () => console.log('Mute 8 hours') },
+        { text: 'Until Tomorrow', onPress: () => console.log('Mute until tomorrow') }
+      ]
+    );
+  };
+
+  const handleBlockUser = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setShowHeaderDropdown(false);
+    Alert.alert(
+      'Block User',
+      `Block ${userName}? They won't be able to send you messages.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Block', style: 'destructive', onPress: () => console.log('User blocked') }
+      ]
+    );
+  };
+
+  const handleClearChat = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setShowHeaderDropdown(false);
+    Alert.alert(
+      'Clear Chat',
+      'Delete all messages in this chat?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear', style: 'destructive', onPress: () => setMessages([]) }
+      ]
+    );
+  };
+
+  const deleteMessage = (messageId: string) => {
+    setMessages(prev => prev.filter(msg => msg.id !== messageId));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  };
+
+  const addQuickReaction = (messageId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    console.log('Quick reaction added to message:', messageId);
+    // Implementation for quick reactions (like/heart)
+  };
+
+  // Animated gesture handlers
+  const keyboardSwipeGestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
+    onActive: (event) => {
+      if (event.translationY > 0 && (showEmojiKeyboard || showStickerPack)) {
+        keyboardSwipeY.value = event.translationY;
+      }
+    },
+    onEnd: (event) => {
+      if (event.translationY > 100) {
+        keyboardSwipeY.value = withTiming(300);
+        runOnJS(() => {
+          setShowEmojiKeyboard(false);
+          setShowStickerPack(false);
+          setKeyboardMode('text');
+        })();
+      } else {
+        keyboardSwipeY.value = withSpring(0);
+      }
+    },
+  });
+
+  const keyboardSwipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: keyboardSwipeY.value }],
+  }));
+
+  const renderMessage = ({ item }: { item: Message }) => (
+    <MessageBubble 
+      message={item} 
+      onLongPress={() => showMessageActions(item.id)}
+      onDoubleTap={() => addQuickReaction(item.id)}
+      formatTime={formatTime}
+    />
   );
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <DynamicHeader
-        title={userName}
-        showBackButton
-        onBackPress={() => {
-          console.log('Main ChatRoom back button pressed');
-          navigation.goBack();
-        }}
-        onTitlePress={() => setShowProfileModal(true)}
-        scrollY={scrollPosition}
-        rightIcons={[
-          { icon: 'phone', onPress: handleVoiceCall },
-          { icon: 'video', onPress: handleVideoCall },
-        ]}
-      />
+    <GestureHandlerRootView style={styles.container}>
+      <SafeAreaView style={styles.container}>
+        <DynamicHeader
+          title={userName}
+          subtitle="Online • Last seen recently"
+          showBackButton={true}
+          onBackPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            navigation.goBack();
+          }}
+          onTitlePress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            handleContactInfo();
+          }}
+          rightIcons={[
+            {
+              icon: "video",
+              onPress: () => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Alert.alert('Video Call', `Start video call with ${userName}?`, [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Call', onPress: () => console.log('Video call started') }
+                ]);
+              }
+            },
+            {
+              icon: "phone", 
+              onPress: () => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Alert.alert('Voice Call', `Call ${userName}?`, [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Call', onPress: () => console.log('Voice call started') }
+                ]);
+              }
+            },
+            {
+              icon: showHeaderDropdown ? "keyboard_arrow_up" : "keyboard_arrow_down",
+              onPress: toggleHeaderDropdown
+            }
+          ]}
+        />
 
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={MessageItem}
-        keyExtractor={(item) => item.id}
-        style={styles.messagesList}
-        contentContainerStyle={styles.messagesContainer}
-        onScroll={(event) => {
-          handleScroll(event);
-          const offsetY = event.nativeEvent.contentOffset.y;
-          const contentHeight = event.nativeEvent.contentSize.height;
-          const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
-          
-          setShowScrollToBottom(
-            offsetY < contentHeight - scrollViewHeight - 100
-          );
-        }}
-        scrollEventThrottle={16}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
-        showsVerticalScrollIndicator={false}
-        ListFooterComponent={isTyping ? TypingIndicator : null}
-      />
+        {showHeaderDropdown && (
+          <>
+            <TouchableWithoutFeedback onPress={toggleHeaderDropdown}>
+              <View style={styles.dropdownOverlay} />
+            </TouchableWithoutFeedback>
+            <MotiView
+              from={{ opacity: 0, translateY: -10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              exit={{ opacity: 0, translateY: -10 }}
+              transition={{ duration: 200 }}
+              style={styles.headerDropdown}
+            >
+              <TouchableOpacity style={styles.dropdownItem} onPress={handleContactInfo}>
+                <MaterialIcon name="account-circle" size={20} color={tokens.colors.onSurface} />
+                <Text style={styles.dropdownText}>Contact Info</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={handleMuteChat}>
+                <MaterialIcon name="volume-off" size={20} color={tokens.colors.onSurface} />
+                <Text style={styles.dropdownText}>Mute Notifications</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={handleClearChat}>
+                <MaterialIcon name="delete-sweep" size={20} color={tokens.colors.onSurface} />
+                <Text style={styles.dropdownText}>Clear Chat</Text>
+              </TouchableOpacity>
+              
+              <View style={styles.dropdownSeparator} />
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={handleBlockUser}>
+                <MaterialIcon name="block" size={20} color={tokens.colors.error} />
+                <Text style={[styles.dropdownText, { color: tokens.colors.error }]}>Block User</Text>
+              </TouchableOpacity>
+            </MotiView>
+          </>
+        )}
 
-      <ScrollToBottomButton />
-      <InputToolbar />
-      <ReactionsModal />
-      <ProfileModal />
-      
-      <MediaViewer
-        visible={mediaViewerVisible}
-        onClose={closeMediaViewer}
-        mediaUri={selectedMediaUri}
-        caption={selectedMediaCaption}
-      />
-    </KeyboardAvoidingView>
+        <KeyboardAvoidingView 
+          style={styles.content}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.id}
+            style={styles.messagesList}
+            contentContainerStyle={styles.messagesContent}
+            showsVerticalScrollIndicator={false}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            scrollEnabled={true}
+            bounces={true}
+            alwaysBounceVertical={true}
+            directionalLockEnabled={true}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handlePullToRefresh}
+                tintColor={tokens.colors.primary}
+                colors={[tokens.colors.primary]}
+                progressBackgroundColor={tokens.colors.surface1}
+              />
+            }
+          />
+
+          {replyToMessage && (
+            <MotiView
+              from={{ opacity: 0, translateY: -10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              exit={{ opacity: 0, translateY: -10 }}
+              transition={{ duration: 200 }}
+              style={styles.replyContainer}
+            >
+              <View style={styles.replyContent}>
+                <View style={styles.replyInfo}>
+                  <MaterialIcon name="reply" size={16} color={tokens.colors.primary} />
+                  <Text style={styles.replyLabel}>
+                    Replying to {replyToMessage?.isSent ? 'yourself' : userName}
+                  </Text>
+                </View>
+                <Text style={styles.replyText} numberOfLines={1}>
+                  {replyToMessage?.sticker || replyToMessage?.text}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={clearReply} style={styles.replyCloseButton}>
+                <MaterialIcon name="close" size={20} color={tokens.colors.onSurface60} />
+              </TouchableOpacity>
+            </MotiView>
+          )}
+
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <TouchableOpacity style={styles.attachButton} onPress={toggleUploadMenu}>
+              <MaterialIcon name="attachment" size={24} color={tokens.colors.onSurface60} />
+            </TouchableOpacity>
+
+            <TextInput
+              ref={textInputRef}
+              style={styles.textInput}
+              value={message}
+              onChangeText={setMessage}
+              placeholder="Message"
+              placeholderTextColor={tokens.colors.onSurface60}
+              multiline
+              maxLength={1000}
+              returnKeyType="default"
+              enablesReturnKeyAutomatically
+              onFocus={() => {
+                setShowEmojiKeyboard(false);
+                setShowStickerPack(false);
+                setShowUploadMenu(false);
+                setKeyboardMode('text');
+              }}
+            />
+
+            <TouchableOpacity 
+              style={styles.emojiButton}
+              onPress={toggleStickerPack}
+              activeOpacity={0.7}
+            >
+              <MaterialIcon 
+                name={keyboardMode === 'sticker' ? "keyboard" : "sticker-emoji"} 
+                size={24} 
+                color={keyboardMode === 'sticker' ? tokens.colors.primary : tokens.colors.onSurface60} 
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.emojiButton}
+              onPress={toggleEmojiKeyboard}
+              activeOpacity={0.7}
+            >
+              <MaterialIcon 
+                name={keyboardMode === 'emoji' ? "keyboard" : "emoticon-outline"} 
+                size={24} 
+                color={keyboardMode === 'emoji' ? tokens.colors.primary : tokens.colors.onSurface60} 
+              />
+            </TouchableOpacity>
+
+            {message.trim() ? (
+              <TouchableOpacity 
+                style={styles.sendButton} 
+                onPress={sendMessage}
+                activeOpacity={0.7}
+              >
+                <MaterialIcon name="send" size={20} color={tokens.colors.onSurface} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={[
+                  styles.micButton,
+                  isRecording && styles.micButtonRecording
+                ]}
+                onPressIn={startRecording}
+                onPressOut={stopRecording}
+                delayPressIn={0}
+                delayPressOut={0}
+                activeOpacity={0.7}
+              >
+                <MaterialIcon 
+                  name={isRecording ? "stop" : "microphone"} 
+                  size={24} 
+                  color={isRecording ? tokens.colors.error : tokens.colors.onSurface60} 
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {isRecording && (
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            exit={{ opacity: 0, translateY: 10 }}
+            transition={{ duration: 200 }}
+            style={styles.recordingIndicator}
+          >
+            <View style={styles.recordingWave}>
+              <MotiView
+                from={{ scaleY: 0.3 }}
+                animate={{ scaleY: [0.3, 1, 0.3] }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 800,
+                  delay: 0,
+                }}
+                style={styles.waveBar}
+              />
+              <MotiView
+                from={{ scaleY: 0.5 }}
+                animate={{ scaleY: [0.5, 1.2, 0.5] }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 800,
+                  delay: 200,
+                }}
+                style={styles.waveBar}
+              />
+              <MotiView
+                from={{ scaleY: 0.3 }}
+                animate={{ scaleY: [0.3, 0.8, 0.3] }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 800,
+                  delay: 400,
+                }}
+                style={styles.waveBar}
+              />
+            </View>
+            <Text style={styles.recordingText}>
+              Recording... {formatDuration(recordingDuration)}
+            </Text>
+            <TouchableOpacity 
+              style={styles.cancelRecordingButton}
+              onPress={cancelRecording}
+            >
+              <MaterialIcon name="close" size={20} color={tokens.colors.error} />
+            </TouchableOpacity>
+          </MotiView>
+        )}
+
+        {showUploadMenu && (
+          <>
+            <TouchableWithoutFeedback onPress={toggleUploadMenu}>
+              <View style={styles.uploadOverlay} />
+            </TouchableWithoutFeedback>
+            <MotiView
+              from={{ opacity: 0, scale: 0.8, translateY: 20 }}
+              animate={{ opacity: 1, scale: 1, translateY: 0 }}
+              exit={{ opacity: 0, scale: 0.8, translateY: 20 }}
+              transition={{ duration: 200 }}
+              style={styles.uploadMenu}
+            >
+              <TouchableOpacity style={styles.uploadOption} onPress={handleCamera}>
+                <View style={styles.uploadIconContainer}>
+                  <MaterialIcon name="camera" size={24} color={tokens.colors.primary} />
+                </View>
+                <Text style={styles.uploadOptionText}>Camera</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.uploadOption} onPress={handleImagePicker}>
+                <View style={styles.uploadIconContainer}>
+                  <MaterialIcon name="image" size={24} color={tokens.colors.primary} />
+                </View>
+                <Text style={styles.uploadOptionText}>Gallery</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.uploadOption} onPress={handleDocumentPicker}>
+                <View style={styles.uploadIconContainer}>
+                  <MaterialIcon name="file-document" size={24} color={tokens.colors.primary} />
+                </View>
+                <Text style={styles.uploadOptionText}>Document</Text>
+              </TouchableOpacity>
+            </MotiView>
+          </>
+        )}
+
+        {showEmojiKeyboard && (
+          <PanGestureHandler onGestureEvent={keyboardSwipeGestureHandler}>
+            <Animated.View style={keyboardSwipeStyle}>
+              <MotiView
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                exit={{ opacity: 0, translateY: 20 }}
+                transition={{ duration: 200 }}
+                style={styles.emojiKeyboard}
+              >
+                <View style={styles.emojiHeader}>
+                  <Text style={styles.emojiHeaderText}>Emoji</Text>
+                  <TouchableOpacity 
+                    onPress={() => {
+                      setShowEmojiKeyboard(false);
+                      setKeyboardMode('text');
+                    }}
+                    style={styles.emojiCloseButton}
+                  >
+                    <MaterialIcon name="keyboard" size={20} color={tokens.colors.primary} />
+                  </TouchableOpacity>
+                </View>
+                <FlatList
+                  data={emojiCategories}
+                  renderItem={renderEmojiCategory}
+                  keyExtractor={(item) => item.category}
+                  style={styles.emojiList}
+                  showsVerticalScrollIndicator={false}
+                />
+              </MotiView>
+            </Animated.View>
+          </PanGestureHandler>
+        )}
+
+        {showStickerPack && (
+          <PanGestureHandler onGestureEvent={keyboardSwipeGestureHandler}>
+            <Animated.View style={keyboardSwipeStyle}>
+              <MotiView
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                exit={{ opacity: 0, translateY: 20 }}
+                transition={{ duration: 200 }}
+                style={styles.stickerKeyboard}
+              >
+                <View style={styles.stickerHeader}>
+                  <Text style={styles.stickerHeaderText}>Stickers</Text>
+                  <TouchableOpacity 
+                    onPress={() => {
+                      setShowStickerPack(false);
+                      setKeyboardMode('text');
+                    }}
+                    style={styles.stickerCloseButton}
+                  >
+                    <MaterialIcon name="keyboard" size={20} color={tokens.colors.primary} />
+                  </TouchableOpacity>
+                </View>
+                <FlatList
+                  data={stickerPacks}
+                  renderItem={renderStickerPack}
+                  keyExtractor={(item) => item.name}
+                  style={styles.stickerList}
+                  showsVerticalScrollIndicator={false}
+                />
+              </MotiView>
+            </Animated.View>
+          </PanGestureHandler>
+        )}
+      </KeyboardAvoidingView>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 };
+
+// Emoji data - iOS-style categories
+const emojiCategories = [
+  {
+    category: 'Smileys & People',
+    emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐', '😕', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾']
+  },
+  {
+    category: 'Animals & Nature',
+    emojis: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷', '🕸', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐃', '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊', '🐇', '🦝', '🦨', '🦡', '🦦', '🦥', '🐁', '🐀', '🐿', '🦔']
+  },
+  {
+    category: 'Food & Drink',
+    emojis: ['🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔', '🍠', '🥐', '🥯', '🍞', '🥖', '🥨', '🧀', '🥚', '🍳', '🧈', '🥞', '🧇', '🥓', '🥩', '🍗', '🍖', '🦴', '🌭', '🍔', '🍟', '🍕', '🫓', '🥪', '🥙', '🧆', '🌮', '🌯', '🫔', '🥗', '🥘', '🫕', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🦪', '🍤', '🍙', '🍚', '🍘', '🍥', '🥠', '🥮', '🍢', '🍡', '🍧', '🍨', '🍦', '🥧', '🧁', '🍰', '🎂', '🍮', '🍭', '🍬', '🍫', '🍿', '🍩', '🍪', '🌰', '🥜', '🍯', '🥛', '🍼', '☕', '🫖', '🍵', '🧃', '🥤', '🧋', '🍶', '🍺', '🍻', '🥂', '🍷', '🥃', '🍸', '🍹', '🧉', '🍾']
+  },
+  {
+    category: 'Activities',
+    emojis: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛷', '⛸', '🥌', '🎿', '⛷', '🏂', '🪂', '🏋️‍♀️', '🏋️', '🏋️‍♂️', '🤼‍♀️', '🤼', '🤼‍♂️', '🤸‍♀️', '🤸', '🤸‍♂️', '⛹️‍♀️', '⛹️', '⛹️‍♂️', '🤺', '🤾‍♀️', '🤾', '🤾‍♂️', '🏌️‍♀️', '🏌️', '🏌️‍♂️', '🏇', '🧘‍♀️', '🧘', '🧘‍♂️', '🏄‍♀️', '🏄', '🏄‍♂️', '🏊‍♀️', '🏊', '🏊‍♂️', '🤽‍♀️', '🤽', '🤽‍♂️', '🚣‍♀️', '🚣', '🚣‍♂️', '🧗‍♀️', '🧗', '🧗‍♂️', '🚵‍♀️', '🚵', '🚵‍♂️', '🚴‍♀️', '🚴', '🚴‍♂️', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖', '🏵', '🎗', '🎫', '🎟', '🎪', '🤹‍♀️', '🤹', '🤹‍♂️', '🎭', '🩰', '🎨', '🎬', '🎤', '🎧', '🎼', '🎵', '🎶', '🥁', '🪘', '🎹', '🎻', '🎺', '🎸', '🪕', '🎷', '🎯', '🎳', '🎮', '🎰', '🧩']
+  },
+  {
+    category: 'Travel & Places',
+    emojis: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🏍', '🛵', '🚲', '🛴', '🛹', '🛼', '🚁', '🛸', '✈️', '🛩', '🛫', '🛬', '🪂', '💺', '🚀', '🛰', '🚉', '🚊', '🚝', '🚞', '🚋', '🚃', '🚟', '🚠', '🚡', '⛴', '🛥', '🚤', '⛵', '🛶', '🚢', '⚓', '⛽', '🚧', '🚦', '🚥', '🗺', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟', '🎡', '🎢', '🎠', '⛲', '⛱', '🏖', '🏝', '🏜', '🌋', '⛰', '🏔', '🗻', '🏕', '⛺', '🛖', '🏠', '🏡', '🏘', '🏚', '🏗', '🏭', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩', '💒', '🏛', '⛪', '🕌', '🛕', '🕍', '🕯', '💡', '🔦', '🏮', '🪔', '📱', '💻', '🖥', '🖨', '⌨️', '🖱', '🖲', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽', '🎞', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙', '🎚', '🎛', '🧭', '⏱', '⏲', '⏰', '🕰', '⌛', '⏳', '📡', '🔋', '🔌', '💡', '🔦', '🕯', '🪔', '🧯']
+  },
+  {
+    category: 'Objects',
+    emojis: ['⌚', '📱', '📲', '💻', '⌨️', '🖥', '🖨', '🖱', '🖲', '🕹', '🗜', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽', '🎞', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙', '🎚', '🎛', '⏱', '⏲', '⏰', '🕰', '⌛', '⏳', '📡', '🔋', '🔌', '💡', '🔦', '🕯', '🪔', '🧯', '🛢', '💸', '💵', '💴', '💶', '💷', '💰', '💳', '💎', '⚖️', '🧰', '🔧', '🔨', '⚒', '🛠', '⛏', '🔩', '⚙️', '🧱', '⛓', '🧲', '🔫', '💣', '🧨', '🪓', '🔪', '🗡', '⚔️', '🛡', '🚬', '⚰️', '⚱️', '🏺', '🔮', '📿', '🧿', '💈', '⚗️', '🔭', '🔬', '🕳', '🩹', '🩺', '💊', '💉', '🩸', '🧬', '🦠', '🧫', '🧪', '🌡', '🧹', '🧺', '🧻', '🚽', '🚰', '🚿', '🛁', '🛀', '🧼', '🪥', '🪒', '🧽', '🧴', '🛎', '🔑', '🗝', '🚪', '🪑', '🛋', '🛏', '🛌', '🧸', '🖼', '🛍', '🛒', '🎁', '🎈', '🎏', '🎀', '🎊', '🎉', '🎎', '🏮', '🎐', '🧧', '✉️', '📩', '📨', '📧', '💌', '📥', '📤', '📦', '🏷', '📪', '📫', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '📊', '📈', '📉', '🗒', '🗓', '📆', '📅', '📇', '🗃', '🗳', '🗄', '📋', '📁', '📂', '🗂', '🗞', '📰', '📓', '📔', '📒', '📕', '📗', '📘', '📙', '📚', '📖', '🔖', '🧷', '🔗', '📎', '🖇', '📐', '📏', '🧮', '📌', '📍', '✂️', '🖊', '🖋', '✒️', '🖌', '🖍', '📝', '✏️', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓']
+  },
+  {
+    category: 'Symbols',
+    emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕', '🛑', '⛔', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', '📵', '🚭', '❗', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯', '💹', '❇️', '✳️', '❎', '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧', '🚾', '♿', '🅿️', '🈳', '🈂️', '🛂', '🛃', '🛄', '🛅', '🚹', '🚺', '🚼', '🚻', '🚮', '🎦', '📶', '🈁', '🔣', 'ℹ️', '🔤', '🔡', '🔠', '🆖', '🆗', '🆙', '🆒', '🆕', '🆓', '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🔢', '#️⃣', '*️⃣', '⏏️', '▶️', '⏸', '⏯', '⏹', '⏺', '⏭', '⏮', '⏩', '⏪', '⏫', '⏬', '◀️', '🔼', '🔽', '➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '↩️', '↪️', '⤴️', '⤵️', '🔀', '🔁', '🔂', '🔄', '🔃', '🎵', '🎶', '➕', '➖', '➗', '✖️', '♾', '💲', '💱', '™️', '©️', '®️', '〰️', '➰', '➿', '🔚', '🔙', '🔛', '🔝', '🔜', '✔️', '☑️', '🔘', '⚪', '⚫', '🔴', '🔵', '🔺', '🔻', '🔸', '🔹', '🔶', '🔷', '🔳', '🔲', '▪️', '▫️', '◾', '◽', '◼️', '◻️', '⬛', '⬜', '🔈', '🔇', '🔉', '🔊', '🔔', '🔕', '📣', '📢', '👁‍🗨', '💬', '💭', '🗯', '♠️', '♣️', '♥️', '♦️', '🃏', '🎴', '🀄', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚', '🕛', '🕜', '🕝', '🕞', '🕟', '🕠', '🕡', '🕢', '🕣', '🕤', '🕥', '🕦', '🕧']
+  },
+  {
+    category: 'Flags',
+    emojis: ['🏁', '🚩', '🎌', '🏴', '🏳️', '🏳️‍🌈', '🏳️‍⚧️', '🏴‍☠️', '🇦🇫', '🇦🇽', '🇦🇱', '🇩🇿', '🇦🇸', '🇦🇩', '🇦🇴', '🇦🇮', '🇦🇶', '🇦🇬', '🇦🇷', '🇦🇲', '🇦🇼', '🇦🇺', '🇦🇹', '🇦🇿', '🇧🇸', '🇧🇭', '🇧🇩', '🇧🇧', '🇧🇾', '🇧🇪', '🇧🇿', '🇧🇯', '🇧🇲', '🇧🇹', '🇧🇴', '🇧🇦', '🇧🇼', '🇧🇷', '🇮🇴', '🇻🇬', '🇧🇳', '🇧🇬', '🇧🇫', '🇧🇮', '🇰🇭', '🇨🇲', '🇨🇦', '🇮🇨', '🇨🇻', '🇧🇶', '🇰🇾', '🇨🇫', '🇹🇩', '🇨🇱', '🇨🇳', '🇨🇽', '🇨🇨', '🇨🇴', '🇰🇲', '🇨🇬', '🇨🇩', '🇨🇰', '🇨🇷', '🇨🇮', '🇭🇷', '🇨🇺', '🇨🇼', '🇨🇾', '🇨🇿', '🇩🇰', '🇩🇯', '🇩🇲', '🇩🇴', '🇪🇨', '🇪🇬', '🇸🇻', '🇬🇶', '🇪🇷', '🇪🇪', '🇪🇹', '🇪🇺', '🇫🇰', '🇫🇴', '🇫🇯', '🇫🇮', '🇫🇷', '🇬🇫', '🇵🇫', '🇹🇫', '🇬🇦', '🇬🇲', '🇬🇪', '🇩🇪', '🇬🇭', '🇬🇮', '🇬🇷', '🇬🇱', '🇬🇩', '🇬🇵', '🇬🇺', '🇬🇹', '🇬🇬', '🇬🇳', '🇬🇼', '🇬🇾', '🇭🇹', '🇭🇳', '🇭🇰', '🇭🇺', '🇮🇸', '🇮🇳', '🇮🇩', '🇮🇷', '🇮🇶', '🇮🇪', '🇮🇲', '🇮🇱', '🇮🇹', '🇯🇲', '🇯🇵', '🎌', '🇯🇪', '🇯🇴', '🇰🇿', '🇰🇪', '🇰🇮', '🇽🇰', '🇰🇼', '🇰🇬', '🇱🇦', '🇱🇻', '🇱🇧', '🇱🇸', '🇱🇷', '🇱🇾', '🇱🇮', '🇱🇹', '🇱🇺', '🇲🇴', '🇲🇰', '🇲🇬', '🇲🇼', '🇲🇾', '🇲🇻', '🇲🇱', '🇲🇹', '🇲🇭', '🇲🇶', '🇲🇷', '🇲🇺', '🇾🇹', '🇲🇽', '🇫🇲', '🇲🇩', '🇲🇨', '🇲🇳', '🇲🇪', '🇲🇸', '🇲🇦', '🇲🇿', '🇲🇲', '🇳🇦', '🇳🇷', '🇳🇵', '🇳🇱', '🇳🇨', '🇳🇿', '🇳🇮', '🇳🇪', '🇳🇬', '🇳🇺', '🇳🇫', '🇰🇵', '🇲🇵', '🇳🇴', '🇴🇲', '🇵🇰', '🇵🇼', '🇵🇸', '🇵🇦', '🇵🇬', '🇵🇾', '🇵🇪', '🇵🇭', '🇵🇳', '🇵🇱', '🇵🇹', '🇵🇷', '🇶🇦', '🇷🇪', '🇷🇴', '🇷🇺', '🇷🇼', '🇼🇸', '🇸🇲', '🇸🇹', '🇸🇦', '🇸🇳', '🇷🇸', '🇸🇨', '🇸🇱', '🇸🇬', '🇸🇽', '🇸🇰', '🇸🇮', '🇬🇸', '🇸🇧', '🇸🇴', '🇿🇦', '🇰🇷', '🇸🇸', '🇪🇸', '🇱🇰', '🇧🇱', '🇸🇭', '🇰🇳', '🇱🇨', '🇵🇲', '🇻🇨', '🇸🇩', '🇸🇷', '🇸🇿', '🇸🇪', '🇨🇭', '🇸🇾', '🇹🇼', '🇹🇯', '🇹🇿', '🇹🇭', '🇹🇱', '🇹🇬', '🇹🇰', '🇹🇴', '🇹🇹', '🇹🇳', '🇹🇷', '🇹🇲', '🇹🇨', '🇹🇻', '🇻🇮', '🇺🇬', '🇺🇦', '🇦🇪', '🇬🇧', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', '🏴󠁧󠁢󠁷󠁬󠁳󠁿', '🇺🇸', '🇺🇾', '🇺🇿', '🇻🇺', '🇻🇦', '🇻🇪', '🇻🇳', '🇼🇫', '🇪🇭', '🇾🇪', '🇿🇲', '🇿🇼']
+  }
+];
+
+// Sticker packs - iOS-style animated and static stickers
+const stickerPacks = [
+  {
+    name: 'Classic',
+    stickers: ['👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👋', '🤚', '🖐', '✋', '🖖', '👏', '🙌', '🤲', '🤝', '🙏', '✍️', '💪', '🦾', '🦿', '🦵', '🦶']
+  },
+  {
+    name: 'Hearts',
+    stickers: ['💖', '💝', '💗', '💓', '💞', '💕', '💘', '💑', '💏', '💋', '🥰', '😍', '🤩', '😘', '😗', '☺️', '😚', '😙', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💟']
+  },
+  {
+    name: 'Animals',
+    stickers: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺']
+  },
+  {
+    name: 'Party',
+    stickers: ['🎉', '🎊', '🥳', '🎈', '🎂', '🍰', '🧁', '🍾', '🥂', '🍻', '🍺', '🥃', '🍸', '🍹', '🍷', '🥤', '🎁', '🎀', '🏆', '🥇', '🥈', '🥉', '🎖', '🏅', '🎗', '🎟', '🎫', '🎪', '🎭', '🎨']
+  },
+  {
+    name: 'Travel',
+    stickers: ['✈️', '🛫', '🛬', '🚗', '🚕', '🚙', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜', '🏍', '🛵', '🚲', '🛴', '🛹', '🚁', '🛸', '🚀', '🛰', '⛵', '🛥', '🚤', '⛴', '🚢']
+  }
+];
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokens.colors.bg,
+    backgroundColor: tokens.colors.surface1,
+  },
+  content: {
+    flex: 1,
+  },
+  headerButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   messagesList: {
     flex: 1,
+    paddingHorizontal: 16,
   },
-  messagesContainer: {
-    padding: tokens.spacing.m,
-    paddingBottom: tokens.spacing.l,
-    paddingTop: 120, // Increased from 80 to 120 to push messages below header
+  messagesContent: {
+    paddingVertical: 16,
+    flexGrow: 1,
+    justifyContent: 'flex-end',
   },
   messageContainer: {
-    marginVertical: tokens.spacing.xs,
-    maxWidth: '75%',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    marginVertical: 4,
+    maxWidth: screenWidth * 0.75,
   },
-  ownMessage: {
+  sentMessage: {
     alignSelf: 'flex-end',
-    flexDirection: 'row-reverse',
   },
-  otherMessage: {
+  receivedMessage: {
     alignSelf: 'flex-start',
-  },
-  messageAvatar: {
-    marginHorizontal: tokens.spacing.s,
-    alignSelf: 'flex-end',
   },
   messageBubble: {
-    padding: tokens.spacing.s,
-    borderRadius: tokens.radius.m,
-    elevation: 1,
-    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    maxWidth: '100%',
   },
-  ownBubble: {
+  sentBubble: {
     backgroundColor: tokens.colors.primary,
-    borderBottomRightRadius: tokens.spacing.xs,
+    borderBottomRightRadius: 6,
   },
-  otherBubble: {
+  receivedBubble: {
     backgroundColor: tokens.colors.surface2,
-    borderBottomLeftRadius: tokens.spacing.xs,
+    borderBottomLeftRadius: 6,
   },
   messageText: {
-    ...tokens.typography.body,
-    lineHeight: 20,
+    fontSize: tokens.typography.body.fontSize,
+    lineHeight: tokens.typography.body.lineHeight,
+    fontFamily: tokens.typography.body.fontFamily,
   },
-  ownText: {
-    color: '#FFFFFF',
-  },
-  otherText: {
+  sentText: {
     color: tokens.colors.onSurface,
   },
-  timestamp: {
-    ...tokens.typography.caption,
-    marginTop: tokens.spacing.xs,
+  receivedText: {
+    color: tokens.colors.onSurface,
+  },
+  messageInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
+  sentInfo: {
+    justifyContent: 'flex-end',
+  },
+  receivedInfo: {
+    justifyContent: 'flex-start',
+  },
+  timeText: {
     fontSize: 11,
-  },
-  ownTimestamp: {
-    color: 'rgba(255,255,255,0.7)',
-    textAlign: 'right',
-  },
-  otherTimestamp: {
-    color: tokens.colors.onSurface38,
-  },
-  replyIndicator: {
-    borderLeftWidth: 3,
-    borderLeftColor: tokens.colors.primary,
-    paddingLeft: tokens.spacing.s,
-    marginBottom: tokens.spacing.xs,
-  },
-  replyText: {
-    ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
-    fontStyle: 'italic',
+    fontFamily: tokens.typography.caption.fontFamily,
   },
-  reactionsContainer: {
-    flexDirection: 'row',
-    marginTop: tokens.spacing.xs,
-    flexWrap: 'wrap',
-  },
-  reaction: {
-    fontSize: 16,
-    marginRight: tokens.spacing.xs,
-    backgroundColor: tokens.colors.surface3,
-    paddingHorizontal: tokens.spacing.s,
-    paddingVertical: 2,
-    borderRadius: tokens.radius.s,
-  },
-  // Typing indicator
-  typingContainer: {
-    alignSelf: 'flex-start',
-    marginVertical: tokens.spacing.xs,
-    marginLeft: tokens.spacing.m,
-  },
-  typingBubble: {
-    backgroundColor: tokens.colors.surface2,
-    borderRadius: tokens.radius.l,
-    borderBottomLeftRadius: tokens.spacing.s,
-    padding: tokens.spacing.m,
-    paddingVertical: tokens.spacing.s,
-  },
-  typingDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  typingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: tokens.colors.onSurface60,
-    marginHorizontal: 2,
-  },
-  // Input toolbar
-  inputToolbar: {
-    backgroundColor: tokens.colors.surface2,
-    minHeight: 56,
-    paddingHorizontal: tokens.spacing.m,
-    paddingVertical: tokens.spacing.s,
-    elevation: 8,
-  },
-  replyStrip: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: tokens.spacing.s,
-    paddingHorizontal: tokens.spacing.m,
-    backgroundColor: tokens.colors.surface3,
-    borderRadius: tokens.radius.s,
-    marginBottom: tokens.spacing.s,
-  },
-  replyStripText: {
-    ...tokens.typography.caption,
-    color: tokens.colors.onSurface60,
-    fontStyle: 'italic',
+  statusContainer: {
+    marginLeft: 4,
   },
   inputContainer: {
+    backgroundColor: tokens.colors.surface1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: tokens.colors.surface2,
+  },
+  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: tokens.spacing.s,
+    backgroundColor: tokens.colors.surface2,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minHeight: 48,
   },
-  toolbarButton: {
-    padding: tokens.spacing.s,
-    borderRadius: tokens.radius.m,
+  attachButton: {
+    padding: 4,
+    marginRight: 8,
   },
   textInput: {
     flex: 1,
-    backgroundColor: tokens.colors.bg,
-    borderRadius: tokens.radius.l,
-    paddingHorizontal: tokens.spacing.m,
-    paddingVertical: tokens.spacing.s,
-    marginHorizontal: tokens.spacing.s,
-    minHeight: 40,
-    maxHeight: 120,
+    fontSize: tokens.typography.body.fontSize,
+    fontFamily: tokens.typography.body.fontFamily,
     color: tokens.colors.onSurface,
-    ...tokens.typography.body,
-    textAlignVertical: 'top',
+    maxHeight: 100,
+    paddingVertical: 8,
+    textAlignVertical: 'center',
   },
-  sendButtonContainer: {
-    borderRadius: 20, // tokens.radius.full equivalent
-    padding: tokens.spacing.s,
+  emojiButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20, // tokens.radius.full equivalent
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  // Reactions modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  reactionsModal: {
-    backgroundColor: tokens.colors.surface2,
-    borderRadius: tokens.radius.l,
-    flexDirection: 'row',
-    paddingHorizontal: tokens.spacing.m,
-    paddingVertical: tokens.spacing.s,
-    gap: tokens.spacing.s,
-  },
-  reactionButton: {
-    padding: tokens.spacing.s,
-    borderRadius: tokens.radius.m,
-  },
-  reactionEmoji: {
-    fontSize: 24,
-  },
-  // Scroll to bottom button
-  scrollToBottomContainer: {
-    position: 'absolute',
-    bottom: 80,
-    right: tokens.spacing.m,
-  },
-  scrollToBottomButton: {
-    width: 48,
-    height: 48,
-    backgroundColor: tokens.colors.surface2,
-    borderRadius: 24, // tokens.radius.full equivalent
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  // Image message styles
-  imageContainer: {
-    marginTop: tokens.spacing.s,
-    borderRadius: tokens.radius.m,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  messageImage: {
-    width: 200,
-    height: 150,
-    borderRadius: tokens.radius.m,
-  },
-  imageCaptionOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: tokens.spacing.s,
-    paddingVertical: tokens.spacing.xs,
-  },
-  imageCaptionText: {
-    color: '#FFFFFF',
-    ...tokens.typography.caption,
-    fontSize: 12,
-  },
-  // Profile modal styles
-  profileModal: {
-    backgroundColor: tokens.colors.surface1,
-    borderTopLeftRadius: tokens.radius.xl,
-    borderTopRightRadius: tokens.radius.xl,
-    marginTop: 'auto',
-    paddingTop: tokens.spacing.l,
-    paddingHorizontal: tokens.spacing.l,
-    paddingBottom: tokens.spacing.xl,
-    maxHeight: '80%',
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: tokens.spacing.l,
-  },
-  profileInfo: {
-    marginLeft: tokens.spacing.m,
-    flex: 1,
-  },
-  profileName: {
-    ...tokens.typography.h2,
-    color: tokens.colors.onSurface,
-    fontWeight: '600',
-  },
-  profileStatus: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface60,
-    marginTop: 2,
-  },
-  profileDetails: {
-    marginBottom: tokens.spacing.l,
-  },
-  profileDetailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: tokens.spacing.s,
-  },
-  profileDetailText: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface,
-    marginLeft: tokens.spacing.m,
-  },
-  profileSettings: {
-    paddingTop: tokens.spacing.s, // Reduced padding
-  },
-  profileSettingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: tokens.spacing.m,
-  },
-  profileSettingText: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface,
-    marginLeft: tokens.spacing.m,
-  },
-  // Full page modal styles
-  fullPageModal: {
-    flex: 1,
-    backgroundColor: tokens.colors.bg,
-  },
-  profileScrollContainer: {
-    flex: 1,
-  },
-  scrollContentContainer: {
-    flexGrow: 1,
-    paddingBottom: tokens.spacing.m, // Reduced from xl to m
-  },
-  fullPageContent: {
-    paddingHorizontal: tokens.spacing.l,
-    paddingTop: tokens.spacing.l,
-  },
-  fullPageProfileHeader: {
-    alignItems: 'center',
-    marginBottom: tokens.spacing.xl,
-  },
-  fullPageProfileName: {
-    ...tokens.typography.h1,
-    color: tokens.colors.onSurface,
-    fontWeight: '700',
-    marginTop: tokens.spacing.m,
-    textAlign: 'center',
-  },
-  fullPageProfileStatus: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface60,
-    marginTop: tokens.spacing.xs,
-    textAlign: 'center',
-  },
-  // Header contact info styles
-  headerContactInfo: {
-    alignItems: 'center',
-    paddingVertical: tokens.spacing.s,
-  },
-  headerContactName: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface,
-    fontWeight: '600',
-    fontSize: 18,
-    textAlign: 'center',
-  },
-  headerContactStatus: {
-    ...tokens.typography.caption,
-    color: tokens.colors.onSurface60,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  headerContactPhone: {
-    ...tokens.typography.body,
-    color: tokens.colors.primary,
-    textAlign: 'center',
-    marginTop: 2,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  // New profile features styles
-  sectionTitle: {
-    ...tokens.typography.h2,
-    color: tokens.colors.onSurface,
-    fontWeight: '600',
-    marginBottom: tokens.spacing.m,
-  },
-  activitySection: {
-    marginBottom: tokens.spacing.l,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: tokens.spacing.xs,
-  },
-  activityText: {
-    ...tokens.typography.body,
-    color: '#4CAF50',
-    marginLeft: tokens.spacing.s,
-    fontWeight: '500',
-  },
-  activitySubtext: {
-    ...tokens.typography.caption,
-    color: tokens.colors.onSurface60,
-    marginLeft: tokens.spacing.s,
-  },
-  mediaSection: {
-    marginBottom: tokens.spacing.l,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: tokens.spacing.m,
-  },
-  seeAllText: {
-    ...tokens.typography.caption,
-    color: tokens.colors.primary,
-    fontWeight: '500',
-  },
-  mediaGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.spacing.s,
-  },
-  mediaItem: {
-    width: '23%',
-    aspectRatio: 1,
-  },
-  mediaPlaceholder: {
-    flex: 1,
-    backgroundColor: tokens.colors.surface2,
-    borderRadius: tokens.radius.s,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  // Additional profile features styles
-  mutualSection: {
-    marginBottom: tokens.spacing.l,
-  },
-  mutualCount: {
-    ...tokens.typography.caption,
-    color: tokens.colors.primary,
-    fontWeight: '500',
-  },
-  mutualAvatars: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  mutualAvatar: {
-    marginRight: -8,
-  },
-  moreMutual: {
-    width: 40,
-    height: 40,
+    backgroundColor: tokens.colors.primary,
     borderRadius: 20,
-    backgroundColor: tokens.colors.surface2,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
   },
-  moreText: {
-    ...tokens.typography.caption,
+  micButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  // Emoji keyboard styles
+  emojiKeyboard: {
+    backgroundColor: tokens.colors.surface1,
+    height: 280,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: tokens.colors.surface2,
+  },
+  emojiHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: tokens.colors.surface2,
+  },
+  emojiHeaderText: {
+    fontSize: tokens.typography.h2.fontSize,
+    fontFamily: tokens.typography.h2.fontFamily,
     color: tokens.colors.onSurface,
+    fontWeight: tokens.typography.h2.fontWeight,
+  },
+  emojiCloseButton: {
+    padding: 8,
+  },
+  emojiList: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  emojiCategoryContainer: {
+    marginVertical: 8,
+  },
+  emojiCategoryTitle: {
+    fontSize: tokens.typography.body.fontSize,
+    fontFamily: tokens.typography.body.fontFamily,
+    color: tokens.colors.onSurface60,
+    marginBottom: 8,
     fontWeight: '600',
   },
-  aboutSection: {
-    marginBottom: tokens.spacing.l,
-  },
-  aboutText: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface,
-    lineHeight: 20,
-    marginBottom: tokens.spacing.m,
-  },
-  interestTags: {
+  emojiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: tokens.spacing.s,
+    justifyContent: 'space-between',
   },
-  tag: {
-    backgroundColor: tokens.colors.surface2,
-    borderRadius: tokens.radius.l,
-    paddingHorizontal: tokens.spacing.m,
-    paddingVertical: tokens.spacing.xs,
-  },
-  tagText: {
-    ...tokens.typography.caption,
-    color: tokens.colors.primary,
-    fontWeight: '500',
-  },
-  statsSection: {
-    marginBottom: tokens.spacing.l,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statNumber: {
-    ...tokens.typography.h2,
-    color: tokens.colors.onSurface,
-    fontWeight: '700',
-    marginTop: tokens.spacing.xs,
-  },
-  statLabel: {
-    ...tokens.typography.caption,
-    color: tokens.colors.onSurface60,
-    marginTop: 2,
-  },
-  socialSection: {
-    marginBottom: tokens.spacing.l,
-  },
-  socialLinks: {
-    gap: tokens.spacing.m,
-  },
-  socialButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tokens.colors.surface2,
-    borderRadius: tokens.radius.m,
-    paddingHorizontal: tokens.spacing.m,
-    paddingVertical: tokens.spacing.s,
-  },
-  socialText: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface,
-    marginLeft: tokens.spacing.s,
-    fontWeight: '500',
-  },
-    // Quick Actions Styles
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: tokens.spacing.xl,
-    paddingVertical: tokens.spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.surface2,
-    marginBottom: tokens.spacing.l,
-    backgroundColor: 'transparent',
-  },
-  quickActionButton: {
-    alignItems: 'center',
-    paddingVertical: tokens.spacing.m,
-    paddingHorizontal: tokens.spacing.s,
-    borderRadius: tokens.radius.l,
-    minWidth: 80,
-    backgroundColor: 'transparent',
-  },
-  quickActionIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: tokens.colors.surface2,
+  emojiPickerButton: {
+    width: '12%',
+    aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: tokens.spacing.s,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    marginVertical: 2,
   },
-  quickActionText: {
-    ...tokens.typography.caption,
-    color: tokens.colors.onSurface,
-    fontWeight: '600',
-    fontSize: 13,
+  emojiText: {
+    fontSize: 24,
+  },
+  // Sticker styles
+  stickerContainer: {
+    padding: 4,
+    borderRadius: 16,
+    maxWidth: '100%',
+  },
+  sentSticker: {
+    alignSelf: 'flex-end',
+  },
+  receivedSticker: {
+    alignSelf: 'flex-start',
+  },
+  stickerText: {
+    fontSize: 64,
     textAlign: 'center',
   },
-  quickActionButtonDanger: {
-    alignItems: 'center',
-    paddingVertical: tokens.spacing.s,
-    paddingHorizontal: tokens.spacing.s,
-    backgroundColor: '#DC3545', // Red/danger color
-    borderRadius: tokens.radius.l,
-    minWidth: 60,
-    flex: 1,
-    marginHorizontal: 2,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  quickActionTextDanger: {
-    ...tokens.typography.caption,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    marginTop: tokens.spacing.xs,
-  },
-  // Header Edit Button Styles
-  profileEditButton: {
-    backgroundColor: tokens.colors.primary,
-    borderRadius: tokens.radius.m,
-    paddingHorizontal: tokens.spacing.l,
-    paddingVertical: tokens.spacing.s,
-    marginTop: tokens.spacing.m,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  profileEditButtonText: {
-    ...tokens.typography.body,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  // Editable fields styles
-  editableProfileName: {
-    ...tokens.typography.h1,
-    color: tokens.colors.onSurface,
-    fontWeight: '700',
-    marginTop: tokens.spacing.m,
-    textAlign: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.primary,
-    paddingBottom: tokens.spacing.xs,
-    minWidth: 200,
-  },
-  editableAboutText: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface,
-    lineHeight: 20,
-    marginBottom: tokens.spacing.m,
-    borderWidth: 1,
-    borderColor: tokens.colors.primary,
-    borderRadius: tokens.radius.s,
-    padding: tokens.spacing.m,
-    minHeight: 80,
-  },
-  // iOS-style profile cards
-  profileDetailsContainer: {
-    marginBottom: tokens.spacing.l,
-    gap: tokens.spacing.m,
-  },
-  iosCard: {
+  stickerKeyboard: {
     backgroundColor: tokens.colors.surface1,
-    borderRadius: 12, // iOS-style rounded corners
-    borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    overflow: 'hidden',
+    height: 280,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: tokens.colors.surface2,
   },
-  iosCardItem: {
+  stickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: tokens.colors.surface2,
+  },
+  stickerHeaderText: {
+    fontSize: tokens.typography.h2.fontSize,
+    fontFamily: tokens.typography.h2.fontFamily,
+    color: tokens.colors.onSurface,
+    fontWeight: tokens.typography.h2.fontWeight,
+  },
+  stickerCloseButton: {
+    padding: 8,
+  },
+  stickerList: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  stickerPackContainer: {
+    marginVertical: 8,
+  },
+  stickerPackTitle: {
+    fontSize: tokens.typography.body.fontSize,
+    fontFamily: tokens.typography.body.fontFamily,
+    color: tokens.colors.onSurface60,
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  stickerGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  stickerButton: {
+    width: '15%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 2,
+    borderRadius: 8,
+  },
+  stickerItemText: {
+    fontSize: 32,
+  },
+  // Reply styles
+  replyContainer: {
+    backgroundColor: tokens.colors.surface2,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: tokens.colors.surface3,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    minHeight: 48,
+    justifyContent: 'space-between',
   },
-  iosCardText: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface,
-    marginLeft: tokens.spacing.m,
+  replyContent: {
     flex: 1,
+    marginRight: 8,
   },
-  iosCardSeparator: {
-    height: 0.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    marginLeft: 52, // Align with text
+  replyInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  replyLabel: {
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.caption.fontFamily,
+    color: tokens.colors.primary,
+    marginLeft: 4,
+    fontWeight: '600',
+  },
+  replyText: {
+    fontSize: tokens.typography.body.fontSize,
+    fontFamily: tokens.typography.body.fontFamily,
+    color: tokens.colors.onSurface60,
+    fontStyle: 'italic',
+  },
+  replyCloseButton: {
+    padding: 4,
+  },
+  // Message indicator styles
+  forwardedIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingBottom: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: tokens.colors.onSurface38,
+  },
+  forwardedText: {
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.caption.fontFamily,
+    color: tokens.colors.onSurface60,
+    marginLeft: 4,
+    fontStyle: 'italic',
+  },
+  replyIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingBottom: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: tokens.colors.primary,
+  },
+  replyIndicatorText: {
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.caption.fontFamily,
+    color: tokens.colors.primary,
+    marginLeft: 4,
+    fontWeight: '600',
+  },
+  headerDropdown: {
+    position: 'absolute',
+    top: 80,
+    right: 12,
+    backgroundColor: tokens.colors.surface2,
+    borderRadius: 12,
+    paddingVertical: 8,
+    minWidth: 180,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: tokens.colors.onSurface,
+    fontWeight: '500',
+  },
+  dropdownSeparator: {
+    height: 1,
+    backgroundColor: tokens.colors.onSurface38,
+    marginVertical: 4,
+    marginHorizontal: 16,
+  },
+  dropdownOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999,
+  },
+  uploadOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1998,
+  },
+  uploadMenu: {
+    position: 'absolute',
+    bottom: 140,
+    left: 20,
+    backgroundColor: tokens.colors.surface2,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    zIndex: 1999,
+  },
+  uploadOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    marginVertical: 2,
+    borderRadius: 8,
+  },
+  uploadIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: tokens.colors.primary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  uploadOptionText: {
+    fontSize: 16,
+    color: tokens.colors.onSurface,
+    fontWeight: '500',
+  },
+  micButtonRecording: {
+    backgroundColor: tokens.colors.error + '20',
+    borderColor: tokens.colors.error,
+    borderWidth: 2,
+  },
+  recordingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colors.surface2,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  recordingWave: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+    gap: 3,
+  },
+  waveBar: {
+    width: 3,
+    height: 16,
+    backgroundColor: tokens.colors.error,
+    borderRadius: 1.5,
+  },
+  recordingText: {
+    flex: 1,
+    fontSize: 14,
+    color: tokens.colors.error,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  cancelRecordingButton: {
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: tokens.colors.error + '20',
   },
 });
+
+export default ChatRoomScreen;
