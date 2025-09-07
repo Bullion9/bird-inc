@@ -186,11 +186,11 @@ export function AddContactScreen() {
                 <Image source={{ uri: profileImage }} style={styles.profileImage} />
               ) : (
                 <View style={styles.placeholderPhoto}>
-                  <MaterialIcon name="camera_alt" size={32} color={tokens.colors.onSurface38} />
+                  <MaterialIcon name="camera_alt" size={32} color="#007AFF" />
                 </View>
               )}
               <View style={styles.photoOverlay}>
-                <MaterialIcon name="camera_alt" size={16} color="#FFFFFF" />
+                <MaterialIcon name="camera_alt" size={16} color="#007AFF" />
               </View>
             </TouchableOpacity>
             <Text style={styles.photoHint}>Add Photo</Text>
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: tokens.colors.primary,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,

@@ -160,12 +160,12 @@ export const DynamicHeader: React.FC<DynamicHeaderProps> = ({
           {rightIcons.map((icon, index) => (
             <View 
               key={index}
-              style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor(icon.icon) }]}
+              style={styles.headerIconContainer}
             >
               <MaterialIcon
                 name={icon.icon}
                 size={24}
-                color="#FFFFFF"
+                color="#007AFF"
                 onPress={icon.onPress}
               />
             </View>
@@ -279,5 +279,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
+    backgroundColor: 'transparent',
   },
 });

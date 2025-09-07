@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useState } from 'react';
-import { View, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent, TouchableOpacity, TextInput } from 'react-native';
+import { View, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -76,26 +76,38 @@ export const SettingsScreen: React.FC = () => {
     setScrollPosition(currentScrollY);
   }, []);
 
-  const handleNavigation = (screen: 'EditProfile' | 'StorageAndData' | 'ChatsSettings' | 'NotificationSettings' | 'PrivacySettings' | 'HelpSettings' | 'ContactSettings' | 'InviteFriends' | 'Notes' | 'ManageFolders' | 'StickerMarket' | 'DesktopApp') => {
+  const handleEditPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Navigate to edit profile or show edit menu
+    navigation.navigate('EditProfile');
+  };
+
+  const handleScanPress = () => {
+    console.log('QR Scan button pressed');
+    try {
+      navigation.navigate('Scan');
+      console.log('Navigation to Scan screen initiated');
+    } catch (error) {
+      console.error('Navigation error:', error);
+      Alert.alert('Navigation Error', 'Could not open scan screen');
+    }
+  };
+
+  const handleNavigation = (screen: 'Account' | 'EditProfile' | 'StorageAndData' | 'ChatsSettings' | 'NotificationSettings' | 'PrivacySettings' | 'HelpSettings' | 'ContactSettings' | 'InviteFriends' | 'Notes' | 'ManageFolders' | 'StickerMarket' | 'DesktopApp' | 'MyQR' | 'Scan') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate(screen);
   };
 
   const settingsGroups = [
     {
-      id: 'account',
+      id: 'main',
       items: [
         {
           id: 'account',
           title: 'Account',
-          icon: 'account_circle',
-          onPress: () => handleNavigation('EditProfile'),
+          icon: 'key',
+          onPress: () => handleNavigation('Account'),
         },
-      ]
-    },
-    {
-      id: 'preferences',
-      items: [
         {
           id: 'chats',
           title: 'Chats',
@@ -131,50 +143,41 @@ export const SettingsScreen: React.FC = () => {
           icon: 'note',
           onPress: () => handleNavigation('Notes'),
         },
-      ]
-    },
-    {
-      id: 'social',
-      items: [
-        {
-          id: 'invite',
-          title: 'Invite Friends',
-          icon: 'person_add',
-          onPress: () => handleNavigation('InviteFriends'),
-        },
-        {
-          id: 'stickers',
-          title: 'Sticker Market',
-          icon: 'emoji_emotions',
-          onPress: () => handleNavigation('StickerMarket'),
-        },
-      ]
-    },
-    {
-      id: 'security',
-      items: [
         {
           id: 'privacy',
           title: 'Privacy',
           icon: 'lock',
           onPress: () => handleNavigation('PrivacySettings'),
         },
+        {
+          id: 'myqr',
+          title: 'My QR Code',
+          icon: 'qrcode',
+          onPress: () => handleNavigation('MyQR'),
+        },
+        {
+          id: 'invite',
+          title: 'Invite Friends',
+          icon: 'person_add',
+          onPress: () => handleNavigation('InviteFriends'),
+        },
       ]
     },
     {
-      id: 'apps',
+      id: 'social',
       items: [
+        {
+          id: 'stickers',
+          title: 'Sticker Market',
+          icon: 'emoji_emotions',
+          onPress: () => handleNavigation('StickerMarket'),
+        },
         {
           id: 'desktop',
           title: 'Get Bird for Desktop',
           icon: 'laptop',
           onPress: () => handleNavigation('DesktopApp'),
         },
-      ]
-    },
-    {
-      id: 'support',
-      items: [
         {
           id: 'help',
           title: 'Help',
@@ -206,6 +209,16 @@ export const SettingsScreen: React.FC = () => {
         showBackButton={false}
         scrollY={scrollPosition}
         titleSize={20}
+        rightIcons={[
+          {
+            icon: 'pencil',
+            onPress: handleEditPress,
+          },
+          {
+            icon: 'qrcode',
+            onPress: handleScanPress,
+          },
+        ]}
       />
       
       <ScrollView 
@@ -253,6 +266,55 @@ export const SettingsScreen: React.FC = () => {
                 <Text style={styles.profileName}>John Doe</Text>
                 <Text style={styles.profileSubtitle}>Edit Profile, Privacy & Status</Text>
               </View>
+              <MaterialIcon 
+                name="chevron_right" 
+                size={20} 
+                color="rgba(142, 142, 147, 1)" 
+              />
+            </TouchableOpacity>
+            
+            {/* Create Avatar Option */}
+            <View style={styles.separatorLine} />
+            <TouchableOpacity
+              style={styles.createAvatarItem}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Alert.alert(
+                  'Create Avatar',
+                  'Choose how you want to create your avatar:',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { 
+                      text: 'AI Generated', 
+                      onPress: () => {
+                        Alert.alert('AI Avatar', 'Generate an AI avatar based on your preferences');
+                      }
+                    },
+                    { 
+                      text: 'From Photo', 
+                      onPress: () => {
+                        Alert.alert('Photo Avatar', 'Create an avatar from your photo');
+                      }
+                    },
+                    { 
+                      text: 'Custom Design', 
+                      onPress: () => {
+                        Alert.alert('Custom Avatar', 'Design your own custom avatar');
+                      }
+                    }
+                  ]
+                );
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: '#34C759' }]}>
+                <MaterialIcon 
+                  name="camera" 
+                  size={18} 
+                  color="#FFFFFF" 
+                />
+              </View>
+              <Text style={styles.iosCardText}>Create Avatar</Text>
               <MaterialIcon 
                 name="chevron_right" 
                 size={20} 
@@ -503,5 +565,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: tokens.spacing.m,
     marginTop: tokens.spacing.s,
+  },
+  separatorLine: {
+    height: 0.5,
+    backgroundColor: 'rgba(142, 142, 147, 0.3)',
+    marginLeft: 16,
+  },
+  createAvatarItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: 'transparent',
   },
 });

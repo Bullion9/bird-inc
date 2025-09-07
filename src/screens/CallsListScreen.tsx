@@ -409,14 +409,14 @@ export const CallsListScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
               <View style={styles.callInfo}>
-                <View style={[styles.callIconContainer, { backgroundColor: getIconBackgroundColor(icon.name, item.type) }]}>
+                <View style={styles.callIconContainer}>
                   <MaterialIcon 
                     name={icon.name} 
                     size={16} 
                     color={getCallIconColor(item.type)}
                   />
                 </View>
-                <View style={[styles.callTypeIconContainer, { backgroundColor: getIconBackgroundColor(callTypeIcon) }]}>
+                <View style={styles.callTypeIconContainer}>
                   <MaterialIcon 
                     name={callTypeIcon} 
                     size={14} 
@@ -440,11 +440,7 @@ export const CallsListScreen: React.FC = () => {
             
             <View style={styles.rightSection}>
               <TouchableOpacity
-                style={[styles.callButton, { 
-                  backgroundColor: getIconBackgroundColor(
-                    item.callType === 'video' ? 'video' : 'phone'
-                  ) 
-                }]}
+                style={styles.callButton}
                 onPress={() => {
                   if (item.callType === 'video') {
                     handleVideoCallPress(item);
@@ -781,6 +777,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   callTypeIconContainer: {
     width: 20,
@@ -789,6 +786,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 4,
+    backgroundColor: 'transparent',
   },
   callType: {
     ...tokens.typography.caption,
@@ -814,6 +812,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 2, // Reduced from 4
+    backgroundColor: 'transparent',
   },
   avatarContainer: {
     position: 'relative',

@@ -47,6 +47,9 @@ import { BioEditScreen } from '../screens/BioEditScreen';
 import { NameEditScreen } from '../screens/NameEditScreen';
 import { UsernameEditScreen } from '../screens/UsernameEditScreen';
 import { PhoneNumberViewScreen } from '../screens/PhoneNumberViewScreen';
+import { ScanScreen } from '../screens/ScanScreen';
+import { MyQRScreen } from '../screens/MyQRScreen';
+import { AccountScreen } from '../screens/AccountScreen';
 import { MaterialIcon } from '../components';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -187,6 +190,7 @@ const SettingsStackNavigator = () => {
       }}
     >
       <SettingsStack.Screen name="Settings" component={SettingsScreen} />
+      <SettingsStack.Screen name="Account" component={AccountScreen} />
       <SettingsStack.Screen name="EditProfile" component={EditProfileScreen} />
       <SettingsStack.Screen name="StorageAndData" component={StorageAndDataScreen} />
       <SettingsStack.Screen name="ChatsSettings" component={ChatsSettingsScreen} />
@@ -203,6 +207,8 @@ const SettingsStackNavigator = () => {
       <SettingsStack.Screen name="NameEdit" component={NameEditScreen} />
       <SettingsStack.Screen name="UsernameEdit" component={UsernameEditScreen} />
       <SettingsStack.Screen name="PhoneNumberView" component={PhoneNumberViewScreen} />
+      <SettingsStack.Screen name="Scan" component={ScanScreen} />
+      <SettingsStack.Screen name="MyQR" component={MyQRScreen} />
     </SettingsStack.Navigator>
   );
 };

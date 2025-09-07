@@ -61,6 +61,7 @@ export type StoriesStackParamList = {
 
 export type SettingsStackParamList = {
   Settings: undefined;
+  Account: undefined;
   EditProfile: undefined;
   StorageAndData: undefined;
   ChatsSettings: undefined;
@@ -77,4 +78,6 @@ export type SettingsStackParamList = {
   NameEdit: { initialName: string; onNameChange: (name: string) => void };
   UsernameEdit: { initialUsername: string; onUsernameChange: (username: string) => void };
   PhoneNumberView: { phoneNumber: string };
+  Scan: undefined;
+  MyQR: undefined;
 };

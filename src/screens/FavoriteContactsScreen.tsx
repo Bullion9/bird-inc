@@ -139,14 +139,14 @@ export const FavoriteContactsScreen: React.FC = () => {
         
         <View style={styles.rightSection}>
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: 'rgba(52, 199, 89, 0.15)' }]}
+            style={styles.actionButton}
             onPress={() => handleCall(item)}
           >
             <MaterialIcon name="phone" size={20} color="#34C759" />
           </TouchableOpacity>
           
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: 'rgba(0, 122, 255, 0.15)' }]}
+            style={styles.actionButton}
             onPress={() => handleVideoCall(item)}
           >
             <MaterialIcon name="videocam" size={20} color="#007AFF" />
@@ -287,6 +287,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   separator: {
     height: 1,

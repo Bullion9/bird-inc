@@ -140,8 +140,8 @@ export const EditProfileScreen: React.FC = () => {
             name={profile.name}
             size={96}
           />
-          <View style={[styles.cameraOverlay, { backgroundColor: getIconBackgroundColor('photo_camera') }]}>
-            <MaterialIcon name="photo_camera" size={20} color="#FFFFFF" />
+          <View style={styles.cameraOverlay}>
+            <MaterialIcon name="photo_camera" size={20} color="#007AFF" />
           </View>
           <Text style={styles.avatarLabel}>Tap to change photo</Text>
         </TouchableOpacity>
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     bottom: tokens.spacing.l,
     right: '50%',
     transform: [{ translateX: 32 }], // Half of avatar width (96/2) + overlay position
-    // backgroundColor removed - now handled by getIconBackgroundColor
+    backgroundColor: 'transparent',
     borderRadius: 8, // iOS-style border radius (changed from 16)
     width: 32,
     height: 32,
