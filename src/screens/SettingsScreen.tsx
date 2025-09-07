@@ -25,6 +25,51 @@ export const SettingsScreen: React.FC = () => {
   const [scrollPosition, setScrollPosition] = React.useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Function to get icon background color based on icon type
+  const getIconColor = (iconName: string): string => {
+    // iOS Settings-style vibrant colors
+    const colorMap: Record<string, string> = {
+      // Core settings - vibrant iOS colors
+      'account_circle': '#007AFF', // Blue
+      'chat_bubble': '#34C759',    // Green
+      'notifications': '#FF9500',  // Orange
+      'storage': '#8E8E93',        // Gray
+      'folder': '#FFCC00',         // Yellow
+      'note': '#30D158',           // Green
+      'person_add': '#FF2D92',     // Pink
+      'emoji_emotions': '#FFCC00', // Yellow
+      'lock': '#FF453A',           // Red
+      'laptop': '#5856D6',         // Purple
+      'help': '#00C7BE',           // Teal
+      'headset': '#007AFF',        // Blue
+      'tag': '#007AFF',            // Blue
+    };
+    
+    return colorMap[iconName] || '#007AFF';
+  };
+
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style background colors (slightly muted versions)
+    const backgroundColorMap: Record<string, string> = {
+      // Core settings - iOS-style gradients and backgrounds
+      'account_circle': '#007AFF', // Blue background
+      'chat_bubble': '#34C759',    // Green background
+      'notifications': '#FF9500',  // Orange background
+      'storage': '#8E8E93',        // Gray background
+      'folder': '#FFCC00',         // Yellow background
+      'note': '#30D158',           // Green background
+      'person_add': '#FF2D92',     // Pink background
+      'emoji_emotions': '#FFCC00', // Yellow background
+      'lock': '#FF453A',           // Red background
+      'laptop': '#5856D6',         // Purple background
+      'help': '#00C7BE',           // Teal background
+      'headset': '#007AFF',        // Blue background
+      'tag': '#007AFF',            // Blue background
+    };
+    
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const currentScrollY = event.nativeEvent.contentOffset.y;
     scrollY.current = currentScrollY;
@@ -227,10 +272,10 @@ export const SettingsScreen: React.FC = () => {
                     onPress={item.onPress}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.iconContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor(item.icon) }]}>
                       <MaterialIcon 
                         name={item.icon} 
-                        size={20} 
+                        size={18} 
                         color="#FFFFFF" 
                       />
                     </View>
@@ -323,12 +368,12 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginRight: 12, // iOS standard spacing
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6, // Rounded icon background
-    backgroundColor: tokens.colors.primary,
+    borderRadius: 8, // More rounded like iOS Settings
+    // backgroundColor will be set dynamically
   },
   settingsTitle: {
     ...tokens.typography.body,

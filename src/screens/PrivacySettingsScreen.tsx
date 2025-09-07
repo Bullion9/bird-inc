@@ -29,6 +29,60 @@ export const PrivacySettingsScreen: React.FC = () => {
   const [fingerprintLock, setFingerprintLock] = useState(false);
   const [twoStepVerification, setTwoStepVerification] = useState(false);
 
+  // Icon color mapping for iOS-style vibrant backgrounds
+  const getIconColor = (iconName: string): string => {
+    const colorMap: Record<string, string> = {
+      // Personal info icons - iOS colors
+      'schedule': '#FF9500',
+      'account_circle': '#007AFF',
+      'info': '#34C759',
+      'done_all': '#007AFF',
+      // Contact permissions - iOS colors
+      'group': '#34C759',
+      'phone': '#007AFF',
+      // Message privacy - iOS colors
+      'auto_delete': '#5856D6',
+      'location_on': '#FF453A',
+      'block': '#FF453A',
+      // Security icons - iOS colors
+      'screen_lock_portrait': '#FF9500',
+      'fingerprint': '#34C759',
+      'verified_user': '#007AFF',
+      // Advanced icons - iOS colors
+      'assessment': '#FF9500',
+      'file_download': '#00C7BE',
+      'delete': '#FF453A',
+    };
+    return colorMap[iconName] || '#007AFF';
+  };
+
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style solid background colors
+    const backgroundColorMap: Record<string, string> = {
+      // Personal info icons
+      'schedule': '#FF9500',
+      'account_circle': '#007AFF',
+      'info': '#34C759',
+      'done_all': '#007AFF',
+      // Contact permissions
+      'group': '#34C759',
+      'phone': '#007AFF',
+      // Message privacy
+      'auto_delete': '#5856D6',
+      'location_on': '#FF453A',
+      'block': '#FF453A',
+      // Security icons
+      'screen_lock_portrait': '#FF9500',
+      'fingerprint': '#34C759',
+      'verified_user': '#007AFF',
+      // Advanced icons
+      'assessment': '#FF9500',
+      'file_download': '#00C7BE',
+      'delete': '#FF453A',
+    };
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   const handleSwitchChange = (setter: (value: boolean) => void, currentValue: boolean) => {
     return (value: boolean) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -69,8 +123,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="schedule" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('schedule') }]}>
+                  <MaterialIcon name="schedule" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Last Seen</Text>
@@ -88,8 +142,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="account_circle" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('account_circle') }]}>
+                  <MaterialIcon name="account_circle" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Profile Photo</Text>
@@ -107,8 +161,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="info" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('info') }]}>
+                  <MaterialIcon name="info" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Status</Text>
@@ -122,8 +176,8 @@ export const PrivacySettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="done_all" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('done_all') }]}>
+                  <MaterialIcon name="done_all" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Read Receipts</Text>
               </View>
@@ -147,8 +201,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="group" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('group') }]}>
+                  <MaterialIcon name="group" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Groups</Text>
@@ -166,8 +220,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="phone" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('phone') }]}>
+                  <MaterialIcon name="phone" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Calls</Text>
@@ -189,8 +243,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="auto_delete" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('auto_delete') }]}>
+                  <MaterialIcon name="auto_delete" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Disappearing Messages</Text>
@@ -208,8 +262,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="location_on" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('location_on') }]}>
+                  <MaterialIcon name="location_on" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Live Location</Text>
@@ -227,8 +281,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="block" size={20} color={tokens.colors.error} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('block') }]}>
+                  <MaterialIcon name="block" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Blocked Contacts</Text>
               </View>
@@ -243,8 +297,8 @@ export const PrivacySettingsScreen: React.FC = () => {
           <View style={styles.cardGroup}>
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="screen_lock_portrait" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('screen_lock_portrait') }]}>
+                  <MaterialIcon name="screen_lock_portrait" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Screen Security</Text>
               </View>
@@ -260,8 +314,8 @@ export const PrivacySettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="fingerprint" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('fingerprint') }]}>
+                  <MaterialIcon name="fingerprint" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>App Lock</Text>
               </View>
@@ -281,8 +335,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="verified_user" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('verified_user') }]}>
+                  <MaterialIcon name="verified_user" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Two-Step Verification</Text>
@@ -304,8 +358,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="assessment" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('assessment') }]}>
+                  <MaterialIcon name="assessment" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Privacy Report</Text>
               </View>
@@ -320,8 +374,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="file_download" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('file_download') }]}>
+                  <MaterialIcon name="file_download" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Request Account Info</Text>
               </View>
@@ -336,8 +390,8 @@ export const PrivacySettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="delete" size={20} color={tokens.colors.error} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('delete') }]}>
+                  <MaterialIcon name="delete" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={[styles.settingTitle, { color: tokens.colors.error }]}>Delete My Account</Text>
@@ -402,6 +456,7 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 8,
   },
   settingTextContainer: {
     flex: 1,

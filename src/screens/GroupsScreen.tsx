@@ -354,7 +354,7 @@ export const GroupsScreen: React.FC = () => {
       </View>
 
       <FAB
-        icon="add"
+        icon="plus"
         style={styles.fab}
         onPress={handleCreateGroup}
         color={tokens.colors.onSurface}

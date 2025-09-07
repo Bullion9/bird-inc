@@ -93,6 +93,15 @@ export const EditProfileScreen: React.FC = () => {
     setProfile(prev => ({ ...prev, [field]: value }));
   };
 
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style solid background colors
+    const backgroundColorMap: Record<string, string> = {
+      'chevron_right': '#8E8E93',  // Gray background
+      'photo_camera': '#34C759',   // Green background for camera
+    };
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   return (
     <View style={styles.container}>
       <DynamicHeader 
@@ -131,7 +140,7 @@ export const EditProfileScreen: React.FC = () => {
             name={profile.name}
             size={96}
           />
-          <View style={styles.cameraOverlay}>
+          <View style={[styles.cameraOverlay, { backgroundColor: getIconBackgroundColor('photo_camera') }]}>
             <MaterialIcon name="photo_camera" size={20} color="#FFFFFF" />
           </View>
           <Text style={styles.avatarLabel}>Tap to change photo</Text>
@@ -148,7 +157,9 @@ export const EditProfileScreen: React.FC = () => {
                   {profile.name || 'Add your name...'}
                 </Text>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.iosCardSeparator} />
@@ -160,7 +171,9 @@ export const EditProfileScreen: React.FC = () => {
                   {profile.username ? `@${profile.username}` : 'Add a username...'}
                 </Text>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.iosCardSeparator} />
@@ -172,7 +185,9 @@ export const EditProfileScreen: React.FC = () => {
                   {profile.bio || 'Add a bio...'}
                 </Text>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -185,7 +200,9 @@ export const EditProfileScreen: React.FC = () => {
                   {profile.phoneNumber}
                 </Text>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -240,8 +257,8 @@ const styles = StyleSheet.create({
     bottom: tokens.spacing.l,
     right: '50%',
     transform: [{ translateX: 32 }], // Half of avatar width (96/2) + overlay position
-    backgroundColor: tokens.colors.primary,
-    borderRadius: 16,
+    // backgroundColor removed - now handled by getIconBackgroundColor
+    borderRadius: 8, // iOS-style border radius (changed from 16)
     width: 32,
     height: 32,
     justifyContent: 'center',
@@ -307,6 +324,13 @@ const styles = StyleSheet.create({
   },
   fieldPlaceholder: {
     color: tokens.colors.onSurface38,
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   stickyFooter: {
     position: 'absolute',

@@ -34,6 +34,27 @@ export const CallScreen: React.FC = () => {
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [callStatus, setCallStatus] = useState<'ringing' | 'connecting' | 'connected'>('ringing');
 
+  // iOS-style icon background colors
+  const getIconBackgroundColor = (iconName: string, isActive: boolean = false): string => {
+    if (isActive) {
+      const activeBackgrounds: { [key: string]: string } = {
+        mic_off: '#FF453A',      // Red for muted mic
+        pause: '#FF9500',        // Orange for hold
+        volume_up: '#007AFF',    // Blue for speaker on
+      };
+      return activeBackgrounds[iconName] || '#FF453A';
+    }
+    
+    const iconBackgrounds: { [key: string]: string } = {
+      mic: '#34C759',          // Green for mic
+      mic_off: '#FF453A',      // Red for muted mic  
+      pause: '#8E8E93',        // Gray for hold
+      volume_up: '#8E8E93',    // Gray for speaker off
+      call_end: '#FF453A',     // Red for end call
+    };
+    return iconBackgrounds[iconName] || '#8E8E93';
+  };
+
   useEffect(() => {
     // Simulate call connection after 3 seconds
     const connectTimer = setTimeout(() => {
@@ -144,14 +165,14 @@ export const CallScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.controlButton,
-              isMuted && styles.activeControlButton
+              { backgroundColor: getIconBackgroundColor(isMuted ? 'mic_off' : 'mic', isMuted) }
             ]}
             onPress={handleMute}
           >
             <MaterialIcon 
               name={isMuted ? 'mic_off' : 'mic'} 
               size={24} 
-              color={isMuted ? tokens.colors.bg : tokens.colors.onSurface} 
+              color="#FFFFFF"
             />
           </TouchableOpacity>
 
@@ -159,14 +180,14 @@ export const CallScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.controlButton,
-              isOnHold && styles.activeControlButton
+              { backgroundColor: getIconBackgroundColor('pause', isOnHold) }
             ]}
             onPress={handleHold}
           >
             <MaterialIcon 
               name="pause" 
               size={24} 
-              color={isOnHold ? tokens.colors.bg : tokens.colors.onSurface} 
+              color="#FFFFFF"
             />
           </TouchableOpacity>
 
@@ -174,20 +195,23 @@ export const CallScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.controlButton,
-              isSpeakerOn && styles.activeControlButton
+              { backgroundColor: getIconBackgroundColor('volume_up', isSpeakerOn) }
             ]}
             onPress={handleSpeaker}
           >
             <MaterialIcon 
               name="volume_up" 
               size={24} 
-              color={isSpeakerOn ? tokens.colors.bg : tokens.colors.onSurface} 
+              color="#FFFFFF"
             />
           </TouchableOpacity>
 
           {/* End Call Button */}
           <TouchableOpacity
-            style={styles.endCallButton}
+            style={[
+              styles.endCallButton,
+              { backgroundColor: getIconBackgroundColor('call_end') }
+            ]}
             onPress={handleEndCall}
           >
             <MaterialIcon 
@@ -250,19 +274,14 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: tokens.colors.surface2,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-  },
-  activeControlButton: {
-    backgroundColor: tokens.colors.secondary,
   },
   endCallButton: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: tokens.colors.error,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,

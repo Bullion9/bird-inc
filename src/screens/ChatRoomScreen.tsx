@@ -236,6 +236,40 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const textInputRef = useRef<TextInput>(null);
+
+  // iOS-style icon background colors for chat room
+  const getIconBackgroundColor = (iconName: string): string => {
+    const iconBackgrounds: { [key: string]: string } = {
+      // Header icons
+      videocam: '#FF9500',          // Orange for video call
+      call: '#34C759',              // Green for voice call
+      
+      // Dropdown menu icons
+      'account-circle': '#007AFF',   // Blue for contact info
+      'volume-off': '#8E8E93',      // Gray for mute
+      'delete-sweep': '#FF9500',    // Orange for clear chat
+      block: '#FF453A',             // Red for block user
+      
+      // Input area icons
+      add: '#007AFF',               // Blue for attach
+      send: '#007AFF',              // Blue for send
+      microphone: '#FF453A',        // Red for voice record
+      'sticker-emoji': '#FFCC00',   // Yellow for stickers
+      'emoticon-outline': '#FFCC00', // Yellow for emoji
+      keyboard: '#8E8E93',          // Gray for keyboard toggle
+      
+      // Upload menu icons
+      camera: '#34C759',            // Green for camera
+      image: '#5856D6',             // Purple for gallery
+      'file-document': '#FF9500',   // Orange for documents
+      
+      // Reply/message action icons
+      reply: '#007AFF',             // Blue for reply
+      close: '#8E8E93',             // Gray for close
+      share: '#007AFF',             // Blue for share
+    };
+    return iconBackgrounds[iconName] || '#8E8E93';
+  };
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -876,31 +910,35 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
           </TouchableOpacity>
           
           <View style={styles.headerRight}>
-            <MaterialIcon 
-              name="videocam" 
-              size={24} 
-              color={tokens.colors.primary}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                Alert.alert('Video Call', `Start video call with ${userName}?`, [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Call', onPress: () => console.log('Video call started') }
-                ]);
-              }}
-            />
+            <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('videocam') }]}>
+              <MaterialIcon 
+                name="videocam" 
+                size={24} 
+                color="#FFFFFF"
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  Alert.alert('Video Call', `Start video call with ${userName}?`, [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Call', onPress: () => console.log('Video call started') }
+                  ]);
+                }}
+              />
+            </View>
             
-            <MaterialIcon 
-              name="call" 
-              size={22} 
-              color={tokens.colors.primary}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                Alert.alert('Voice Call', `Call ${userName}?`, [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Call', onPress: () => console.log('Voice call started') }
-                ]);
-              }}
-            />
+            <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('call') }]}>
+              <MaterialIcon 
+                name="call" 
+                size={22} 
+                color="#FFFFFF"
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  Alert.alert('Voice Call', `Call ${userName}?`, [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Call', onPress: () => console.log('Voice call started') }
+                  ]);
+                }}
+              />
+            </View>
           </View>
         </View>
 
@@ -917,24 +955,32 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
               style={styles.headerDropdown}
             >
               <TouchableOpacity style={styles.dropdownItem} onPress={handleContactInfo}>
-                <MaterialIcon name="account-circle" size={20} color={tokens.colors.onSurface} />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('account-circle') }]}>
+                  <MaterialIcon name="account-circle" size={20} color="#FFFFFF" />
+                </View>
                 <Text style={styles.dropdownText}>Contact Info</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.dropdownItem} onPress={handleMuteChat}>
-                <MaterialIcon name="volume-off" size={20} color={tokens.colors.onSurface} />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('volume-off') }]}>
+                  <MaterialIcon name="volume-off" size={20} color="#FFFFFF" />
+                </View>
                 <Text style={styles.dropdownText}>Mute Notifications</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.dropdownItem} onPress={handleClearChat}>
-                <MaterialIcon name="delete-sweep" size={20} color={tokens.colors.onSurface} />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('delete-sweep') }]}>
+                  <MaterialIcon name="delete-sweep" size={20} color="#FFFFFF" />
+                </View>
                 <Text style={styles.dropdownText}>Clear Chat</Text>
               </TouchableOpacity>
               
               <View style={styles.dropdownSeparator} />
               
               <TouchableOpacity style={styles.dropdownItem} onPress={handleBlockUser}>
-                <MaterialIcon name="block" size={20} color={tokens.colors.error} />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('block') }]}>
+                  <MaterialIcon name="block" size={20} color="#FFFFFF" />
+                </View>
                 <Text style={[styles.dropdownText, { color: tokens.colors.error }]}>Block User</Text>
               </TouchableOpacity>
             </MotiView>
@@ -980,7 +1026,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
             >
               <View style={styles.replyContent}>
                 <View style={styles.replyInfo}>
-                  <MaterialIcon name="reply" size={16} color={tokens.colors.primary} />
+                  <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('reply') }]}>
+                    <MaterialIcon name="reply" size={16} color="#FFFFFF" />
+                  </View>
                   <Text style={styles.replyLabel}>
                     Replying to {replyToMessage?.isSent ? 'yourself' : userName}
                   </Text>
@@ -990,7 +1038,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
                 </Text>
               </View>
               <TouchableOpacity onPress={clearReply} style={styles.replyCloseButton}>
-                <MaterialIcon name="close" size={20} color={tokens.colors.onSurface60} />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('close') }]}>
+                  <MaterialIcon name="close" size={20} color="#FFFFFF" />
+                </View>
               </TouchableOpacity>
             </MotiView>
           )}
@@ -998,7 +1048,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
         <View style={styles.inputContainer}>
           <View style={styles.inputRow}>
             <TouchableOpacity style={styles.attachButton} onPress={toggleUploadMenu}>
-              <MaterialIcon name="add" size={18} color="#8E8E93" />
+              <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('add') }]}>
+                <MaterialIcon name="add" size={18} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
 
             <View style={styles.inputWrapper}>
@@ -1026,11 +1078,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
               onPress={toggleStickerPack}
               activeOpacity={0.7}
             >
-              <MaterialIcon 
-                name={keyboardMode === 'sticker' ? "keyboard" : "sticker-emoji"} 
-                size={24} 
-                color={keyboardMode === 'sticker' ? tokens.colors.primary : tokens.colors.onSurface60} 
-              />
+              <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('sticker-emoji') }]}>
+                <MaterialIcon 
+                  name={keyboardMode === 'sticker' ? "keyboard" : "sticker-emoji"} 
+                  size={24} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -1038,11 +1092,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
               onPress={toggleEmojiKeyboard}
               activeOpacity={0.7}
             >
-              <MaterialIcon 
-                name={keyboardMode === 'emoji' ? "keyboard" : "emoticon-outline"} 
-                size={24} 
-                color={keyboardMode === 'emoji' ? tokens.colors.primary : tokens.colors.onSurface60} 
-              />
+              <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('emoticon-outline') }]}>
+                <MaterialIcon 
+                  name={keyboardMode === 'emoji' ? "keyboard" : "emoticon-outline"} 
+                  size={24} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
             </View>
 
@@ -1053,7 +1109,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
                 onPress={sendMessage}
                 activeOpacity={0.7}
               >
-                <MaterialIcon name="send" size={24} color="#FFFFFF" />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('send') }]}>
+                  <MaterialIcon name="send" size={24} color="#FFFFFF" />
+                </View>
               </TouchableOpacity>
             )}
 
@@ -1067,11 +1125,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
                 delayPressOut={0}
                 activeOpacity={0.7}
               >
-                <MaterialIcon 
-                  name="microphone" 
-                  size={24} 
-                  color={tokens.colors.onSurface60} 
-                />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('microphone') }]}>
+                  <MaterialIcon 
+                    name="microphone" 
+                    size={24} 
+                    color="#FFFFFF" 
+                  />
+                </View>
               </TouchableOpacity>
             )}
 
@@ -1134,22 +1194,22 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
               style={styles.uploadMenu}
             >
               <TouchableOpacity style={styles.uploadOption} onPress={handleCamera}>
-                <View style={styles.uploadIconContainer}>
-                  <MaterialIcon name="camera" size={24} color={tokens.colors.primary} />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('camera') }]}>
+                  <MaterialIcon name="camera" size={24} color="#FFFFFF" />
                 </View>
                 <Text style={styles.uploadOptionText}>Camera</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.uploadOption} onPress={handleImagePicker}>
-                <View style={styles.uploadIconContainer}>
-                  <MaterialIcon name="image" size={24} color={tokens.colors.primary} />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('image') }]}>
+                  <MaterialIcon name="image" size={24} color="#FFFFFF" />
                 </View>
                 <Text style={styles.uploadOptionText}>Gallery</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.uploadOption} onPress={handleDocumentPicker}>
-                <View style={styles.uploadIconContainer}>
-                  <MaterialIcon name="file-document" size={24} color={tokens.colors.primary} />
+                <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('file-document') }]}>
+                  <MaterialIcon name="file-document" size={24} color="#FFFFFF" />
                 </View>
                 <Text style={styles.uploadOptionText}>Document</Text>
               </TouchableOpacity>
@@ -1169,14 +1229,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
               >
                 <View style={styles.emojiHeader}>
                   <Text style={styles.emojiHeaderText}>Emoji</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => {
                       setShowEmojiKeyboard(false);
                       setKeyboardMode('text');
                     }}
                     style={styles.emojiCloseButton}
                   >
-                    <MaterialIcon name="keyboard" size={20} color={tokens.colors.primary} />
+                    <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('keyboard') }]}>
+                      <MaterialIcon name="keyboard" size={20} color="#FFFFFF" />
+                    </View>
                   </TouchableOpacity>
                 </View>
                 <FlatList
@@ -1203,14 +1265,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
               >
                 <View style={styles.stickerHeader}>
                   <Text style={styles.stickerHeaderText}>Stickers</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => {
                       setShowStickerPack(false);
                       setKeyboardMode('text');
                     }}
                     style={styles.stickerCloseButton}
                   >
-                    <MaterialIcon name="keyboard" size={20} color={tokens.colors.primary} />
+                    <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('keyboard') }]}>
+                      <MaterialIcon name="keyboard" size={20} color="#FFFFFF" />
+                    </View>
                   </TouchableOpacity>
                 </View>
                 <FlatList
@@ -1329,6 +1393,14 @@ const styles = StyleSheet.create({
     right: 16,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  headerIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   backButton: {
     padding: 8,
@@ -1459,10 +1531,7 @@ const styles = StyleSheet.create({
     minHeight: 30, // Reduced iOS Messages height
   },
   attachButton: {
-    backgroundColor: 'transparent', // Remove background
-    borderWidth: 1, // Add border line
-    borderColor: '#8E8E93', // iOS gray border
-    borderRadius: 15, // Perfect circle (30px diameter / 2)
+    // Removed all styling - now handled by headerIconContainer
     width: 30, // iOS plus button size
     height: 30,
     justifyContent: 'center',
@@ -1493,8 +1562,7 @@ const styles = StyleSheet.create({
     marginBottom: 1, // Slight alignment adjustment
   },
   sendButtonOutside: {
-    backgroundColor: '#007AFF', // iOS blue
-    borderRadius: 20, // Even larger round button
+    // Removed backgroundColor and borderRadius - now handled by headerIconContainer
     width: 40, // Even larger button size
     height: 40,
     justifyContent: 'center',
@@ -1503,16 +1571,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center', // Center align with input
   },
   micButtonOutside: {
-    borderRadius: 20, // Even larger round button
+    // Removed borderRadius and backgroundColor - now handled by headerIconContainer
     width: 40, // Even larger button size
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8, // iOS spacing
     alignSelf: 'center', // Center align with input
-    borderWidth: 1,
-    borderColor: '#8E8E93',
-    backgroundColor: 'transparent',
+    // Removed border properties as well
   },
   emojiButton: {
     padding: 2, // Minimal iOS padding
@@ -1787,10 +1853,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   uploadIconContainer: {
+    // Removed background and border radius - now handled by headerIconContainer
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: tokens.colors.primary + '20',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

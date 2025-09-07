@@ -25,6 +25,58 @@ export const ChatsSettingsScreen: React.FC = () => {
   const [groupNotifications, setGroupNotifications] = useState(true);
   const [archiveChats, setArchiveChats] = useState(false);
 
+  // Icon color mapping for iOS-style vibrant icons
+  const getIconColor = (iconName: string): string => {
+    const colorMap: Record<string, string> = {
+      // Privacy icons - blue theme
+      'done_all': '#007AFF',
+      'schedule': '#FF9500',
+      'radio_button_checked': '#34C759',
+      // Message icons - communication theme
+      'send': '#007AFF',
+      'volume_up': '#34C759',
+      'preview': '#FF9500',
+      // Management icons - action theme  
+      'backup': '#5856D6',
+      'file_download': '#00C7BE',
+      'archive': '#FF9500',
+      // Appearance icons - design theme
+      'palette': '#FF2D92',
+      'wallpaper': '#5856D6',
+      'format_size': '#5856D6',
+      // Advanced icons - warning theme
+      'clear_all': '#FF9500',
+      'delete': '#FF453A',
+    };
+    return colorMap[iconName] || '#007AFF';
+  };
+
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style solid background colors
+    const backgroundColorMap: Record<string, string> = {
+      // Privacy icons - blue theme
+      'done_all': '#007AFF',
+      'schedule': '#FF9500',
+      'radio_button_checked': '#34C759',
+      // Message icons - communication theme
+      'send': '#007AFF',
+      'volume_up': '#34C759',
+      'preview': '#FF9500',
+      // Management icons - action theme  
+      'backup': '#5856D6',
+      'file_download': '#00C7BE',
+      'archive': '#FF9500',
+      // Appearance icons - design theme
+      'palette': '#FF2D92',
+      'wallpaper': '#5856D6',
+      'format_size': '#5856D6',
+      // Advanced icons - warning theme
+      'clear_all': '#FF9500',
+      'delete': '#FF453A',
+    };
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   const handleSwitchChange = (setter: (value: boolean) => void, currentValue: boolean) => {
     return (value: boolean) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -62,8 +114,8 @@ export const ChatsSettingsScreen: React.FC = () => {
           <View style={styles.cardGroup}>
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="done_all" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('done_all') }]}>
+                  <MaterialIcon name="done_all" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Read Receipts</Text>
               </View>
@@ -79,8 +131,8 @@ export const ChatsSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="schedule" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('schedule') }]}>
+                  <MaterialIcon name="schedule" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Last Seen</Text>
               </View>
@@ -96,8 +148,8 @@ export const ChatsSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="radio_button_checked" size={20} color={tokens.colors.success} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('radio_button_checked') }]}>
+                  <MaterialIcon name="radio_button_checked" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Online Status</Text>
               </View>
@@ -117,8 +169,8 @@ export const ChatsSettingsScreen: React.FC = () => {
           <View style={styles.cardGroup}>
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="send" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('send') }]}>
+                  <MaterialIcon name="send" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Enter to Send</Text>
               </View>
@@ -134,8 +186,8 @@ export const ChatsSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="volume_up" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('volume_up') }]}>
+                  <MaterialIcon name="volume_up" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Sound Effects</Text>
               </View>
@@ -151,8 +203,8 @@ export const ChatsSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="preview" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('preview') }]}>
+                  <MaterialIcon name="preview" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Message Preview</Text>
               </View>
@@ -176,8 +228,8 @@ export const ChatsSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="backup" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('backup') }]}>
+                  <MaterialIcon name="backup" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Backup Chats</Text>
@@ -195,8 +247,8 @@ export const ChatsSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="file_download" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('file_download') }]}>
+                  <MaterialIcon name="file_download" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Export Chat History</Text>
               </View>
@@ -207,8 +259,8 @@ export const ChatsSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="archive" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('archive') }]}>
+                  <MaterialIcon name="archive" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Auto-Archive Chats</Text>
               </View>
@@ -232,8 +284,8 @@ export const ChatsSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="palette" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('palette') }]}>
+                  <MaterialIcon name="palette" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Chat Theme</Text>
@@ -251,8 +303,8 @@ export const ChatsSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="wallpaper" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('wallpaper') }]}>
+                  <MaterialIcon name="wallpaper" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Chat Wallpaper</Text>
@@ -270,8 +322,8 @@ export const ChatsSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="format_size" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('format_size') }]}>
+                  <MaterialIcon name="format_size" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Font Size</Text>
@@ -293,8 +345,8 @@ export const ChatsSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="clear_all" size={20} color={tokens.colors.secondary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('clear_all') }]}>
+                  <MaterialIcon name="clear_all" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Clear Chat Cache</Text>
@@ -312,8 +364,8 @@ export const ChatsSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="delete" size={20} color={tokens.colors.error} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('delete') }]}>
+                  <MaterialIcon name="delete" size={18} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={[styles.settingTitle, { color: tokens.colors.error }]}>Delete All Chats</Text>
@@ -378,6 +430,7 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 8,
   },
   settingTextContainer: {
     flex: 1,

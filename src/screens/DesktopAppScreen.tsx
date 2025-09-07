@@ -32,6 +32,27 @@ export const DesktopAppScreen: React.FC = () => {
     }
   };
 
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style background colors
+    const backgroundColorMap: Record<string, string> = {
+      'download': '#007AFF',        // Blue background
+      'headset': '#007AFF',         // Blue background
+      'help': '#00C7BE',           // Teal background
+      'info': '#00C7BE',           // Teal background
+      'sync': '#34C759',           // Green background
+      'keyboard': '#5856D6',       // Purple background
+      'file-multiple': '#FF9500',  // Orange background
+      'picture-in-picture-bottom-right': '#007AFF', // Blue background
+      'bell': '#FF453A',           // Red background
+      'fullscreen': '#00C7BE',     // Teal background
+      'chip': '#5856D6',           // Purple background
+      'open-in-new': '#007AFF',    // Blue background
+      'chevron_right': '#8E8E93',  // Gray background
+    };
+    
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   const features = [
     {
       icon: 'sync',
@@ -110,11 +131,13 @@ export const DesktopAppScreen: React.FC = () => {
                 <Text style={styles.webAppTitle}>Bird Chat Web</Text>
                 <Text style={styles.webAppSubtitle}>Use instantly in your browser - no download required</Text>
               </View>
-              <MaterialIcon 
-                name="open-in-new" 
-                size={20} 
-                color={tokens.colors.onSurface60} 
-              />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('open-in-new') }]}>
+                <MaterialIcon 
+                  name="open-in-new" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -137,11 +160,13 @@ export const DesktopAppScreen: React.FC = () => {
                   <Text style={styles.platformDetails}>Windows 10 or later • 64-bit</Text>
                 </View>
               </View>
-              <MaterialIcon 
-                name="download" 
-                size={20} 
-                color={tokens.colors.onSurface60} 
-              />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('download') }]}>
+                <MaterialIcon 
+                  name="download" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -152,7 +177,7 @@ export const DesktopAppScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.downloadItemLeft}>
-                <View style={[styles.platformIcon, { backgroundColor: '#000000' }]}>
+                <View style={[styles.platformIcon, { backgroundColor: '#007AFF' }]}>
                   <MaterialIcon name="apple" size={24} color="#FFFFFF" />
                 </View>
                 <View style={styles.downloadInfo}>
@@ -160,11 +185,13 @@ export const DesktopAppScreen: React.FC = () => {
                   <Text style={styles.platformDetails}>macOS 11.0 or later • Intel & Apple Silicon</Text>
                 </View>
               </View>
-              <MaterialIcon 
-                name="download" 
-                size={20} 
-                color={tokens.colors.onSurface60} 
-              />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('download') }]}>
+                <MaterialIcon 
+                  name="download" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -175,7 +202,7 @@ export const DesktopAppScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.downloadItemLeft}>
-                <View style={[styles.platformIcon, { backgroundColor: '#FCC624' }]}>
+                <View style={[styles.platformIcon, { backgroundColor: '#E95420' }]}>
                   <Text style={styles.linuxIcon}>🐧</Text>
                 </View>
                 <View style={styles.downloadInfo}>
@@ -183,11 +210,13 @@ export const DesktopAppScreen: React.FC = () => {
                   <Text style={styles.platformDetails}>Ubuntu 18.04+ • Debian 9+ • AppImage</Text>
                 </View>
               </View>
-              <MaterialIcon 
-                name="download" 
-                size={20} 
-                color={tokens.colors.onSurface60} 
-              />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('download') }]}>
+                <MaterialIcon 
+                  name="download" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -199,8 +228,8 @@ export const DesktopAppScreen: React.FC = () => {
             {features.map((feature, index) => (
               <React.Fragment key={feature.title}>
                 <View style={styles.featureItem}>
-                  <View style={styles.featureIcon}>
-                    <MaterialIcon name={feature.icon} size={20} color={tokens.colors.primary} />
+                  <View style={[styles.featureIcon, { backgroundColor: getIconBackgroundColor(feature.icon) }]}>
+                    <MaterialIcon name={feature.icon} size={20} color="#FFFFFF" />
                   </View>
                   <View style={styles.featureInfo}>
                     <Text style={styles.featureTitle}>{feature.title}</Text>
@@ -219,7 +248,9 @@ export const DesktopAppScreen: React.FC = () => {
           <View style={styles.cardGroup}>
             <View style={styles.requirementItem}>
               <View style={styles.requirementHeader}>
-                <MaterialIcon name="chip" size={20} color={tokens.colors.onSurface60} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chip') }]}>
+                  <MaterialIcon name="chip" size={20} color="#FFFFFF" />
+                </View>
                 <Text style={styles.requirementTitle}>Minimum Requirements</Text>
               </View>
               <View style={styles.requirementList}>
@@ -242,7 +273,7 @@ export const DesktopAppScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('help') }]}>
                   <MaterialIcon name="help" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
@@ -250,11 +281,13 @@ export const DesktopAppScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Common questions and troubleshooting</Text>
                 </View>
               </View>
-              <MaterialIcon 
-                name="chevron_right" 
-                size={20} 
-                color={tokens.colors.onSurface60} 
-              />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon 
+                  name="chevron_right" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -265,7 +298,7 @@ export const DesktopAppScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('headset') }]}>
                   <MaterialIcon name="headset" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
@@ -273,11 +306,13 @@ export const DesktopAppScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Get help with desktop app issues</Text>
                 </View>
               </View>
-              <MaterialIcon 
-                name="chevron_right" 
-                size={20} 
-                color={tokens.colors.onSurface60} 
-              />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon 
+                  name="chevron_right" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -423,7 +458,6 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokens.colors.surface2,
     borderRadius: 8,
   },
   featureInfo: {
@@ -484,7 +518,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    backgroundColor: tokens.colors.primary,
   },
   settingTextContainer: {
     flex: 1,

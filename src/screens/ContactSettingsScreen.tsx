@@ -21,6 +21,43 @@ export const ContactSettingsScreen: React.FC = () => {
     message: '',
   });
 
+  const getIconColor = (iconName: string): string => {
+    const colorMap: Record<string, string> = {
+      // Contact methods - communication blues
+      'email': '#007AFF',
+      'web': '#34C759',
+      
+      // Social media - brand colors
+      'twitter': '#1DA1F2',
+      'facebook': '#1877F2',
+      
+      // Business/work - professional grays/blues
+      'office-building': '#5856D6',
+      'clock-outline': '#FF9500',
+    };
+    
+    return colorMap[iconName] || '#007AFF';
+  };
+
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style background colors for Contact Us page
+    const backgroundColorMap: Record<string, string> = {
+      // Contact methods - vibrant backgrounds
+      'email': '#007AFF',           // Blue background
+      'web': '#34C759',             // Green background
+      
+      // Social media - brand backgrounds
+      'twitter': '#1DA1F2',         // Twitter blue
+      'facebook': '#1877F2',        // Facebook blue
+      
+      // Business/work - professional colors
+      'office-building': '#5856D6',  // Purple background
+      'clock-outline': '#FF9500',    // Orange background
+    };
+    
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -177,7 +214,7 @@ export const ContactSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('email') }]}>
                   <MaterialIcon name="email" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
@@ -200,7 +237,7 @@ export const ContactSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('web') }]}>
                   <MaterialIcon name="web" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
@@ -227,8 +264,8 @@ export const ContactSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: '#1DA1F2' }]}>
-                  <Text style={styles.socialIcon}>𝕏</Text>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('twitter') }]}>
+                  <MaterialIcon name="twitter" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Twitter</Text>
@@ -250,8 +287,8 @@ export const ContactSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: '#1877F2' }]}>
-                  <Text style={styles.socialIcon}>f</Text>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('facebook') }]}>
+                  <MaterialIcon name="facebook" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Facebook</Text>
@@ -273,7 +310,7 @@ export const ContactSettingsScreen: React.FC = () => {
           <View style={styles.cardGroup}>
             <View style={styles.infoItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('office-building') }]}>
                   <MaterialIcon name="office-building" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
@@ -287,7 +324,7 @@ export const ContactSettingsScreen: React.FC = () => {
             
             <View style={styles.infoItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('clock-outline') }]}>
                   <MaterialIcon name="clock-outline" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
@@ -361,7 +398,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    backgroundColor: tokens.colors.primary,
   },
   settingTextContainer: {
     flex: 1,

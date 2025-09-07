@@ -34,6 +34,28 @@ export const DynamicHeader: React.FC<DynamicHeaderProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   
+  // iOS-style icon background color function
+  const getIconBackgroundColor = (iconName: string): string => {
+    const iconBackgrounds: { [key: string]: string } = {
+      // Chat list header icons
+      magnify: '#8E8E93',           // Gray for search
+      'message-plus': '#34C759',    // Green for new chat
+      // Groups screen icons
+      filter_list: '#5856D6',       // Purple for filter
+      search: '#8E8E93',            // Gray for search
+      group_add: '#34C759',         // Green for add group
+      // Edit screen icons
+      check: '#34C759',             // Green for save/check
+      // Calls screen icons
+      phone: '#34C759',             // Green for phone
+      // Common icons
+      back: '#007AFF',              // Blue for back
+      menu: '#8E8E93',              // Gray for menu
+      settings: '#8E8E93',          // Gray for settings
+    };
+    return iconBackgrounds[iconName] || '#8E8E93';
+  };
+  
   // Improved logic with smoother transitions - more aggressive collapsing
   const showTitle = scrollY > 30; // Reduced from 60 to 30
   const backgroundOpacity = Math.min(scrollY / 60, 0.95); // Reduced from 100 to 60 for faster response
@@ -136,13 +158,17 @@ export const DynamicHeader: React.FC<DynamicHeaderProps> = ({
           }}
         >
           {rightIcons.map((icon, index) => (
-            <MaterialIcon
+            <View 
               key={index}
-              name={icon.icon}
-              size={24}
-              color={tokens.colors.primary}
-              onPress={icon.onPress}
-            />
+              style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor(icon.icon) }]}
+            >
+              <MaterialIcon
+                name={icon.icon}
+                size={24}
+                color="#FFFFFF"
+                onPress={icon.onPress}
+              />
+            </View>
           ))}
         </MotiView>
       </View>
@@ -245,5 +271,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     flexDirection: 'row',
+  },
+  headerIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
 });

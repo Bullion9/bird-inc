@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
-import { IconButton } from 'react-native-paper';
+import { IconButton, Icon } from 'react-native-paper';
 import { tokens } from '../theme/tokens';
 
 interface MaterialIconProps {
@@ -30,6 +30,7 @@ const iconMap: Record<string, string> = {
   // Communication
   'phone': 'phone',
   'videocam': 'video',
+  'videocam_off': 'video-off',
   'phone_in_talk': 'phone-in-talk',
   'call': 'phone',
   'call_end': 'phone-hangup',
@@ -75,20 +76,29 @@ const iconMap: Record<string, string> = {
   
   // Actions
   'delete': 'delete',
+  'delete-outline': 'delete-outline',
   'add': 'plus',
   'share': 'share-variant',
   'download': 'download',
   'file_download': 'download',
   'backup': 'backup-restore',
   'archive': 'archive',
+  'archive-outline': 'archive-outline',
   'clear_all': 'notification-clear-all',
+  'push-pin': 'pin',
+  'push-pin-outline': 'pin-outline',
   
   // Camera & Photo
   'camera_alt': 'camera',
   'photo': 'image',
   'photo_camera': 'camera',
+  'flip_camera_ios': 'camera-flip',
   'image': 'image',
   'wallpaper': 'wallpaper',
+  
+  // Screen & Display
+  'fullscreen': 'fullscreen',
+  'fullscreen_exit': 'fullscreen-exit',
   
   // Interface Elements
   'insert_emoticon': 'emoticon-happy',
@@ -107,6 +117,7 @@ const iconMap: Record<string, string> = {
   'notifications_active': 'bell-ring',
   'storage': 'database',
   'help': 'help-circle-outline',
+  'headset': 'headset',
   'cleaning_services': 'broom',
   'chat_bubble': 'chat',
   'viber': 'chat-processing',
@@ -138,6 +149,11 @@ const iconMap: Record<string, string> = {
   'smart_display': 'monitor-cellphone',
   'video_library': 'video-box',
   'ondemand_video': 'play-box',
+  
+  // Social Media Icons
+  'whatsapp': 'whatsapp',
+  'twitter': 'twitter',
+  'facebook': 'facebook',
 };
 
 export const MaterialIcon: React.FC<MaterialIconProps> = ({
@@ -152,30 +168,15 @@ export const MaterialIcon: React.FC<MaterialIconProps> = ({
   const mappedIconName = iconMap[name] || name;
   const iconWeight = active ? 600 : weight;
 
-  // Debug log
-  console.log(`MaterialIcon: ${name} -> ${mappedIconName}`);
-
-  // For debugging - let's use a simple colored text approach to ensure color shows
-  if (color === tokens.colors.success || color === tokens.colors.error) {
-    const IconComponent = () => (
-      <View style={[styles.debugIcon, { backgroundColor: color, borderRadius: size/2, width: size, height: size }]}>
-        <Text style={{ color: '#FFFFFF', fontSize: size * 0.6, textAlign: 'center', lineHeight: size }}>
-          {name.includes('made') ? '↗' : name.includes('received') ? '↙' : '📞'}
-        </Text>
-      </View>
-    );
-
-    if (onPress) {
-      return (
-        <TouchableOpacity onPress={onPress} style={styles.button}>
-          <IconComponent />
-        </TouchableOpacity>
-      );
-    }
-    return <IconComponent />;
+  // Debug log to see what icons are being rendered
+  console.log(`🔍 MaterialIcon: ${name} -> ${mappedIconName} | Color: ${iconColor} | Size: ${size}`);
+  
+  // Special debug for headset icon
+  if (name === 'headset') {
+    console.log(`🎧 HEADSET ICON FOUND! Mapped to: ${mappedIconName} | Color: ${iconColor} | Size: ${size}`);
   }
 
-  // Fallback to original IconButton for other icons
+  // Use IconButton for pressable icons
   if (onPress) {
     return (
       <IconButton
@@ -188,13 +189,12 @@ export const MaterialIcon: React.FC<MaterialIconProps> = ({
     );
   }
 
+  // Use Icon component for non-pressable icons (no disabled state issues)
   return (
-    <IconButton
-      icon={mappedIconName}
+    <Icon
+      source={mappedIconName}
       size={size}
-      iconColor={iconColor}
-      style={styles.icon}
-      disabled
+      color={iconColor}
     />
   );
 };

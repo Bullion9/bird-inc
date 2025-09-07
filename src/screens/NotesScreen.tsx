@@ -34,18 +34,40 @@ export const NotesScreen: React.FC = () => {
     {
       id: '2',
       title: 'Shopping List',
-      content: 'Milk, Bread, Eggs, Coffee...',
+      content: 'Milk, bread, eggs, apples...',
       date: '2025-01-14',
       isPinned: false,
     },
     {
       id: '3',
-      title: 'Ideas',
-      content: 'App feature ideas and improvements...',
+      title: 'Recipe Ideas',
+      content: 'Pasta with herbs, grilled chicken...',
       date: '2025-01-13',
-      isPinned: false,
+      isPinned: true,
     },
   ]);
+
+  const getIconColor = (iconName: string): string => {
+    const colorMap: Record<string, string> = {
+      // Notes - bright colors for visibility
+      'add': '#34C759',
+    };
+    
+    return colorMap[iconName] || '#007AFF';
+  };
+
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style solid background colors
+    const backgroundColorMap: Record<string, string> = {
+      'search': '#8E8E93',           // Gray background
+      'add': '#34C759',              // Green background
+      'pin': '#FF9500',              // Orange background
+      'pin_active': '#FF453A',       // Red background for pinned
+      'delete': '#FF453A',           // Red background
+      'note': '#5856D6',             // Purple background
+    };
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
 
   const createNewNote = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -107,7 +129,9 @@ export const NotesScreen: React.FC = () => {
         {/* Search Bar */}
         <View style={styles.searchSection}>
           <View style={styles.searchContainer}>
-            <MaterialIcon name="search" size={20} color="rgba(142, 142, 147, 1)" />
+            <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('search') }]}>
+              <MaterialIcon name="search" size={20} color="#FFFFFF" />
+            </View>
             <TextInput
               style={styles.searchInput}
               placeholder="Search notes"
@@ -126,7 +150,9 @@ export const NotesScreen: React.FC = () => {
           onPress={createNewNote}
           activeOpacity={0.7}
         >
-          <MaterialIcon name="add" size={24} color="#FFFFFF" />
+          <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('add') }]}>
+            <MaterialIcon name="add" size={24} color="#FFFFFF" />
+          </View>
           <Text style={styles.createButtonText}>Create New Note</Text>
         </TouchableOpacity>
 
@@ -149,11 +175,13 @@ export const NotesScreen: React.FC = () => {
                           onPress={() => togglePin(note.id)}
                           style={styles.pinButton}
                         >
-                          <MaterialIcon 
-                            name="pin" 
-                            size={16} 
-                            color={tokens.colors.primary} 
-                          />
+                          <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('pin_active') }]}>
+                            <MaterialIcon 
+                              name="pin" 
+                              size={16} 
+                              color="#FFFFFF" 
+                            />
+                          </View>
                         </TouchableOpacity>
                       </View>
                       <Text style={styles.notePreview}>{note.content}</Text>
@@ -163,11 +191,13 @@ export const NotesScreen: React.FC = () => {
                       onPress={() => deleteNote(note.id)}
                       style={styles.deleteButton}
                     >
-                      <MaterialIcon 
-                        name="delete" 
-                        size={20} 
-                        color={tokens.colors.error} 
-                      />
+                      <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('delete') }]}>
+                        <MaterialIcon 
+                          name="delete" 
+                          size={20} 
+                          color="#FFFFFF" 
+                        />
+                      </View>
                     </TouchableOpacity>
                   </TouchableOpacity>
                   {index < pinnedNotes.length - 1 && <View style={styles.separator} />}
@@ -196,11 +226,13 @@ export const NotesScreen: React.FC = () => {
                           onPress={() => togglePin(note.id)}
                           style={styles.pinButton}
                         >
-                          <MaterialIcon 
-                            name="pin" 
-                            size={16} 
-                            color={tokens.colors.onSurface38} 
-                          />
+                          <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('pin') }]}>
+                            <MaterialIcon 
+                              name="pin" 
+                              size={16} 
+                              color="#FFFFFF" 
+                            />
+                          </View>
                         </TouchableOpacity>
                       </View>
                       <Text style={styles.notePreview}>{note.content}</Text>
@@ -210,11 +242,13 @@ export const NotesScreen: React.FC = () => {
                       onPress={() => deleteNote(note.id)}
                       style={styles.deleteButton}
                     >
-                      <MaterialIcon 
-                        name="delete" 
-                        size={20} 
-                        color={tokens.colors.error} 
-                      />
+                      <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('delete') }]}>
+                        <MaterialIcon 
+                          name="delete" 
+                          size={20} 
+                          color="#FFFFFF" 
+                        />
+                      </View>
                     </TouchableOpacity>
                   </TouchableOpacity>
                   {index < regularNotes.length - 1 && <View style={styles.separator} />}
@@ -227,7 +261,9 @@ export const NotesScreen: React.FC = () => {
         {/* Empty State */}
         {filteredNotes.length === 0 && (
           <View style={styles.emptyState}>
-            <MaterialIcon name="note" size={64} color={tokens.colors.onSurface38} />
+            <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('note'), width: 64, height: 64, borderRadius: 16 }]}>
+              <MaterialIcon name="note" size={64} color="#FFFFFF" />
+            </View>
             <Text style={styles.emptyTitle}>No Notes Found</Text>
             <Text style={styles.emptySubtitle}>
               {searchQuery ? 'Try a different search term' : 'Create your first note to get started'}
@@ -264,12 +300,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 7,
     minHeight: 32,
+    gap: 8,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: '#FFFFFF',
-    marginLeft: 6,
     fontFamily: 'System',
     paddingVertical: 0,
   },
@@ -333,7 +369,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pinButton: {
-    padding: tokens.spacing.xs,
+    padding: 2,
   },
   notePreview: {
     ...tokens.typography.body,
@@ -346,7 +382,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   deleteButton: {
-    padding: tokens.spacing.s,
+    padding: 2,
     marginLeft: tokens.spacing.s,
   },
   separator: {
@@ -371,5 +407,12 @@ const styles = StyleSheet.create({
     color: tokens.colors.onSurface38,
     textAlign: 'center',
     paddingHorizontal: tokens.spacing.l,
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
   },
 });

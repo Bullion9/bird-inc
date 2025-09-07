@@ -15,6 +15,62 @@ export const HelpSettingsScreen: React.FC = () => {
   const navigation = useNavigation<HelpSettingsNavigationProp>();
   const [scrollOffset, setScrollOffset] = useState(0);
 
+  // Icon color mapping for better visual hierarchy
+  const getIconColor = (iconName: string): string => {
+    const colorMap: Record<string, string> = {
+      // Getting started icons - learning theme
+      'info': '#2196F3',
+      'play_circle': '#4CAF50',
+      'star': '#FF9800',
+      // Common issues icons - problem theme
+      'settings': '#FF9500',
+      'error': '#FF453A',
+      'notifications': '#5856D6',
+      'schedule': '#FF9500',
+      // Account & security icons - security theme
+      'lock': '#FF453A',
+      // Support icons - help theme
+      'help': '#007AFF',
+      'chat': '#34C759',
+      // Legal icons - document theme
+      'check': '#34C759',
+      'visibility': '#5856D6',
+      'circle': '#00C7BE',
+      // About icons - info theme
+      'tag': '#FF9500',
+    };
+    return colorMap[iconName] || '#007AFF';
+  };
+
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style solid background colors
+    const backgroundColorMap: Record<string, string> = {
+      // Getting started icons
+      'info': '#007AFF',              // Blue background
+      'play_circle': '#34C759',       // Green background  
+      'star': '#FF9500',              // Orange background
+      // Common issues icons
+      'settings': '#FF9500',          // Orange background
+      'error': '#FF453A',             // Red background
+      'notifications': '#5856D6',     // Purple background
+      'schedule': '#FF9500',          // Orange background
+      // Account & security icons
+      'lock': '#FF453A',              // Red background
+      // Support icons
+      'help': '#007AFF',              // Blue background
+      'chat': '#34C759',              // Green background
+      // Legal icons
+      'check': '#34C759',             // Green background
+      'visibility': '#5856D6',        // Purple background
+      'circle': '#00C7BE',            // Teal background
+      // About icons
+      'tag': '#FF9500',               // Orange background
+      // Chevron icons
+      'chevron_right': '#8E8E93',     // Gray background
+    };
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   const handleActionPress = (action: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     console.log(`Action pressed: ${action}`);
@@ -48,15 +104,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="info" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('info') }]}>
+                  <MaterialIcon name="info" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Quick Start Guide</Text>
                   <Text style={styles.settingSubtitle}>Learn the basics of Bird Chat</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -67,15 +125,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="play_circle" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('play_circle') }]}>
+                  <MaterialIcon name="play_circle" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Video Tutorials</Text>
                   <Text style={styles.settingSubtitle}>Step-by-step walkthroughs</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -86,15 +146,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="star" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('star') }]}>
+                  <MaterialIcon name="star" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>New Features</Text>
                   <Text style={styles.settingSubtitle}>Discover what's new</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -109,15 +171,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="settings" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('settings') }]}>
+                  <MaterialIcon name="settings" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Connection Problems</Text>
                   <Text style={styles.settingSubtitle}>Troubleshoot network issues</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -128,15 +192,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="error" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('error') }]}>
+                  <MaterialIcon name="error" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Messages Not Sending</Text>
                   <Text style={styles.settingSubtitle}>Fix delivery problems</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -147,15 +213,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="notifications" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('notifications') }]}>
+                  <MaterialIcon name="notifications" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Notification Problems</Text>
                   <Text style={styles.settingSubtitle}>Not receiving alerts</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -166,15 +234,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="schedule" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('schedule') }]}>
+                  <MaterialIcon name="schedule" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>App Running Slow</Text>
                   <Text style={styles.settingSubtitle}>Improve performance</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -189,15 +259,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="lock" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('lock') }]}>
+                  <MaterialIcon name="lock" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Account Recovery</Text>
                   <Text style={styles.settingSubtitle}>Regain access to your account</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -208,15 +280,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="lock" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('lock') }]}>
+                  <MaterialIcon name="lock" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Security Tips</Text>
                   <Text style={styles.settingSubtitle}>Keep your account safe</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -227,15 +301,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <Text style={{ fontSize: 12, color: tokens.colors.primary }}>🚫</Text>
+                <View style={[styles.iconContainer, { backgroundColor: '#FF453A' }]}>
+                  <MaterialIcon name="block" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Managing Blocked Users</Text>
                   <Text style={styles.settingSubtitle}>Block and unblock contacts</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -250,15 +326,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="help" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('help') }]}>
+                  <MaterialIcon name="help" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>FAQ</Text>
                   <Text style={styles.settingSubtitle}>Frequently asked questions</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -269,15 +347,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="chat" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chat') }]}>
+                  <MaterialIcon name="chat" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Contact Support</Text>
                   <Text style={styles.settingSubtitle}>Get help from our team</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -288,15 +368,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="error" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('error') }]}>
+                  <MaterialIcon name="error" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Report a Bug</Text>
                   <Text style={styles.settingSubtitle}>Help us improve the app</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -307,15 +389,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="chat" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chat') }]}>
+                  <MaterialIcon name="chat" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Send Feedback</Text>
                   <Text style={styles.settingSubtitle}>Share your thoughts</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -330,12 +414,14 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="check" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('check') }]}>
+                  <MaterialIcon name="check" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Terms of Service</Text>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -346,12 +432,14 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="visibility" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('visibility') }]}>
+                  <MaterialIcon name="visibility" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Privacy Policy</Text>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -362,12 +450,14 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="circle" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('circle') }]}>
+                  <MaterialIcon name="circle" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Open Source Licenses</Text>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -378,8 +468,8 @@ export const HelpSettingsScreen: React.FC = () => {
           <View style={styles.cardGroup}>
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="tag" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('tag') }]}>
+                  <MaterialIcon name="tag" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Version</Text>
@@ -396,15 +486,17 @@ export const HelpSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="star" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('star') }]}>
+                  <MaterialIcon name="star" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>What's New</Text>
                   <Text style={styles.settingSubtitle}>Latest updates and features</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -462,6 +554,7 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 8,
   },
   settingTextContainer: {
     flex: 1,

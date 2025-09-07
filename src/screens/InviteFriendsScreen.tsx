@@ -90,7 +90,7 @@ export const InviteFriendsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={[styles.iconContainer, { backgroundColor: '#34C759' }]}>
-                  <MaterialIcon name="sms" size={20} color="#FFFFFF" />
+                  <MaterialIcon name="message-text" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Messages</Text>
               </View>
@@ -130,7 +130,7 @@ export const InviteFriendsScreen: React.FC = () => {
             >
               <View style={styles.settingItemLeft}>
                 <View style={[styles.iconContainer, { backgroundColor: '#25D366' }]}>
-                  <Text style={styles.socialIcon}>W</Text>
+                  <MaterialIcon name="whatsapp" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>WhatsApp</Text>
               </View>
@@ -181,7 +181,7 @@ export const InviteFriendsScreen: React.FC = () => {
               </View>
             </View>
             
-            <View style={styles.separator} />
+            <View style={styles.statSeparator} />
             
             <View style={styles.statItem}>
               <View style={styles.statContent}>
@@ -300,6 +300,11 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: tokens.colors.surface3,
     marginLeft: 52,
+  },
+  statSeparator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: tokens.colors.surface3,
+    marginHorizontal: tokens.spacing.m,
   },
   socialIcon: {
     fontSize: 16,

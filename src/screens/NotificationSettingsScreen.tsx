@@ -28,6 +28,66 @@ export const NotificationSettingsScreen: React.FC = () => {
   const [quietHours, setQuietHours] = useState(false);
   const [weekendQuiet, setWeekendQuiet] = useState(false);
 
+  // Function to get icon background color based on icon type
+  const getIconColor = (iconName: string): string => {
+    const colorMap: { [key: string]: string } = {
+      // Notification States
+      'notifications_active': '#FF9500', // Orange
+      'volume_up': '#34C759', // Green
+      'vibration': '#FF2D92', // Pink
+      'lightbulb': '#FFCC00', // Yellow
+      
+      // Message Types
+      'message': '#34C759', // Green
+      'group': '#FF9500', // Orange
+      'phone': '#007AFF', // Blue
+      'favorite': '#FF453A', // Red
+      'alternate_email': '#5856D6', // Purple
+      
+      // Settings
+      'schedule': '#8E8E93', // Gray
+      'notifications': '#FF9500', // Orange
+      'weekend': '#00C7BE', // Teal
+    };
+    
+    return colorMap[iconName] || tokens.colors.primary;
+  };
+
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style solid background colors
+    const backgroundColorMap: { [key: string]: string } = {
+      // Notification States
+      'notifications_active': '#FF9500', // Orange
+      'volume_up': '#34C759', // Green
+      'vibration': '#FF2D92', // Pink
+      'lightbulb': '#FFCC00', // Yellow
+      
+      // Message Types
+      'message': '#34C759', // Green
+      'group': '#FF9500', // Orange
+      'phone': '#007AFF', // Blue
+      'favorite': '#FF453A', // Red
+      'alternate_email': '#5856D6', // Purple
+      
+      // Customization
+      'music_note': '#34C759', // Green
+      'ring_volume': '#007AFF', // Blue
+      
+      // Settings
+      'schedule': '#8E8E93', // Gray
+      'notifications': '#FF9500', // Orange
+      'weekend': '#00C7BE', // Teal
+      
+      // Advanced
+      'history': '#5856D6', // Purple
+      'security': '#FF453A', // Red
+      'restore': '#FF9500', // Orange
+      'chevron_right': '#8E8E93', // Gray
+    };
+    
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   const handleSwitchChange = (setter: (value: boolean) => void, currentValue: boolean) => {
     return (value: boolean) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -64,8 +124,8 @@ export const NotificationSettingsScreen: React.FC = () => {
           <View style={styles.cardGroup}>
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="notifications_active" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('notifications_active') }]}>
+                  <MaterialIcon name="notifications_active" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Show Notifications</Text>
               </View>
@@ -81,8 +141,8 @@ export const NotificationSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="volume_up" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('volume_up') }]}>
+                  <MaterialIcon name="volume_up" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Sound</Text>
               </View>
@@ -96,10 +156,10 @@ export const NotificationSettingsScreen: React.FC = () => {
             
             <View style={styles.separator} />
             
-            <View style={styles.settingItem}>
+                        <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="vibration" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('vibration') }]}>
+                  <MaterialIcon name="vibration" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Vibration</Text>
               </View>
@@ -115,8 +175,8 @@ export const NotificationSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="preview" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('lightbulb') }]}>
+                  <MaterialIcon name="preview" size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Show Previews</Text>
               </View>
@@ -130,14 +190,35 @@ export const NotificationSettingsScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Group Notifications */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Groups</Text>
+          <View style={styles.cardGroup}>
+            <View style={styles.settingItem}>
+              <View style={styles.settingItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('message') }]}>
+                  <MaterialIcon name="message" size={20} color="#FFFFFF" />
+                </View>
+                <Text style={styles.settingTitle}>Group Notifications</Text>
+              </View>
+              <Switch
+                value={groupNotifications}
+                onValueChange={handleSwitchChange(setGroupNotifications, groupNotifications)}
+                trackColor={{ false: tokens.colors.surface3, true: tokens.colors.primary }}
+                thumbColor={tokens.colors.onSurface}
+              />
+            </View>
+          </View>
+        </View>
+
         {/* Message Types */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Message Types</Text>
           <View style={styles.cardGroup}>
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="message" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('message') }]}>
+                  <MaterialIcon name="message" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Messages</Text>
               </View>
@@ -153,8 +234,8 @@ export const NotificationSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="group" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('group') }]}>
+                  <MaterialIcon name="group" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Group Messages</Text>
               </View>
@@ -170,8 +251,8 @@ export const NotificationSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="phone" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('phone') }]}>
+                  <MaterialIcon name="phone" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Calls</Text>
               </View>
@@ -187,8 +268,8 @@ export const NotificationSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="favorite" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('favorite') }]}>
+                  <MaterialIcon name="favorite" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Reactions</Text>
               </View>
@@ -204,8 +285,8 @@ export const NotificationSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="alternate_email" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('alternate_email') }]}>
+                  <MaterialIcon name="alternate_email" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Mentions</Text>
               </View>
@@ -229,15 +310,17 @@ export const NotificationSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="music_note" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('music_note') }]}>
+                  <MaterialIcon name="music_note" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Notification Sound</Text>
                   <Text style={styles.settingSubtitle}>Default</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -248,15 +331,17 @@ export const NotificationSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="ring_volume" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('ring_volume') }]}>
+                  <MaterialIcon name="ring_volume" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Ringtone</Text>
                   <Text style={styles.settingSubtitle}>Default</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -267,15 +352,17 @@ export const NotificationSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="lightbulb" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('lightbulb') }]}>
+                  <MaterialIcon name="lightbulb" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>LED Color</Text>
                   <Text style={styles.settingSubtitle}>Blue</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -290,8 +377,8 @@ export const NotificationSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="schedule" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('schedule') }]}>
+                  <MaterialIcon name="schedule" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Quiet Hours</Text>
@@ -310,8 +397,8 @@ export const NotificationSettingsScreen: React.FC = () => {
             
             <View style={styles.settingItem}>
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="weekend" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('weekend') }]}>
+                  <MaterialIcon name="weekend" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Weekend Quiet Mode</Text>
               </View>
@@ -335,12 +422,14 @@ export const NotificationSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="history" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('history') }]}>
+                  <MaterialIcon name="history" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>Notification History</Text>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -351,12 +440,14 @@ export const NotificationSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="security" size={20} color={tokens.colors.primary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('security') }]}>
+                  <MaterialIcon name="security" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.settingTitle}>App Permissions</Text>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -367,15 +458,17 @@ export const NotificationSettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
-                  <MaterialIcon name="restore" size={20} color={tokens.colors.secondary} />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('restore') }]}>
+                  <MaterialIcon name="restore" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
                   <Text style={styles.settingTitle}>Reset to Defaults</Text>
                   <Text style={styles.settingSubtitle}>Restore original settings</Text>
                 </View>
               </View>
-              <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface60} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -433,6 +526,7 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 8,
   },
   settingTextContainer: {
     flex: 1,

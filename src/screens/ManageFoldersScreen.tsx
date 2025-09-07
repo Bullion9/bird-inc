@@ -55,6 +55,34 @@ export const ManageFoldersScreen: React.FC = () => {
     },
   ]);
 
+  const getIconColor = (iconName: string): string => {
+    const colorMap: Record<string, string> = {
+      // Folder management - bright colors for visibility
+      'add': '#34C759',
+      'folder': '#FFCC00',
+      'chat': '#007AFF',
+      'auto-fix': '#5856D6',
+      'reorder-horizontal': '#FF9500',
+    };
+    
+    return colorMap[iconName] || '#007AFF';
+  };
+
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style solid background colors
+    const backgroundColorMap: Record<string, string> = {
+      'add': '#34C759',              // Green background
+      'folder': '#FF9500',           // Orange background
+      'chat': '#007AFF',             // Blue background
+      'edit': '#5856D6',             // Purple background
+      'delete': '#FF453A',           // Red background
+      'auto-fix': '#5856D6',         // Purple background
+      'reorder-horizontal': '#FF9500', // Orange background
+      'chevron_right': '#8E8E93',    // Gray background
+    };
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   const createFolder = () => {
     if (!newFolderName.trim()) {
       Alert.alert('Error', 'Please enter a folder name');
@@ -167,7 +195,9 @@ export const ManageFoldersScreen: React.FC = () => {
             onPress={() => setShowCreateFolder(true)}
             activeOpacity={0.7}
           >
-            <MaterialIcon name="add" size={24} color="#FFFFFF" />
+            <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('add') }]}>
+              <MaterialIcon name="add" size={24} color="#FFFFFF" />
+            </View>
             <Text style={styles.addFolderButtonText}>Create New Folder</Text>
           </TouchableOpacity>
         )}
@@ -203,22 +233,26 @@ export const ManageFoldersScreen: React.FC = () => {
                           style={styles.folderActionButton}
                           activeOpacity={0.7}
                         >
-                          <MaterialIcon 
-                            name="edit" 
-                            size={20} 
-                            color={tokens.colors.onSurface60} 
-                          />
+                          <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('edit') }]}>
+                            <MaterialIcon 
+                              name="edit" 
+                              size={20} 
+                              color="#FFFFFF" 
+                            />
+                          </View>
                         </TouchableOpacity>
                         <TouchableOpacity 
                           onPress={() => deleteFolder(folder.id)}
                           style={styles.folderActionButton}
                           activeOpacity={0.7}
                         >
-                          <MaterialIcon 
-                            name="delete" 
-                            size={20} 
-                            color={tokens.colors.error} 
-                          />
+                          <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('delete') }]}>
+                            <MaterialIcon 
+                              name="delete" 
+                              size={20} 
+                              color="#FFFFFF" 
+                            />
+                          </View>
                         </TouchableOpacity>
                       </>
                     )}
@@ -240,7 +274,7 @@ export const ManageFoldersScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('auto-fix') }]}>
                   <MaterialIcon name="auto-fix" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
@@ -248,11 +282,13 @@ export const ManageFoldersScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Automatically sort chats into folders</Text>
                 </View>
               </View>
-              <MaterialIcon 
-                name="chevron_right" 
-                size={20} 
-                color={tokens.colors.onSurface60} 
-              />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon 
+                  name="chevron_right" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
             
             <View style={styles.separator} />
@@ -263,7 +299,7 @@ export const ManageFoldersScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.settingItemLeft}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('reorder-horizontal') }]}>
                   <MaterialIcon name="reorder-horizontal" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.settingTextContainer}>
@@ -271,11 +307,13 @@ export const ManageFoldersScreen: React.FC = () => {
                   <Text style={styles.settingSubtitle}>Customize folder arrangement</Text>
                 </View>
               </View>
-              <MaterialIcon 
-                name="chevron_right" 
-                size={20} 
-                color={tokens.colors.onSurface60} 
-              />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                <MaterialIcon 
+                  name="chevron_right" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -415,7 +453,7 @@ const styles = StyleSheet.create({
     gap: tokens.spacing.s,
   },
   folderActionButton: {
-    padding: tokens.spacing.s,
+    padding: 2,
   },
   settingItem: {
     flexDirection: 'row',
@@ -436,7 +474,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    backgroundColor: tokens.colors.primary,
   },
   settingTextContainer: {
     flex: 1,

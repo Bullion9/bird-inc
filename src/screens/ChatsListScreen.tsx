@@ -434,6 +434,18 @@ const ChatRowItem: React.FC<{
   const translateX = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
 
+  // iOS-style icon background color function for swipe gestures
+  const getIconBackgroundColor = (iconName: string): string => {
+    const iconBackgrounds: { [key: string]: string } = {
+      // Swipe gesture icons
+      'push-pin': '#FF9500',            // Orange for pin
+      'push-pin-outline': '#8E8E93',    // Gray for unpin
+      'archive-outline': '#5856D6',     // Purple for archive
+      'delete-outline': '#FF453A',      // Red for delete
+    };
+    return iconBackgrounds[iconName] || '#8E8E93';
+  };
+
   const onGestureEvent = Animated.event(
     [{ nativeEvent: { translationX: translateX } }],
     { 
@@ -522,9 +534,13 @@ const ChatRowItem: React.FC<{
             }
           ]}
         >
-          <Text style={styles.swipeIconText}>
-            {chat.isPinned ? "★" : "☆"}
-          </Text>
+          <View style={[styles.swipeIconContainer, { backgroundColor: getIconBackgroundColor(chat.isPinned ? 'push-pin' : 'push-pin-outline') }]}>
+            <MaterialIcon 
+              name={chat.isPinned ? 'push-pin' : 'push-pin-outline'} 
+              size={18} 
+              color="#FFFFFF" 
+            />
+          </View>
         </Animated.View>
       </View>
 
@@ -550,7 +566,13 @@ const ChatRowItem: React.FC<{
             }
           ]}
         >
-          <Text style={styles.swipeIconText}>📦</Text>
+          <View style={[styles.swipeIconContainer, { backgroundColor: getIconBackgroundColor('archive-outline') }]}>
+            <MaterialIcon 
+              name="archive-outline" 
+              size={18} 
+              color="#FFFFFF" 
+            />
+          </View>
         </Animated.View>
 
         {/* Delete indicator */}
@@ -573,7 +595,13 @@ const ChatRowItem: React.FC<{
             }
           ]}
         >
-          <Text style={styles.swipeIconText}>🗑️</Text>
+          <View style={[styles.swipeIconContainer, { backgroundColor: getIconBackgroundColor('delete-outline') }]}>
+            <MaterialIcon 
+              name="delete-outline" 
+              size={18} 
+              color="#FFFFFF" 
+            />
+          </View>
         </Animated.View>
       </View>
       <PanGestureHandler
@@ -1226,5 +1254,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '400',
     color: '#FFFFFF',
+  },
+  swipeIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

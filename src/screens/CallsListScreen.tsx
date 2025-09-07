@@ -47,6 +47,22 @@ export const CallsListScreen: React.FC = () => {
       scrollY.removeListener(listener);
     };
   }, [scrollY]);
+
+  // iOS-style icon background colors
+  const getIconBackgroundColor = (iconName: string, callType?: string): string => {
+    // Special handling for missed calls
+    if (callType === 'missed') {
+      return '#FF453A'; // Red for missed calls
+    }
+    
+    const iconBackgrounds: { [key: string]: string } = {
+      call_made: '#34C759',       // Green for outgoing calls
+      call_received: '#34C759',   // Green for incoming calls
+      phone: '#007AFF',           // Blue for phone calls
+      video: '#FF9500',           // Orange for video calls
+    };
+    return iconBackgrounds[iconName] || '#8E8E93';
+  };
   
   const [calls, setCalls] = useState<CallItem[]>([
     {
@@ -326,11 +342,13 @@ export const CallsListScreen: React.FC = () => {
                 {item.name}
               </Text>
               <View style={styles.callInfo}>
-                <MaterialIcon 
-                  name={icon.name} 
-                  size={16} 
-                  color={icon.color} 
-                />
+                <View style={[styles.callIconContainer, { backgroundColor: getIconBackgroundColor(icon.name, item.type) }]}>
+                  <MaterialIcon 
+                    name={icon.name} 
+                    size={16} 
+                    color="#FFFFFF"
+                  />
+                </View>
                 <Text style={[
                   styles.callType,
                   item.type === 'missed' && styles.missedCallType
@@ -351,24 +369,24 @@ export const CallsListScreen: React.FC = () => {
             
             <View style={styles.rightSection}>
               <TouchableOpacity
-                style={styles.callButton}
+                style={[styles.callButton, { backgroundColor: getIconBackgroundColor('phone') }]}
                 onPress={() => handleCallPress(item)}
               >
                 <MaterialIcon 
                   name="phone" 
                   size={24} 
-                  color={tokens.colors.onSurface60} 
+                  color="#FFFFFF"
                 />
               </TouchableOpacity>
               
               <TouchableOpacity
-                style={styles.callButton}
+                style={[styles.callButton, { backgroundColor: getIconBackgroundColor('video') }]}
                 onPress={() => handleVideoCallPress(item)}
               >
                 <MaterialIcon 
                   name="video" 
                   size={24} 
-                  color={tokens.colors.primary} 
+                  color="#FFFFFF"
                 />
               </TouchableOpacity>
             </View>
@@ -528,6 +546,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.spacing.xs,
   },
+  callIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   callType: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
@@ -549,8 +574,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   callButton: {
-    padding: 6,
-    borderRadius: tokens.radius.m,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 4,
   },
   avatarContainer: {
     position: 'relative',

@@ -47,6 +47,31 @@ export const VideoCallScreen: React.FC = () => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const minimizeAnim = useRef(new Animated.Value(1)).current;
 
+  // iOS-style icon background colors for video call controls
+  const getIconBackgroundColor = (iconName: string, isActive: boolean = false): string => {
+    if (isActive) {
+      const activeBackgrounds: { [key: string]: string } = {
+        mic_off: '#FF453A',        // Red for muted mic
+        videocam_off: '#FF453A',   // Red for disabled video
+      };
+      return activeBackgrounds[iconName] || '#FF453A';
+    }
+    
+    const iconBackgrounds: { [key: string]: string } = {
+      mic: '#34C759',            // Green for mic
+      mic_off: '#FF453A',        // Red for muted mic  
+      videocam: '#007AFF',       // Blue for video
+      videocam_off: '#FF453A',   // Red for disabled video
+      flip_camera_ios: '#8E8E93', // Gray for camera flip
+      call_end: '#FF453A',       // Red for end call
+      check: '#34C759',          // Green for accept
+      close: '#FF453A',          // Red for decline
+      fullscreen: '#8E8E93',     // Gray for minimize/expand
+      fullscreen_exit: '#8E8E93', // Gray for minimize/expand
+    };
+    return iconBackgrounds[iconName] || '#8E8E93';
+  };
+
   useEffect(() => {
     // Permissions are handled by the useCameraPermissions hook
   }, []);
@@ -194,10 +219,10 @@ export const VideoCallScreen: React.FC = () => {
           />
           {isMinimized && (
             <TouchableOpacity 
-              style={styles.expandButton}
+              style={[styles.expandButton, { backgroundColor: getIconBackgroundColor('fullscreen') }]}
               onPress={handleMinimize}
             >
-              <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: '400' }}>⛶</Text>
+              <MaterialIcon name="fullscreen" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           )}
         </Animated.View>
@@ -210,19 +235,19 @@ export const VideoCallScreen: React.FC = () => {
           <View style={styles.incomingControls}>
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
               <TouchableOpacity
-                style={[styles.callButton, styles.declineButton]}
+                style={[styles.callButton, { backgroundColor: getIconBackgroundColor('close') }]}
                 onPress={handleDeclineCall}
               >
-                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '400' }}>✕</Text>
+                <MaterialIcon name="close" size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </Animated.View>
             
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
               <TouchableOpacity
-                style={[styles.callButton, styles.acceptButton]}
+                style={[styles.callButton, { backgroundColor: getIconBackgroundColor('check') }]}
                 onPress={handleAcceptCall}
               >
-                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '400' }}>✓</Text>
+                <MaterialIcon name="check" size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -235,16 +260,14 @@ export const VideoCallScreen: React.FC = () => {
               transition={{ delay: 200 }}
             >
               <TouchableOpacity
-                style={[styles.controlButton, isMuted && styles.controlButtonActive]}
+                style={[styles.controlButton, { backgroundColor: getIconBackgroundColor(isMuted ? 'mic_off' : 'mic', isMuted) }]}
                 onPress={handleToggleMute}
               >
-                <Text style={{ 
-                  color: isMuted ? "#F44336" : "#FFFFFF", 
-                  fontSize: 12, 
-                  fontWeight: '400' 
-                }}>
-                  {isMuted ? "⊗" : "●"}
-                </Text>
+                <MaterialIcon 
+                  name={isMuted ? 'mic_off' : 'mic'} 
+                  size={24} 
+                  color="#FFFFFF"
+                />
               </TouchableOpacity>
             </MotiView>
 
@@ -254,10 +277,10 @@ export const VideoCallScreen: React.FC = () => {
               transition={{ delay: 300 }}
             >
               <TouchableOpacity
-                style={styles.endCallButton}
+                style={[styles.endCallButton, { backgroundColor: getIconBackgroundColor('call_end') }]}
                 onPress={handleEndCall}
               >
-                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '400' }}>✕</Text>
+                <MaterialIcon name="call_end" size={32} color="#FFFFFF" />
               </TouchableOpacity>
             </MotiView>
 
@@ -267,16 +290,14 @@ export const VideoCallScreen: React.FC = () => {
               transition={{ delay: 400 }}
             >
               <TouchableOpacity
-                style={[styles.controlButton, !isVideoEnabled && styles.controlButtonActive]}
+                style={[styles.controlButton, { backgroundColor: getIconBackgroundColor(isVideoEnabled ? 'videocam' : 'videocam_off', !isVideoEnabled) }]}
                 onPress={handleToggleVideo}
               >
-                <Text style={{ 
-                  color: !isVideoEnabled ? "#F44336" : "#FFFFFF", 
-                  fontSize: 12, 
-                  fontWeight: '400' 
-                }}>
-                  {isVideoEnabled ? "▶" : "◼"}
-                </Text>
+                <MaterialIcon 
+                  name={isVideoEnabled ? 'videocam' : 'videocam_off'} 
+                  size={24} 
+                  color="#FFFFFF"
+                />
               </TouchableOpacity>
             </MotiView>
 
@@ -286,10 +307,10 @@ export const VideoCallScreen: React.FC = () => {
               transition={{ delay: 500 }}
             >
               <TouchableOpacity
-                style={styles.controlButton}
+                style={[styles.controlButton, { backgroundColor: getIconBackgroundColor('flip_camera_ios') }]}
                 onPress={handleFlipCamera}
               >
-                <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: '400' }}>↻</Text>
+                <MaterialIcon name="flip_camera_ios" size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </MotiView>
 
@@ -299,12 +320,14 @@ export const VideoCallScreen: React.FC = () => {
               transition={{ delay: 600 }}
             >
               <TouchableOpacity
-                style={styles.controlButton}
+                style={[styles.controlButton, { backgroundColor: getIconBackgroundColor(isMinimized ? 'fullscreen' : 'fullscreen_exit') }]}
                 onPress={handleMinimize}
               >
-                <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: '400' }}>
-                  {isMinimized ? "⛶" : "⊟"}
-                </Text>
+                <MaterialIcon 
+                  name={isMinimized ? 'fullscreen' : 'fullscreen_exit'} 
+                  size={24} 
+                  color="#FFFFFF"
+                />
               </TouchableOpacity>
             </MotiView>
           </View>
@@ -397,7 +420,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -430,17 +452,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
-  acceptButton: {
-    backgroundColor: '#4CAF50',
-  },
-  declineButton: {
-    backgroundColor: '#F44336',
-  },
   endCallButton: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#F44336',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -453,7 +468,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -461,9 +475,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-  },
-  controlButtonActive: {
-    backgroundColor: 'rgba(244, 67, 54, 0.8)',
   },
   permissionButton: {
     backgroundColor: tokens.colors.primary,

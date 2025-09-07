@@ -48,6 +48,18 @@ export const StorageAndDataScreen: React.FC = () => {
 
   const totalStorage = '4.0 GB';
 
+  const getIconBackgroundColor = (iconName: string): string => {
+    // iOS Settings-style solid background colors
+    const backgroundColorMap: Record<string, string> = {
+      'storage': '#5856D6',           // Purple background
+      'download': '#007AFF',          // Blue background
+      'photo': '#34C759',             // Green background
+      'cleaning_services': '#FF9500', // Orange background
+      'chevron_right': '#8E8E93',     // Gray background
+    };
+    return backgroundColorMap[iconName] || '#007AFF';
+  };
+
   const handleToggle = (setting: keyof typeof settings) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSettings(prev => ({ ...prev, [setting]: !prev[setting] }));
@@ -97,7 +109,9 @@ export const StorageAndDataScreen: React.FC = () => {
         {/* Storage Overview - iOS Style */}
         <View style={styles.iosCard}>
           <View style={styles.iosCardItem}>
-            <MaterialIcon name="storage" size={24} color={tokens.colors.primary} />
+            <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('storage') }]}>
+              <MaterialIcon name="storage" size={24} color="#FFFFFF" />
+            </View>
             <Text style={styles.iosCardText}>Storage Usage</Text>
           </View>
           
@@ -131,7 +145,9 @@ export const StorageAndDataScreen: React.FC = () => {
               <TouchableOpacity onPress={handleManageStorage} style={styles.manageButton}>
                 <View style={styles.manageButtonContent}>
                   <Text style={styles.manageButtonText}>Manage Storage</Text>
-                  <MaterialIcon name="chevron_right" size={20} color={tokens.colors.primary} />
+                  <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('chevron_right') }]}>
+                    <MaterialIcon name="chevron_right" size={20} color="#FFFFFF" />
+                  </View>
                 </View>
               </TouchableOpacity>
             </View>
@@ -141,7 +157,9 @@ export const StorageAndDataScreen: React.FC = () => {
         {/* Auto-Download Settings - iOS Style */}
         <View style={styles.iosCard}>
           <View style={styles.iosCardItem}>
-            <MaterialIcon name="download" size={24} color={tokens.colors.primary} />
+            <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('download') }]}>
+              <MaterialIcon name="download" size={24} color="#FFFFFF" />
+            </View>
             <Text style={styles.iosCardText}>Auto-Download</Text>
           </View>
           
@@ -209,7 +227,9 @@ export const StorageAndDataScreen: React.FC = () => {
         {/* Media Settings - iOS Style */}
         <View style={styles.iosCard}>
           <View style={styles.iosCardItem}>
-            <MaterialIcon name="photo" size={24} color={tokens.colors.primary} />
+            <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('photo') }]}>
+              <MaterialIcon name="photo" size={24} color="#FFFFFF" />
+            </View>
             <Text style={styles.iosCardText}>Media Settings</Text>
           </View>
           
@@ -258,7 +278,9 @@ export const StorageAndDataScreen: React.FC = () => {
         <TouchableOpacity onPress={handleClearCache}>
           <View style={styles.iosCard}>
             <View style={styles.iosCardItem}>
-              <MaterialIcon name="cleaning_services" size={24} color={tokens.colors.primary} />
+              <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('cleaning_services') }]}>
+                <MaterialIcon name="cleaning_services" size={24} color="#FFFFFF" />
+              </View>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Clear Cache</Text>
                 <Text style={styles.settingDescription}>
@@ -450,5 +472,12 @@ const styles = StyleSheet.create({
     height: 0.5,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     marginLeft: 56, // Align with text
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
   },
 });

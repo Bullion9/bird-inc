@@ -51,6 +51,20 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // iOS-style icon background color function
+  const getIconBackgroundColor = (iconName: string): string => {
+    const iconBackgrounds: { [key: string]: string } = {
+      // Media viewer icons
+      close: '#8E8E93',             // Gray for close
+      share: '#007AFF',             // Blue for share
+      download: '#34C759',          // Green for download
+      // Common icons
+      back: '#007AFF',              // Blue for back
+      menu: '#8E8E93',              // Gray for menu
+    };
+    return iconBackgrounds[iconName] || '#8E8E93';
+  };
+
   // Animation values
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -200,15 +214,21 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({
                 style={styles.closeButton}
                 onPress={handleClose}
               >
-                <MaterialIcon name="close" size={24} color="#FFFFFF" />
+                <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('close') }]}>
+                  <MaterialIcon name="close" size={24} color="#FFFFFF" />
+                </View>
               </TouchableOpacity>
               
               <View style={styles.headerActions}>
                 <TouchableOpacity style={styles.actionButton}>
-                  <MaterialIcon name="share" size={24} color="#FFFFFF" />
+                  <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('share') }]}>
+                    <MaterialIcon name="share" size={24} color="#FFFFFF" />
+                  </View>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-                  <MaterialIcon name="download" size={24} color="#FFFFFF" />
+                  <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor('download') }]}>
+                    <MaterialIcon name="download" size={24} color="#FFFFFF" />
+                  </View>
                 </TouchableOpacity>
               </View>
             </View>
@@ -324,5 +344,12 @@ const styles = StyleSheet.create({
     ...tokens.typography.body,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

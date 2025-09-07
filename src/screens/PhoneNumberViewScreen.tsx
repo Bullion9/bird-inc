@@ -20,6 +20,17 @@ export const PhoneNumberViewScreen: React.FC = () => {
   const { phoneNumber } = route.params;
   const [scrollOffset, setScrollOffset] = useState(0);
 
+  // iOS-style icon background colors
+  const getIconBackgroundColor = (iconName: string): string => {
+    const iconBackgrounds: { [key: string]: string } = {
+      phone: '#34C759',           // Green for phone
+      lock: '#8E8E93',            // Gray for lock/security
+      check_circle: '#34C759',    // Green for success/verified
+      notifications: '#FF9500',   // Orange for notifications
+    };
+    return iconBackgrounds[iconName] || '#007AFF';
+  };
+
   const handleChangeNumber = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     // This would typically navigate to a verification flow
@@ -54,15 +65,15 @@ export const PhoneNumberViewScreen: React.FC = () => {
         {/* Current Phone Number */}
         <BirdCard style={styles.phoneCard}>
           <View style={styles.phoneContainer}>
-            <View style={styles.phoneIconContainer}>
-              <MaterialIcon name="phone" size={24} color={tokens.colors.primary} />
+            <View style={[styles.phoneIconContainer, { backgroundColor: getIconBackgroundColor('phone') }]}>
+              <MaterialIcon name="phone" size={24} color="#FFFFFF" />
             </View>
             <View style={styles.phoneDetails}>
               <Text style={styles.phoneLabel}>Current number</Text>
               <Text style={styles.phoneNumber}>{phoneNumber}</Text>
             </View>
-            <View style={styles.lockIconContainer}>
-              <MaterialIcon name="lock" size={20} color={tokens.colors.onSurface60} />
+            <View style={[styles.lockIconContainer, { backgroundColor: getIconBackgroundColor('lock') }]}>
+              <MaterialIcon name="lock" size={20} color="#FFFFFF" />
             </View>
           </View>
         </BirdCard>
@@ -70,17 +81,23 @@ export const PhoneNumberViewScreen: React.FC = () => {
         {/* Information Section */}
         <View style={styles.infoSection}>
           <View style={styles.infoItem}>
-            <MaterialIcon name="check_circle" size={20} color={tokens.colors.success} />
+            <View style={[styles.infoIconContainer, { backgroundColor: getIconBackgroundColor('check_circle') }]}>
+              <MaterialIcon name="check_circle" size={20} color="#FFFFFF" />
+            </View>
             <Text style={styles.infoText}>Verified and secure</Text>
           </View>
           
           <View style={styles.infoItem}>
-            <MaterialIcon name="notifications" size={20} color={tokens.colors.primary} />
+            <View style={[styles.infoIconContainer, { backgroundColor: getIconBackgroundColor('notifications') }]}>
+              <MaterialIcon name="notifications" size={20} color="#FFFFFF" />
+            </View>
             <Text style={styles.infoText}>Used for notifications and security</Text>
           </View>
           
           <View style={styles.infoItem}>
-            <MaterialIcon name="lock" size={20} color={tokens.colors.onSurface60} />
+            <View style={[styles.infoIconContainer, { backgroundColor: getIconBackgroundColor('lock') }]}>
+              <MaterialIcon name="lock" size={20} color="#FFFFFF" />
+            </View>
             <Text style={styles.infoText}>Hidden from other users</Text>
           </View>
         </View>
@@ -108,7 +125,9 @@ export const PhoneNumberViewScreen: React.FC = () => {
         {/* Security Note */}
         <View style={styles.securityNote}>
           <View style={styles.securityNoteHeader}>
-            <MaterialIcon name="lock" size={16} color={tokens.colors.onSurface60} />
+            <View style={[styles.securityIconContainer, { backgroundColor: getIconBackgroundColor('lock') }]}>
+              <MaterialIcon name="lock" size={16} color="#FFFFFF" />
+            </View>
             <Text style={styles.securityNoteTitle}>Security Note</Text>
           </View>
           <Text style={styles.securityNoteText}>
@@ -157,8 +176,7 @@ const styles = StyleSheet.create({
   phoneIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: `${tokens.colors.primary}20`,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -177,7 +195,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   lockIconContainer: {
-    padding: tokens.spacing.s,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   infoSection: {
     gap: tokens.spacing.m,
@@ -187,6 +209,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.spacing.s,
+  },
+  infoIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   infoText: {
     ...tokens.typography.body,
@@ -230,6 +259,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.spacing.s,
+  },
+  securityIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   securityNoteTitle: {
     ...tokens.typography.caption,
