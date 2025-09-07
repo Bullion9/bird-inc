@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Share,
   Dimensions,
 } from 'react-native';
 import { Text } from 'react-native-paper';
@@ -13,7 +12,6 @@ import { MotiView } from 'moti';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import * as Haptics from 'expo-haptics';
-import QRCode from 'react-native-qrcode-svg';
 
 import { tokens } from '../theme/tokens';
 import { SettingsStackParamList } from '../navigation/types';
@@ -39,33 +37,27 @@ export const MyQRScreen: React.FC = () => {
   const [scrollOffset, setScrollOffset] = useState(0);
   const qrRef = useRef<View>(null);
 
-  // Generate QR data - contains contact information in vCard format
-  const generateQRData = () => {
-    // Create a vCard format for contact sharing
-    const vCard = `BEGIN:VCARD
-VERSION:3.0
-FN:${userData.name}
-TEL:${userData.phone}
-URL:bird://user/${userData.userId}
-NOTE:${userData.bio}
-NICKNAME:${userData.username}
-END:VCARD`;
-    return vCard;
-  };
-
-  const qrData = generateQRData();
+  // Debug: Log when screen mounts
+  React.useEffect(() => {
+    console.log('MyQRScreen mounted - Coming Soon feature');
+    console.log('User data:', {
+      qrSize,
+      userId: userData.userId,
+      name: userData.name
+    });
+  }, []);
 
   const handleShare = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       
-      await Share.share({
-        title: 'My Bird QR Code',
-        message: `Connect with me on Bird! Use this link: bird://user/${userData.userId}`,
-      });
+      Alert.alert(
+        'Coming Soon',
+        'QR code sharing will be available in the next update!',
+        [{ text: 'OK', style: 'default' }]
+      );
     } catch (error) {
       console.error('Error sharing QR code:', error);
-      Alert.alert('Error', 'Failed to share QR code');
     }
   };
 
@@ -73,13 +65,12 @@ END:VCARD`;
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       Alert.alert(
-        'Save QR Code',
-        'QR code saved to your photos!',
+        'Coming Soon',
+        'Save to photos will be available in the next update!',
         [{ text: 'OK', style: 'default' }]
       );
     } catch (error) {
       console.error('Error saving QR code:', error);
-      Alert.alert('Error', 'Failed to save QR code');
     }
   };
 
@@ -104,7 +95,7 @@ END:VCARD`;
       icon: 'content-copy',
       onPress: () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        Alert.alert('Copied', 'Profile link copied to clipboard');
+        Alert.alert('Coming Soon', 'Copy link feature will be available in the next update!');
       },
       color: '#FF9500',
     },
@@ -152,7 +143,7 @@ END:VCARD`;
           <Text style={styles.userBio}>{userData.bio}</Text>
         </MotiView>
 
-        {/* QR Code */}
+        {/* Coming Soon Feature */}
         <MotiView
           from={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -160,21 +151,21 @@ END:VCARD`;
           style={styles.qrSection}
         >
           <View style={styles.qrContainer} ref={qrRef}>
-            <View style={styles.qrBackground}>
-              <QRCode
-                value={qrData}
-                size={qrSize}
-                color={tokens.colors.onSurface}
-                backgroundColor="#FFFFFF"
-                logoSize={30}
-                logoMargin={2}
-                logoBackgroundColor="transparent"
-              />
+            <View style={styles.comingSoonBackground}>
+              <View style={styles.comingSoonContent}>
+                <MaterialIcon name="qrcode" size={80} color={tokens.colors.primary} />
+                <Text style={styles.comingSoonTitle}>QR Code Generation</Text>
+                <Text style={styles.comingSoonSubtitle}>Coming Soon</Text>
+                <View style={styles.comingSoonBadge}>
+                  <MaterialIcon name="schedule" size={16} color="#FFFFFF" />
+                  <Text style={styles.comingSoonBadgeText}>In Development</Text>
+                </View>
+              </View>
             </View>
           </View>
           
           <Text style={styles.qrDescription}>
-            Others can scan this code to add you as a contact and start chatting
+            This feature will allow others to scan your code to add you as a contact and start chatting
           </Text>
         </MotiView>
 
@@ -219,10 +210,11 @@ END:VCARD`;
           transition={{ type: 'timing', duration: 300, delay: 800 }}
           style={styles.infoCard}
         >
-          <MaterialIcon name="information" size={20} color={tokens.colors.primary} />
+          <MaterialIcon name="information" size={20} color="#FF9500" />
           <Text style={styles.infoText}>
-            Your QR code is unique to you and contains your contact information. 
-            Anyone who scans it can add you on Bird and start a conversation.
+            🚀 We're working hard to bring you QR code generation! This feature will allow 
+            others to scan your unique code to instantly add you on Bird and start conversations. 
+            Stay tuned for the next update!
           </Text>
         </MotiView>
       </ScrollView>
@@ -349,5 +341,78 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: tokens.spacing.s,
     lineHeight: 16,
+  },
+  qrErrorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.surface1,
+  },
+  qrErrorText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface38,
+    marginTop: tokens.spacing.s,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: tokens.spacing.m,
+    paddingHorizontal: tokens.spacing.m,
+    paddingVertical: tokens.spacing.s,
+    backgroundColor: tokens.colors.primary,
+    borderRadius: tokens.radius.s,
+  },
+  retryText: {
+    ...tokens.typography.caption,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  comingSoonBackground: {
+    backgroundColor: '#FFFFFF',
+    padding: tokens.spacing.l,
+    borderRadius: tokens.radius.l,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    width: qrSize,
+    height: qrSize,
+    borderWidth: 2,
+    borderColor: tokens.colors.primary,
+    borderStyle: 'dashed',
+  },
+  comingSoonContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  comingSoonTitle: {
+    ...tokens.typography.h3,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+    marginTop: tokens.spacing.m,
+    textAlign: 'center',
+  },
+  comingSoonSubtitle: {
+    ...tokens.typography.h2,
+    color: tokens.colors.primary,
+    fontWeight: '700',
+    marginTop: tokens.spacing.s,
+    textAlign: 'center',
+  },
+  comingSoonBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF9500',
+    paddingHorizontal: tokens.spacing.s,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: tokens.spacing.m,
+  },
+  comingSoonBadgeText: {
+    ...tokens.typography.caption,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    marginLeft: 4,
+    fontSize: 11,
   },
 });

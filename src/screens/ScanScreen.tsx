@@ -216,7 +216,13 @@ export const ScanScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerButton} onPress={handleClose}>
-            <MaterialIcon name="close" size={24} color="#FFFFFF" />
+            <View style={{ transform: [{ scaleX: 1.3 }] }}>
+              <MaterialIcon 
+                name="chevron-left" 
+                size={40} 
+                color="#FFFFFF" 
+              />
+            </View>
           </TouchableOpacity>
           
           <Text style={styles.headerTitle}>Scan QR Code</Text>
@@ -271,7 +277,10 @@ export const ScanScreen: React.FC = () => {
         <View style={styles.bottomContainer}>
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={() => Alert.alert('My QR Code', 'Feature coming soon!')}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              navigation.navigate('MyQR');
+            }}
           >
             <MaterialIcon name="qrcode" size={24} color="#FFFFFF" />
             <Text style={styles.actionText}>My QR</Text>
@@ -295,7 +304,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 60,
-    paddingHorizontal: tokens.spacing.m,
+    paddingHorizontal: 1,
     paddingBottom: tokens.spacing.m,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },

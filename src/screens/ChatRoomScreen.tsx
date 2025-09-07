@@ -14,6 +14,8 @@ import {
   Keyboard,
   Alert,
   RefreshControl,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -302,6 +304,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   const [forwardedMessages, setForwardedMessages] = useState<string[]>([]);
   const [showHeaderDropdown, setShowHeaderDropdown] = useState(false);
+  const [showProfileSheet, setShowProfileSheet] = useState(false);
   
   // Animated values for gestures
   const pullToRefreshY = useSharedValue(0);
@@ -790,11 +793,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
   const handleContactInfo = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowHeaderDropdown(false);
-    Alert.alert(
-      'Contact Info',
-      `Name: ${userName}\nStatus: Online\nLast seen: Now`,
-      [{ text: 'OK' }]
-    );
+    setShowProfileSheet(true);
   };
 
   const handleMuteChat = () => {
@@ -895,7 +894,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
                 navigation.goBack();
               }}
             >
-              <Text style={styles.iosBackArrow}>‹</Text>
+              <View style={{ transform: [{ scaleX: 1.3 }] }}>
+                <MaterialIcon 
+                  name="chevron-left" 
+                  size={40} 
+                  color={tokens.colors.primary} 
+                />
+              </View>
             </TouchableOpacity>
           </View>
           
@@ -1303,6 +1308,128 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
         )}
       </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Profile Sheet Modal */}
+      <Modal
+        visible={showProfileSheet}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowProfileSheet(false)}
+      >
+        <BlurView intensity={100} style={styles.profileSheetContainer}>
+          <SafeAreaView style={styles.profileSheetContent}>
+            {/* Header */}
+            <View style={styles.profileSheetHeader}>
+              <TouchableOpacity
+                style={styles.profileSheetCloseButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowProfileSheet(false);
+                }}
+              >
+                <MaterialIcon name="close" size={24} color={tokens.colors.onSurface} />
+              </TouchableOpacity>
+              <Text style={styles.profileSheetTitle}>Contact Info</Text>
+              <View style={styles.profileSheetHeaderSpacer} />
+            </View>
+
+            {/* Profile Avatar and Name */}
+            <View style={styles.profileSheetMainSection}>
+              <View style={styles.profileSheetAvatar}>
+                <Text style={styles.profileSheetAvatarText}>
+                  {userName?.charAt(0)?.toUpperCase() || 'U'}
+                </Text>
+              </View>
+              <Text style={styles.profileSheetName}>{userName}</Text>
+              <Text style={styles.profileSheetStatus}>Online • Last seen recently</Text>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.profileSheetActions}>
+              <TouchableOpacity 
+                style={styles.profileSheetActionButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  Alert.alert('Audio Call', `Calling ${userName}...`);
+                }}
+              >
+                <View style={[styles.profileSheetActionIcon, { backgroundColor: '#34C759' }]}>
+                  <MaterialIcon name="phone" size={24} color="#FFFFFF" />
+                </View>
+                <Text style={styles.profileSheetActionText}>Audio</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.profileSheetActionButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  Alert.alert('Video Call', `Video calling ${userName}...`);
+                }}
+              >
+                <View style={[styles.profileSheetActionIcon, { backgroundColor: '#007AFF' }]}>
+                  <MaterialIcon name="videocam" size={24} color="#FFFFFF" />
+                </View>
+                <Text style={styles.profileSheetActionText}>Video</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.profileSheetActionButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  Alert.alert('Search', 'Search in conversation...');
+                }}
+              >
+                <View style={[styles.profileSheetActionIcon, { backgroundColor: '#FF9500' }]}>
+                  <MaterialIcon name="search" size={24} color="#FFFFFF" />
+                </View>
+                <Text style={styles.profileSheetActionText}>Search</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Info Sections */}
+            <ScrollView style={styles.profileSheetScroll} showsVerticalScrollIndicator={false}>
+              {/* Contact Details */}
+              <View style={styles.profileSheetSection}>
+                <Text style={styles.profileSheetSectionTitle}>Contact Details</Text>
+                <TouchableOpacity style={styles.profileSheetInfoItem}>
+                  <MaterialIcon name="phone" size={20} color={tokens.colors.onSurface60} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Phone</Text>
+                    <Text style={styles.profileSheetInfoValue}>+1 234 567 8900</Text>
+                  </View>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.profileSheetInfoItem}>
+                  <MaterialIcon name="email" size={20} color={tokens.colors.onSurface60} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Email</Text>
+                    <Text style={styles.profileSheetInfoValue}>john@example.com</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Privacy Settings */}
+              <View style={styles.profileSheetSection}>
+                <Text style={styles.profileSheetSectionTitle}>Privacy & Support</Text>
+                
+                <TouchableOpacity style={styles.profileSheetInfoItem}>
+                  <MaterialIcon name="block" size={20} color={tokens.colors.error} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={[styles.profileSheetInfoLabel, { color: tokens.colors.error }]}>Block Contact</Text>
+                  </View>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.profileSheetInfoItem}>
+                  <MaterialIcon name="report" size={20} color={tokens.colors.error} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={[styles.profileSheetInfoLabel, { color: tokens.colors.error }]}>Report Contact</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </BlurView>
+      </Modal>
     </GestureHandlerRootView>
   );
 };
@@ -1384,7 +1511,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     position: 'absolute',
-    left: 16,
+    left: 1,
     zIndex: 1,
   },
   headerCenter: {
@@ -1416,15 +1543,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   backButton: {
-    padding: 8,
-  },
-  iosBackArrow: {
-    fontSize: 40,
-    fontWeight: '300',
-    color: tokens.colors.primary,
-    lineHeight: 40,
-    textAlign: 'center',
-    transform: [{ scaleX: 1.2 }], // Make it wider/longer
+    padding: 0,
   },
   headerAction: {
     padding: 12,
@@ -1949,6 +2068,140 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 16,
     backgroundColor: tokens.colors.error + '20',
+  },
+  // Profile Sheet Styles
+  profileSheetContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  profileSheetContent: {
+    flex: 1,
+    backgroundColor: tokens.colors.bg,
+  },
+  profileSheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: tokens.spacing.m,
+    paddingVertical: tokens.spacing.s,
+    borderBottomWidth: 0.5,
+    borderBottomColor: tokens.colors.separator,
+  },
+  profileSheetCloseButton: {
+    padding: tokens.spacing.s,
+    borderRadius: 20,
+    backgroundColor: tokens.colors.surface1,
+  },
+  profileSheetTitle: {
+    ...tokens.typography.h3,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+    textAlign: 'center',
+    flex: 1,
+  },
+  profileSheetHeaderSpacer: {
+    width: 40, // Same width as close button
+  },
+  profileSheetMainSection: {
+    alignItems: 'center',
+    paddingVertical: tokens.spacing.xl,
+    paddingHorizontal: tokens.spacing.m,
+  },
+  profileSheetAvatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: tokens.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: tokens.spacing.m,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  profileSheetAvatarText: {
+    fontSize: 48,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  profileSheetName: {
+    ...tokens.typography.h2,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+    marginBottom: tokens.spacing.xs,
+    textAlign: 'center',
+  },
+  profileSheetStatus: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface60,
+    textAlign: 'center',
+  },
+  profileSheetActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: tokens.spacing.xl,
+    paddingVertical: tokens.spacing.l,
+    borderBottomWidth: 0.5,
+    borderBottomColor: tokens.colors.separator,
+  },
+  profileSheetActionButton: {
+    alignItems: 'center',
+    minWidth: 60,
+  },
+  profileSheetActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: tokens.spacing.s,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  profileSheetActionText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  profileSheetScroll: {
+    flex: 1,
+  },
+  profileSheetSection: {
+    paddingHorizontal: tokens.spacing.m,
+    paddingVertical: tokens.spacing.l,
+  },
+  profileSheetSectionTitle: {
+    ...tokens.typography.h3,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+    fontSize: 18,
+    marginBottom: tokens.spacing.m,
+  },
+  profileSheetInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: tokens.spacing.m,
+    borderBottomWidth: 0.5,
+    borderBottomColor: tokens.colors.separator,
+  },
+  profileSheetInfoContent: {
+    marginLeft: tokens.spacing.m,
+    flex: 1,
+  },
+  profileSheetInfoLabel: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  profileSheetInfoValue: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface60,
   },
 });
 

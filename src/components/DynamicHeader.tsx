@@ -99,7 +99,13 @@ export const DynamicHeader: React.FC<DynamicHeaderProps> = ({
               onPress={onBackPress}
               style={styles.backButton}
             >
-              <Text style={styles.iosBackArrow}>‹</Text>
+              <View style={{ transform: [{ scaleX: 1.3 }] }}>
+                <MaterialIcon 
+                  name="chevron-left" 
+                  size={40} 
+                  color={tokens.colors.primary} 
+                />
+              </View>
             </TouchableOpacity>
           </MotiView>
         )}
@@ -207,20 +213,12 @@ const styles = StyleSheet.create({
   },
   leftContainer: {
     position: 'absolute',
-    left: 16,
+    left: 1,
     flexDirection: 'row',
   },
   backButton: {
     margin: 0,
-    padding: 8,
-  },
-  iosBackArrow: {
-    fontSize: 40,
-    fontWeight: '300',
-    color: tokens.colors.primary,
-    lineHeight: 40,
-    textAlign: 'center',
-    transform: [{ scaleX: 1.2 }], // Make it wider/longer
+    padding: 0,
   },
   backButtonBackground: {
     backgroundColor: 'rgba(0, 0, 0, 0.6)',

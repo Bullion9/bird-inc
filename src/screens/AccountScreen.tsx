@@ -246,60 +246,6 @@ export const AccountScreen: React.FC = () => {
     }
   };
 
-  const renderAccountItem = (item: AccountItem, index: number) => (
-    <MotiView
-      key={item.id}
-      from={{ opacity: 0, translateX: -20 }}
-      animate={{ opacity: 1, translateX: 0 }}
-      transition={{ type: 'timing', duration: 300, delay: index * 50 }}
-    >
-      <TouchableOpacity
-        style={styles.accountRow}
-        onPress={item.onPress}
-        activeOpacity={item.type === 'toggle' ? 1 : 0.7}
-        disabled={item.type === 'toggle'}
-      >
-        <View style={styles.accountItemLeft}>
-          <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor(item.type) }]}>
-            <MaterialIcon name={item.icon} size={20} color="#FFFFFF" />
-          </View>
-          
-          <View style={styles.accountContent}>
-            <View style={styles.titleRow}>
-              <Text style={[styles.accountTitle, item.type === 'danger' && styles.dangerText]}>
-                {item.title}
-              </Text>
-              {item.showBadge && (
-                <View style={[styles.badge, { backgroundColor: item.badgeColor }]}>
-                  <Text style={styles.badgeText}>!</Text>
-                </View>
-              )}
-            </View>
-            {item.subtitle && (
-              <Text style={styles.accountSubtitle}>{item.subtitle}</Text>
-            )}
-          </View>
-        </View>
-        
-        <View style={styles.accountAction}>
-          {item.type === 'toggle' && (
-            <Switch
-              value={item.value}
-              onValueChange={item.onToggle}
-              trackColor={{ false: 'rgba(255, 255, 255, 0.1)', true: tokens.colors.primary }}
-              thumbColor={item.value ? '#FFFFFF' : '#FFFFFF'}
-              ios_backgroundColor="rgba(255, 255, 255, 0.1)"
-            />
-          )}
-          {(item.type === 'navigation' || item.type === 'danger') && (
-            <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface38} />
-          )}
-        </View>
-      </TouchableOpacity>
-      {index < accountSections.flatMap(s => s.items).length - 1 && <View style={styles.separator} />}
-    </MotiView>
-  );
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -341,7 +287,59 @@ export const AccountScreen: React.FC = () => {
               {section.title}
             </Text>
             <View style={[styles.sectionContent, section.title === 'Danger Zone' && styles.dangerSection]}>
-              {section.items.map((item, index) => renderAccountItem(item, index))}
+              {section.items.map((item, index) => (
+                <MotiView
+                  key={item.id}
+                  from={{ opacity: 0, translateX: -20 }}
+                  animate={{ opacity: 1, translateX: 0 }}
+                  transition={{ type: 'timing', duration: 300, delay: index * 50 }}
+                >
+                  <TouchableOpacity
+                    style={styles.accountRow}
+                    onPress={item.onPress}
+                    activeOpacity={item.type === 'toggle' ? 1 : 0.7}
+                    disabled={item.type === 'toggle'}
+                  >
+                    <View style={styles.accountItemLeft}>
+                      <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor(item.type) }]}>
+                        <MaterialIcon name={item.icon} size={20} color="#FFFFFF" />
+                      </View>
+                      
+                      <View style={styles.accountContent}>
+                        <View style={styles.titleRow}>
+                          <Text style={[styles.accountTitle, item.type === 'danger' && styles.dangerText]}>
+                            {item.title}
+                          </Text>
+                          {item.showBadge && (
+                            <View style={[styles.badge, { backgroundColor: item.badgeColor }]}>
+                              <Text style={styles.badgeText}>!</Text>
+                            </View>
+                          )}
+                        </View>
+                        {item.subtitle && (
+                          <Text style={styles.accountSubtitle}>{item.subtitle}</Text>
+                        )}
+                      </View>
+                    </View>
+                    
+                    <View style={styles.accountAction}>
+                      {item.type === 'toggle' && (
+                        <Switch
+                          value={item.value}
+                          onValueChange={item.onToggle}
+                          trackColor={{ false: 'rgba(255, 255, 255, 0.1)', true: tokens.colors.primary }}
+                          thumbColor={item.value ? '#FFFFFF' : '#FFFFFF'}
+                          ios_backgroundColor="rgba(255, 255, 255, 0.1)"
+                        />
+                      )}
+                      {(item.type === 'navigation' || item.type === 'danger') && (
+                        <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface38} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                  {index < section.items.length - 1 && <View style={styles.separator} />}
+                </MotiView>
+              ))}
             </View>
           </MotiView>
         ))}

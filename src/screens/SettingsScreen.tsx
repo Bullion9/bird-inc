@@ -481,15 +481,15 @@ const styles = StyleSheet.create({
   },
   iosCardText: {
     ...tokens.typography.body, // iOS body text style from tokens
-    color: '#FFFFFF',
+    color: tokens.colors.onSurface, // Use theme text color instead of hardcoded white
     marginLeft: 12,
     flex: 1,
     fontWeight: '400', // iOS Settings weight
     fontFamily: 'System',
   },
   iosCardSeparator: {
-    height: 0.33, // iOS standard separator thickness
-    backgroundColor: tokens.colors.separator, // iOS separator color from tokens
+    height: 0.5, // Make separator more visible
+    backgroundColor: 'rgba(84, 84, 88, 0.8)', // Slightly more visible separator
     marginLeft: 52, // Align with text, accounting for icon
   },
   // Search Bar Styles
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   separatorLine: {
     height: 0.5,
     backgroundColor: 'rgba(142, 142, 147, 0.3)',
-    marginLeft: 16,
+    marginLeft: 0,
   },
   createAvatarItem: {
     flexDirection: 'row',
