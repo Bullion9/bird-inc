@@ -84,194 +84,235 @@ interface MessageBubbleProps {
   onLongPress: () => void;
   onDoubleTap: () => void;
   formatTime: (date: Date) => string;
+  onShowEmojiKeyboard: () => void;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onDoubleTap, formatTime }) => {
-  const messageSwipeX = useSharedValue(0);
-  const messagePinchScale = useSharedValue(1);
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onDoubleTap, formatTime, onShowEmojiKeyboard }) => {
+  // Validate props and provide safe defaults
+  if (!message) {
+    return null;
+  }
 
-  const messageSwipeGestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
-    onStart: () => {
-      // Only trigger haptic if it's a strong swipe gesture
-    },
-    onActive: (event) => {
-      // Only respond to significant horizontal swipes to avoid interfering with vertical scrolling
-      if (Math.abs(event.translationX) > Math.abs(event.translationY) * 2) {
-        if (event.translationX < 0) {
-          messageSwipeX.value = clamp(event.translationX, -80, 0);
-        } else {
-          messageSwipeX.value = clamp(event.translationX, 0, 80);
+  // Safely extract and convert all string values with explicit validation
+  const messageText = React.useMemo(() => {
+    try {
+      const text = message.text;
+      if (text === null || text === undefined) {
+        return '';
+      }
+      return String(text);
+    } catch {
+      return '';
+    }
+  }, [message.text]);
+
+  const stickerText = React.useMemo(() => {
+    try {
+      const sticker = message.sticker;
+      if (sticker === null || sticker === undefined) {
+        return '';
+      }
+      return String(sticker);
+    } catch {
+      return '';
+    }
+  }, [message.sticker]);
+
+  const timeDisplay = React.useMemo(() => {
+    try {
+      if (message.timestamp && formatTime) {
+        const timeStr = formatTime(message.timestamp);
+        if (timeStr === null || timeStr === undefined) {
+          return '';
         }
+        return String(timeStr);
       }
-    },
-    onEnd: (event) => {
-      // Require more significant swipe to trigger action
-      if (Math.abs(event.translationX) > 80 && Math.abs(event.translationX) > Math.abs(event.translationY) * 2) {
-        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
-        runOnJS(onLongPress)();
-      }
-      messageSwipeX.value = withSpring(0);
-    },
-  });
+      return '';
+    } catch {
+      return '';
+    }
+  }, [message.timestamp, formatTime]);
 
-  const messagePinchGestureHandler = useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>({
-    onActive: (event) => {
-      messagePinchScale.value = clamp(event.scale, 0.5, 3);
-    },
-    onEnd: () => {
-      messagePinchScale.value = withSpring(1);
-    },
-  });
+  // Render content with explicit Text wrapping for all strings
+  const renderMessageContent = () => {
+    // Disappeared message
+    if (message.isDisappeared) {
+      return (
+        <View style={[styles.messageBubble, styles.disappearedBubble]}>
+          <View style={styles.disappearedContent}>
+            <MaterialIcon name="auto_delete" size={16} color={tokens.colors.onSurface38} />
+            <Text style={styles.disappearedText}>
+              This message has disappeared
+            </Text>
+          </View>
+        </View>
+      );
+    }
 
-  const messageSwipeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: messageSwipeX.value }],
-  }));
+    // Sticker message
+    if (message.sticker && stickerText) {
+      return (
+        <View style={[
+          styles.stickerContainer,
+          message.isSent ? styles.sentSticker : styles.receivedSticker,
+        ]}>
+          <Text style={styles.stickerText}>
+            {stickerText}
+          </Text>
+        </View>
+      );
+    }
 
-  const messagePinchStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: messagePinchScale.value }],
-  }));
-
-  return (
-    <PanGestureHandler 
-      onGestureEvent={messageSwipeGestureHandler}
-      activeOffsetX={[-15, 15]}
-      failOffsetY={[-10, 10]}
-    >
-      <Animated.View style={messageSwipeStyle}>
-        <LongPressGestureHandler
-          minDurationMs={800}
-          maxDist={20}
-          onHandlerStateChange={(event) => {
-            if (event.nativeEvent.state === State.ACTIVE) {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              onLongPress();
-            }
-          }}
-        >
-          <Animated.View>
-            <TapGestureHandler
-              numberOfTaps={2}
-              maxDist={30}
-              onHandlerStateChange={(event) => {
-                if (event.nativeEvent.state === State.ACTIVE) {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  onDoubleTap();
-                }
-              }}
+    // Regular text message
+    if (message.isSent) {
+      // Sent message with gray background
+      return (
+        <View style={styles.messageWithIconContainer}>
+          <TouchableOpacity 
+            style={styles.senderIconLeft}
+            onPress={() => {
+              // Handle heart icon tap
+              console.log('Heart icon tapped for sender');
+            }}
+            onLongPress={() => {
+              // Show emoji keyboard on long press
+              onShowEmojiKeyboard();
+            }}
+            activeOpacity={0.7}
+          >
+            <BlurView
+              intensity={60}
+              tint="light"
+              style={styles.heartIconBlur}
             >
-              <Animated.View>
-                <PinchGestureHandler 
-                  onGestureEvent={messagePinchGestureHandler}
-                >
-                  <Animated.View style={messagePinchStyle}>
-                    <MotiView
-                      from={{ opacity: 0, translateY: 20 }}
-                      animate={{ opacity: 1, translateY: 0 }}
-                      transition={{ duration: 300 }}
-                      style={[
-                        styles.messageContainer,
-                        message.isSent ? styles.sentMessage : styles.receivedMessage,
-                      ]}
-                    >
-                      {/* Show disappeared message indicator */}
-                      {message.isDisappeared ? (
-                        <View style={[
-                          styles.messageBubble,
-                          styles.disappearedBubble,
-                        ]}>
-                          <View style={styles.disappearedContent}>
-                            <MaterialIcon name="auto_delete" size={16} color={tokens.colors.onSurface38} />
-                            <Text style={styles.disappearedText}>This message has disappeared</Text>
-                          </View>
-                        </View>
-                      ) : message.sticker ? (
-                        <View style={[
-                          styles.stickerContainer,
-                          message.isSent ? styles.sentSticker : styles.receivedSticker,
-                        ]}>
-                          <Text style={styles.stickerText}>{message.sticker}</Text>
-                          {/* Show timer indicator for disappearing stickers */}
-                          {message.disappearingTimer && message.disappearingTimer > 0 && (
-                            <MotiView
-                              from={{ scale: 1 }}
-                              animate={{ scale: [1, 1.1, 1] }}
-                              transition={{
-                                type: 'timing',
-                                duration: 2000,
-                                loop: true,
-                              }}
-                              style={styles.timerIndicator}
-                            >
-                              <MaterialIcon name="timer" size={12} color="#FFFFFF" />
-                            </MotiView>
-                          )}
-                        </View>
-                      ) : (
-                        <View style={[
-                          styles.messageBubble,
-                          message.isSent ? styles.sentBubble : styles.receivedBubble,
-                        ]}>
-                          {message.text?.startsWith('Forwarded:') && (
-                            <View style={styles.forwardedIndicator}>
-                              <MaterialIcon name="share" size={12} color={tokens.colors.onSurface60} />
-                              <Text style={styles.forwardedText}>Forwarded</Text>
-                            </View>
-                          )}
-                          {message.text?.startsWith('Replying to') && (
-                            <View style={styles.replyIndicator}>
-                              <MaterialIcon name="reply" size={12} color={tokens.colors.primary} />
-                              <Text style={styles.replyIndicatorText}>Reply</Text>
-                            </View>
-                          )}
-                          <Text style={[
-                            styles.messageText,
-                            message.isSent ? styles.sentText : styles.receivedText,
-                          ]}>
-                            {message.text}
-                          </Text>
-                          {/* Show timer indicator for disappearing messages */}
-                          {message.disappearingTimer && message.disappearingTimer > 0 && (
-                            <MotiView
-                              from={{ scale: 1 }}
-                              animate={{ scale: [1, 1.1, 1] }}
-                              transition={{
-                                type: 'timing',
-                                duration: 2000,
-                                loop: true,
-                              }}
-                              style={styles.timerIndicator}
-                            >
-                              <MaterialIcon name="timer" size={12} color="#FFFFFF" />
-                            </MotiView>
-                          )}
-                        </View>
-                      )}
-                      <View style={[
-                        styles.messageInfo,
-                        message.isSent ? styles.sentInfo : styles.receivedInfo,
-                      ]}>
-                        <Text style={styles.timeText}>{formatTime(message.timestamp)}</Text>
-                        {message.isSent && (
-                          <View style={styles.statusContainer}>
-                            {message.isRead ? (
-                              <MaterialIcon name="done_all" size={12} color="#007AFF" />
-                            ) : message.isDelivered ? (
-                              <MaterialIcon name="done_all" size={12} color="rgba(142, 142, 147, 1)" />
-                            ) : (
-                              <MaterialIcon name="done" size={12} color="rgba(142, 142, 147, 1)" />
-                            )}
-                          </View>
-                        )}
-                      </View>
-                    </MotiView>
-                  </Animated.View>
-                </PinchGestureHandler>
-              </Animated.View>
-            </TapGestureHandler>
-          </Animated.View>
-        </LongPressGestureHandler>
-      </Animated.View>
-    </PanGestureHandler>
+              <MaterialIcon name="favorite" size={16} color="rgba(255, 107, 107, 0.8)" />
+            </BlurView>
+          </TouchableOpacity>
+          <View style={[
+            styles.messageBubble,
+            styles.sentBubble,
+          ]}>
+            {messageText && messageText.startsWith('Forwarded:') && (
+              <View style={styles.forwardedIndicator}>
+                <MaterialIcon name="share" size={12} color={tokens.colors.onSurface60} />
+                <Text style={styles.forwardedText}>
+                  Forwarded
+                </Text>
+              </View>
+            )}
+            {messageText && messageText.startsWith('Replying to') && (
+              <View style={styles.replyIndicator}>
+                <MaterialIcon name="reply" size={12} color={tokens.colors.primary} />
+                <Text style={styles.replyIndicatorText}>
+                  Reply
+                </Text>
+              </View>
+            )}
+            <Text style={[
+              styles.messageText,
+              styles.sentText,
+            ]}>
+              {messageText || ' '}
+            </Text>
+          </View>
+        </View>
+      );
+    } else {
+      // Received message with blur background
+      return (
+        <View style={styles.messageWithIconContainer}>
+          <View style={[
+            styles.messageBubble,
+            styles.receivedBubble,
+          ]}>
+            <BlurView
+              intensity={80}
+              tint="light"
+              style={styles.blurBubble}
+            >
+              {messageText && messageText.startsWith('Forwarded:') && (
+                <View style={styles.forwardedIndicator}>
+                  <MaterialIcon name="share" size={12} color={tokens.colors.onSurface60} />
+                  <Text style={styles.forwardedText}>
+                    Forwarded
+                  </Text>
+                </View>
+              )}
+              {messageText && messageText.startsWith('Replying to') && (
+                <View style={styles.replyIndicator}>
+                  <MaterialIcon name="reply" size={12} color={tokens.colors.primary} />
+                  <Text style={styles.replyIndicatorText}>
+                    Reply
+                  </Text>
+                </View>
+              )}
+              <Text style={[
+                styles.messageText,
+                styles.receivedText,
+              ]}>
+                {messageText || ' '}
+              </Text>
+            </BlurView>
+          </View>
+          <TouchableOpacity 
+            style={styles.receiverIconRight}
+            onPress={() => {
+              // Handle heart icon tap
+              console.log('Heart icon tapped for receiver');
+            }}
+            onLongPress={() => {
+              // Show emoji keyboard on long press
+              onShowEmojiKeyboard();
+            }}
+            activeOpacity={0.7}
+          >
+            <BlurView
+              intensity={60}
+              tint="light"
+              style={styles.heartIconBlur}
+            >
+              <MaterialIcon name="favorite" size={16} color="#FFFFFF" />
+            </BlurView>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+  };
+
+  // Main render
+  return (
+    <TouchableOpacity 
+      onLongPress={onLongPress}
+      onPress={onDoubleTap}
+      activeOpacity={0.95}
+      style={[
+        styles.messageContainer,
+        message.isSent ? styles.sentMessage : styles.receivedMessage,
+      ]}
+    >
+      <View>
+        {renderMessageContent()}
+        <View style={[
+          styles.messageInfo,
+          message.isSent ? styles.sentInfo : styles.receivedInfo,
+        ]}>
+          <Text style={styles.timeText}>
+            {timeDisplay || ' '}
+          </Text>
+          {message.isSent && (
+            <View style={styles.statusContainer}>
+              {message.isRead ? (
+                <MaterialIcon name="done_all" size={12} color="#007AFF" />
+              ) : message.isDelivered ? (
+                <MaterialIcon name="done_all" size={12} color="rgba(142, 142, 147, 1)" />
+              ) : (
+                <MaterialIcon name="done" size={12} color="rgba(142, 142, 147, 1)" />
+              )}
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -794,16 +835,16 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const renderEmojiCategory = ({ item }: { item: typeof emojiCategories[0] }) => (
     <View style={styles.emojiCategoryContainer}>
-      <Text style={styles.emojiCategoryTitle}>{item.category}</Text>
+      <Text style={styles.emojiCategoryTitle}>{String(item?.category || 'Emojis')}</Text>
       <View style={styles.emojiGrid}>
-        {item.emojis.map((emoji, index) => (
+        {(item?.emojis || []).map((emoji, index) => (
           <TouchableOpacity
             key={index}
             style={styles.emojiPickerButton}
-            onPress={() => insertEmoji(emoji)}
+            onPress={() => insertEmoji(String(emoji || ''))}
             activeOpacity={0.6}
           >
-            <Text style={styles.emojiText}>{emoji}</Text>
+            <Text style={styles.emojiText}>{String(emoji || '')}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -812,16 +853,16 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const renderStickerPack = ({ item }: { item: typeof stickerPacks[0] }) => (
     <View style={styles.stickerPackContainer}>
-      <Text style={styles.stickerPackTitle}>{item.name}</Text>
+      <Text style={styles.stickerPackTitle}>{String(item?.name || 'Stickers')}</Text>
       <View style={styles.stickerGrid}>
-        {item.stickers.map((sticker, index) => (
+        {(item?.stickers || []).map((sticker, index) => (
           <TouchableOpacity
             key={index}
             style={styles.stickerButton}
-            onPress={() => insertSticker(sticker)}
+            onPress={() => insertSticker(String(sticker || ''))}
             activeOpacity={0.6}
           >
-            <Text style={styles.stickerItemText}>{sticker}</Text>
+            <Text style={styles.stickerItemText}>{String(sticker || '')}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -1060,14 +1101,26 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
     transform: [{ translateY: keyboardSwipeY.value }],
   }));
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <MessageBubble 
-      message={item} 
-      onLongPress={() => showMessageActions(item.id)}
-      onDoubleTap={() => addQuickReaction(item.id)}
-      formatTime={formatTime}
-    />
-  );
+  const renderMessage = ({ item }: { item: Message }) => {
+    // Safety check for item
+    if (!item || typeof item !== 'object' || !item.id) {
+      return <View style={{ height: 0, width: 0 }} />;
+    }
+    
+    return (
+      <MessageBubble 
+        message={item} 
+        onLongPress={() => showMessageActions(item.id)}
+        onDoubleTap={() => addQuickReaction(item.id)}
+        formatTime={formatTime}
+        onShowEmojiKeyboard={() => {
+          setShowEmojiKeyboard(true);
+          setShowStickerPack(false);
+          setKeyboardMode('emoji');
+        }}
+      />
+    );
+  };
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -1443,13 +1496,19 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
                 <View style={styles.disappearingBannerText}>
                   <Text style={styles.disappearingBannerTitle}>Disappearing Messages</Text>
                   <Text style={styles.disappearingBannerSubtitle}>
-                    Messages disappear after {getTimerLabel(disappearingTimer)}
+                    {`Messages disappear after ${String(getTimerLabel(disappearingTimer))}`}
                   </Text>
                 </View>
                 <View style={styles.timerIconContainer}>
                   <MaterialIcon name="timer" size={16} color="#5856D6" />
                   <Text style={styles.timerText}>
-                    {disappearingTimer < 60 ? `${disappearingTimer}s` : disappearingTimer < 3600 ? `${Math.floor(disappearingTimer / 60)}m` : `${Math.floor(disappearingTimer / 3600)}h`}
+                    {String(
+                      disappearingTimer < 60 
+                        ? `${disappearingTimer}s` 
+                        : disappearingTimer < 3600 
+                          ? `${Math.floor(disappearingTimer / 60)}m` 
+                          : `${Math.floor(disappearingTimer / 3600)}h`
+                    )}
                   </Text>
                 </View>
               </View>
@@ -1619,11 +1678,7 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
         {showUploadMenu && (
           <PanGestureHandler onGestureEvent={keyboardSwipeGestureHandler}>
             <Animated.View style={keyboardSwipeStyle}>
-              <BlurView
-                intensity={80}
-                tint="dark"
-                style={styles.uploadKeyboard}
-              >
+              <View style={styles.uploadKeyboard}>
                 <MotiView
                   from={{ opacity: 0, translateY: 20 }}
                   animate={{ opacity: 1, translateY: 0 }}
@@ -1631,20 +1686,6 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
                   transition={{ duration: 200 }}
                   style={styles.uploadKeyboardContent}
                 >
-                  <View style={styles.uploadHeader}>
-                    <Text style={styles.uploadHeaderText}>Attachments</Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setShowUploadMenu(false);
-                        setKeyboardMode('text');
-                      }}
-                      style={styles.uploadCloseButton}
-                    >
-                      <View style={styles.headerIconContainer}>
-                        <MaterialIcon name="keyboard" size={20} color="#007AFF" />
-                      </View>
-                    </TouchableOpacity>
-                  </View>
                   <View style={styles.uploadOptions}>
                     <View style={styles.uploadGrid}>
                       <TouchableOpacity style={styles.uploadGridItem} onPress={handleCamera}>
@@ -1698,7 +1739,7 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
                     </View>
                   </View>
                 </MotiView>
-              </BlurView>
+              </View>
             </Animated.View>
           </PanGestureHandler>
         )}
@@ -1706,11 +1747,7 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
         {showEmojiKeyboard && (
           <PanGestureHandler onGestureEvent={keyboardSwipeGestureHandler}>
             <Animated.View style={keyboardSwipeStyle}>
-              <BlurView
-                intensity={80}
-                tint="dark"
-                style={styles.emojiKeyboard}
-              >
+              <View style={styles.emojiKeyboard}>
                 <MotiView
                   from={{ opacity: 0, translateY: 20 }}
                   animate={{ opacity: 1, translateY: 0 }}
@@ -1718,29 +1755,15 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
                   transition={{ duration: 200 }}
                   style={styles.emojiKeyboardContent}
                 >
-                  <View style={styles.emojiHeader}>
-                    <Text style={styles.emojiHeaderText}>Emoji</Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setShowEmojiKeyboard(false);
-                        setKeyboardMode('text');
-                      }}
-                      style={styles.emojiCloseButton}
-                    >
-                      <View style={styles.headerIconContainer}>
-                        <MaterialIcon name="keyboard" size={20} color="#007AFF" />
-                      </View>
-                    </TouchableOpacity>
-                  </View>
                   <FlatList
                     data={emojiCategories}
                     renderItem={renderEmojiCategory}
-                    keyExtractor={(item) => item.category}
+                    keyExtractor={(item) => String(item?.category || `emoji-${Math.random()}`)}
                     style={styles.emojiList}
                     showsVerticalScrollIndicator={false}
                   />
                 </MotiView>
-              </BlurView>
+              </View>
             </Animated.View>
           </PanGestureHandler>
         )}
@@ -1748,11 +1771,7 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
         {showStickerPack && (
           <PanGestureHandler onGestureEvent={keyboardSwipeGestureHandler}>
             <Animated.View style={keyboardSwipeStyle}>
-              <BlurView
-                intensity={80}
-                tint="dark"
-                style={styles.stickerKeyboard}
-              >
+              <View style={styles.stickerKeyboard}>
                 <MotiView
                   from={{ opacity: 0, translateY: 20 }}
                   animate={{ opacity: 1, translateY: 0 }}
@@ -1760,29 +1779,15 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
                   transition={{ duration: 200 }}
                   style={styles.stickerKeyboardContent}
                 >
-                  <View style={styles.stickerHeader}>
-                    <Text style={styles.stickerHeaderText}>Stickers</Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setShowStickerPack(false);
-                        setKeyboardMode('text');
-                      }}
-                      style={styles.stickerCloseButton}
-                    >
-                      <View style={styles.headerIconContainer}>
-                        <MaterialIcon name="keyboard" size={20} color="#007AFF" />
-                      </View>
-                    </TouchableOpacity>
-                  </View>
                   <FlatList
                     data={stickerPacks}
                     renderItem={renderStickerPack}
-                    keyExtractor={(item) => item.name}
+                    keyExtractor={(item) => String(item?.name || `sticker-${Math.random()}`)}
                     style={styles.stickerList}
                     showsVerticalScrollIndicator={false}
                   />
                 </MotiView>
-              </BlurView>
+              </View>
             </Animated.View>
           </PanGestureHandler>
         )}
@@ -2094,7 +2099,7 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
                     <View style={styles.profileSheetInfoContent}>
                       <Text style={styles.profileSheetInfoLabel}>Disappearing Messages</Text>
                       <Text style={styles.profileSheetInfoSubtext}>
-                        {isDisappearingEnabled ? `${getTimerLabel(disappearingTimer)} timer` : 'Off'}
+                        {isDisappearingEnabled ? `${String(getTimerLabel(disappearingTimer))} timer` : 'Off'}
                       </Text>
                     </View>
                     <Switch
@@ -2618,12 +2623,53 @@ const styles = StyleSheet.create({
     minHeight: 34, // iOS minimum bubble height
   },
   sentBubble: {
-    backgroundColor: tokens.colors.primary, // iOS blue
+    backgroundColor: '#6D6D70', // Darker ash color for sender
     borderBottomRightRadius: 4, // iOS tail corner
   },
   receivedBubble: {
-    backgroundColor: 'rgba(142, 142, 147, 0.12)', // iOS gray bubble
+    backgroundColor: 'transparent', // Completely transparent outer container
+    overflow: 'hidden', // Required for blur to work properly
+  },
+  blurBubble: {
+    paddingHorizontal: 16, // iOS Messages horizontal padding
+    paddingVertical: 8, // iOS Messages padding
+    borderRadius: 18, // iOS Messages corner radius
     borderBottomLeftRadius: 4, // iOS tail corner
+    minHeight: 34, // iOS minimum bubble height
+    backgroundColor: 'rgba(255, 255, 255, 0.15)', // Glass tint only on blur view
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3, // Android shadow
+    overflow: 'hidden', // Ensure blur respects border radius
+  },
+  messageWithIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  senderIconLeft: {
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  receiverIconRight: {
+    marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heartIconBlur: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
   },
   disappearedBubble: {
     backgroundColor: 'rgba(142, 142, 147, 0.08)', // Even more subtle gray
@@ -2660,10 +2706,15 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   sentText: {
-    color: '#FFFFFF', // White text on blue background
+    color: '#FFFFFF', // Bright white text on ash background
+    fontWeight: '500', // Slightly bolder for better visibility
   },
   receivedText: {
-    color: tokens.colors.onSurface, // Dark text on light background
+    color: '#FFFFFF', // Bright white text for better visibility on glass background
+    fontWeight: '500', // Slightly bolder for better visibility
+    textShadowColor: 'rgba(0, 0, 0, 0.5)', // Stronger text shadow for contrast
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   messageInfo: {
     flexDirection: 'row',
@@ -2798,6 +2849,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+    backgroundColor: tokens.colors.bg,
   },
   emojiKeyboardContent: {
     flex: 1,
@@ -2873,6 +2925,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+    backgroundColor: tokens.colors.bg,
   },
   stickerKeyboardContent: {
     flex: 1,
@@ -3250,6 +3303,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+    backgroundColor: tokens.colors.bg,
   },
   uploadKeyboardContent: {
     flex: 1,
@@ -3290,9 +3344,9 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   uploadIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
