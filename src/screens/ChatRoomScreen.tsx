@@ -19,6 +19,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
+import { BlurView } from 'expo-blur';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MotiView } from 'moti';
@@ -254,8 +255,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
       add: '#007AFF',               // Blue for attach
       send: '#007AFF',              // Blue for send
       microphone: '#FF453A',        // Red for voice record
-      'sticker-emoji': '#FFCC00',   // Yellow for stickers
-      'emoticon-outline': '#FFCC00', // Yellow for emoji
+      'sticker-emoji': 'rgba(255, 255, 255, 0.15)',   // Blur-style for stickers
+      'emoticon-outline': 'rgba(255, 255, 255, 0.15)', // Blur-style for emoji
       keyboard: '#8E8E93',          // Gray for keyboard toggle
       
       // Upload menu icons
@@ -1220,35 +1221,41 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
         {showEmojiKeyboard && (
           <PanGestureHandler onGestureEvent={keyboardSwipeGestureHandler}>
             <Animated.View style={keyboardSwipeStyle}>
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                exit={{ opacity: 0, translateY: 20 }}
-                transition={{ duration: 200 }}
+              <BlurView
+                intensity={80}
+                tint="dark"
                 style={styles.emojiKeyboard}
               >
-                <View style={styles.emojiHeader}>
-                  <Text style={styles.emojiHeaderText}>Emoji</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowEmojiKeyboard(false);
-                      setKeyboardMode('text');
-                    }}
-                    style={styles.emojiCloseButton}
-                  >
-                    <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('keyboard') }]}>
-                      <MaterialIcon name="keyboard" size={20} color="#FFFFFF" />
-                    </View>
-                  </TouchableOpacity>
-                </View>
-                <FlatList
-                  data={emojiCategories}
-                  renderItem={renderEmojiCategory}
-                  keyExtractor={(item) => item.category}
-                  style={styles.emojiList}
-                  showsVerticalScrollIndicator={false}
-                />
-              </MotiView>
+                <MotiView
+                  from={{ opacity: 0, translateY: 20 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  exit={{ opacity: 0, translateY: 20 }}
+                  transition={{ duration: 200 }}
+                  style={styles.emojiKeyboardContent}
+                >
+                  <View style={styles.emojiHeader}>
+                    <Text style={styles.emojiHeaderText}>Emoji</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowEmojiKeyboard(false);
+                        setKeyboardMode('text');
+                      }}
+                      style={styles.emojiCloseButton}
+                    >
+                      <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('keyboard') }]}>
+                        <MaterialIcon name="keyboard" size={20} color="#FFFFFF" />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                  <FlatList
+                    data={emojiCategories}
+                    renderItem={renderEmojiCategory}
+                    keyExtractor={(item) => item.category}
+                    style={styles.emojiList}
+                    showsVerticalScrollIndicator={false}
+                  />
+                </MotiView>
+              </BlurView>
             </Animated.View>
           </PanGestureHandler>
         )}
@@ -1256,35 +1263,41 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
         {showStickerPack && (
           <PanGestureHandler onGestureEvent={keyboardSwipeGestureHandler}>
             <Animated.View style={keyboardSwipeStyle}>
-              <MotiView
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                exit={{ opacity: 0, translateY: 20 }}
-                transition={{ duration: 200 }}
+              <BlurView
+                intensity={80}
+                tint="dark"
                 style={styles.stickerKeyboard}
               >
-                <View style={styles.stickerHeader}>
-                  <Text style={styles.stickerHeaderText}>Stickers</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowStickerPack(false);
-                      setKeyboardMode('text');
-                    }}
-                    style={styles.stickerCloseButton}
-                  >
-                    <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('keyboard') }]}>
-                      <MaterialIcon name="keyboard" size={20} color="#FFFFFF" />
-                    </View>
-                  </TouchableOpacity>
-                </View>
-                <FlatList
-                  data={stickerPacks}
-                  renderItem={renderStickerPack}
-                  keyExtractor={(item) => item.name}
-                  style={styles.stickerList}
-                  showsVerticalScrollIndicator={false}
-                />
-              </MotiView>
+                <MotiView
+                  from={{ opacity: 0, translateY: 20 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  exit={{ opacity: 0, translateY: 20 }}
+                  transition={{ duration: 200 }}
+                  style={styles.stickerKeyboardContent}
+                >
+                  <View style={styles.stickerHeader}>
+                    <Text style={styles.stickerHeaderText}>Stickers</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowStickerPack(false);
+                        setKeyboardMode('text');
+                      }}
+                      style={styles.stickerCloseButton}
+                    >
+                      <View style={[styles.headerIconContainer, { backgroundColor: getIconBackgroundColor('keyboard') }]}>
+                        <MaterialIcon name="keyboard" size={20} color="#FFFFFF" />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                  <FlatList
+                    data={stickerPacks}
+                    renderItem={renderStickerPack}
+                    keyExtractor={(item) => item.name}
+                    style={styles.stickerList}
+                    showsVerticalScrollIndicator={false}
+                  />
+                </MotiView>
+              </BlurView>
             </Animated.View>
           </PanGestureHandler>
         )}
@@ -1590,10 +1603,16 @@ const styles = StyleSheet.create({
   },
   // Emoji keyboard styles
   emojiKeyboard: {
-    backgroundColor: tokens.colors.surface1,
     height: 280,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: tokens.colors.surface2,
+    overflow: 'hidden',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  emojiKeyboardContent: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   emojiHeader: {
     flexDirection: 'row',
@@ -1659,10 +1678,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   stickerKeyboard: {
-    backgroundColor: tokens.colors.surface1,
     height: 280,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: tokens.colors.surface2,
+    overflow: 'hidden',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  stickerKeyboardContent: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   stickerHeader: {
     flexDirection: 'row',

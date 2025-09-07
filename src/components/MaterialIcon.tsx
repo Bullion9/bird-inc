@@ -63,6 +63,7 @@ const iconMap: Record<string, string> = {
   'visibility_off': 'eye-off',
   'shield_spark': 'shield-check',
   'sparkle': 'star',
+  'star': 'star',
   'lock': 'lock',
   'preview': 'eye',
   
@@ -76,14 +77,14 @@ const iconMap: Record<string, string> = {
   
   // Actions
   'delete': 'delete',
-  'delete-outline': 'delete-outline',
+  'delete-outline': 'trash-can',
   'add': 'plus',
   'share': 'share-variant',
   'download': 'download',
   'file_download': 'download',
   'backup': 'backup-restore',
   'archive': 'archive',
-  'archive-outline': 'archive-outline',
+  'archive-outline': 'inbox-arrow-down',
   'clear_all': 'notification-clear-all',
   'push-pin': 'pin',
   'push-pin-outline': 'pin-outline',

@@ -20,9 +20,14 @@ import ChatRoomScreen from '../screens/ChatRoomScreen';
 import { GroupsScreen } from '../screens/GroupsScreen';
 import { GroupDetailsScreen } from '../screens/GroupDetailsScreen';
 import { CreateGroupScreen } from '../screens/CreateGroupScreen';
+import { ImportContactsScreen } from '../screens/ImportContactsScreen';
 import { CallsListScreen } from '../screens/CallsListScreen';
 import { CallScreen } from '../screens/CallScreen';
 import { VideoCallScreen } from '../screens/VideoCallScreen';
+import { ContactDetailsScreen } from '../screens/ContactDetailsScreen';
+import { AddContactScreen } from '../screens/AddContactScreen';
+import { FavoriteContactsScreen } from '../screens/FavoriteContactsScreen';
+import { CallSettingsScreen } from '../screens/CallSettingsScreen';
 import { StoriesListScreen } from '../screens/StoriesListScreen';
 import { StoryViewerScreen } from '../screens/StoryViewerScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
@@ -87,6 +92,7 @@ const ChatsStackNavigator = () => {
       <ChatsStack.Screen name="Groups" component={GroupsScreen} />
       <ChatsStack.Screen name="GroupDetails" component={GroupDetailsScreen} />
       <ChatsStack.Screen name="CreateGroup" component={CreateGroupScreen} />
+      <ChatsStack.Screen name="ImportContacts" component={ImportContactsScreen} />
     </ChatsStack.Navigator>
   );
 };
@@ -118,6 +124,10 @@ const CallsStackNavigator = () => {
       <CallsStack.Screen name="CallsList" component={CallsListScreen} />
       <CallsStack.Screen name="CallScreen" component={CallScreen} />
       <CallsStack.Screen name="VideoCall" component={VideoCallScreen} />
+      <CallsStack.Screen name="ContactDetails" component={ContactDetailsScreen} />
+      <CallsStack.Screen name="AddContact" component={AddContactScreen} />
+      <CallsStack.Screen name="FavoriteContacts" component={FavoriteContactsScreen} />
+      <CallsStack.Screen name="CallSettings" component={CallSettingsScreen} />
     </CallsStack.Navigator>
   );
 };

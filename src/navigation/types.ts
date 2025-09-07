@@ -26,6 +26,7 @@ export type ChatsStackParamList = {
   Groups: undefined;
   GroupDetails: { groupId: string; groupName: string };
   CreateGroup: undefined;
+  ImportContacts: undefined;
 };
 
 export type CallsStackParamList = {
@@ -43,6 +44,14 @@ export type CallsStackParamList = {
     contactAvatar?: string;
     isIncoming?: boolean;
   };
+  ContactDetails: {
+    contactId: string;
+    contactName: string;
+    contactAvatar?: string;
+  };
+  AddContact: undefined;
+  FavoriteContacts: undefined;
+  CallSettings: undefined;
 };
 
 export type StoriesStackParamList = {

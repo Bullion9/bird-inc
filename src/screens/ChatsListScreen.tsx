@@ -6,7 +6,10 @@ import {
   ImageBackground, 
   Dimensions, 
   TouchableOpacity,
-  Animated
+  Animated,
+  Modal,
+  Image,
+  Alert
 } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { Text, Searchbar } from 'react-native-paper';
@@ -430,7 +433,8 @@ const ChatRowItem: React.FC<{
   onPin: (id: string) => void;
   onArchive: (id: string) => void;
   onDelete: (id: string) => void;
-}> = ({ chat, onPress, onPin, onArchive, onDelete }) => {
+  onAvatarPress: (chat: any) => void;
+}> = ({ chat, onPress, onPin, onArchive, onDelete, onAvatarPress }) => {
   const translateX = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -438,12 +442,14 @@ const ChatRowItem: React.FC<{
   const getIconBackgroundColor = (iconName: string): string => {
     const iconBackgrounds: { [key: string]: string } = {
       // Swipe gesture icons
-      'push-pin': '#FF9500',            // Orange for pin
-      'push-pin-outline': '#8E8E93',    // Gray for unpin
-      'archive-outline': '#5856D6',     // Purple for archive
-      'delete-outline': '#FF453A',      // Red for delete
+      'push-pin': 'rgba(255, 149, 0, 0.15)',        // Orange blur for bookmark/pin
+      'push-pin-outline': 'rgba(142, 142, 147, 0.15)', // Gray blur for unbookmark/unpin
+      'archive-outline': 'rgba(88, 86, 214, 0.15)',    // Purple blur for archive
+      'delete-outline': 'rgba(255, 69, 58, 0.15)',     // Red blur for delete
+      // Pin icon for pinned chats
+      'pin': 'rgba(255, 149, 0, 0.15)',            // Orange blur for pin
     };
-    return iconBackgrounds[iconName] || '#8E8E93';
+    return iconBackgrounds[iconName] || 'rgba(255, 255, 255, 0.15)';
   };
 
   const onGestureEvent = Animated.event(
@@ -623,7 +629,11 @@ const ChatRowItem: React.FC<{
             delayLongPress={500}
           >
             <View style={styles.chatContent}>
-              <View style={styles.avatarContainer}>
+              <TouchableOpacity 
+                style={styles.avatarContainer}
+                onPress={() => onAvatarPress(chat)}
+                activeOpacity={0.7}
+              >
                 <Avatar
                   source={chat.avatar}
                   name={chat.name}
@@ -633,19 +643,20 @@ const ChatRowItem: React.FC<{
                 {chat.hasStory && !chat.storyViewed && (
                   <View style={styles.storyIndicator} />
                 )}
-              </View>
+              </TouchableOpacity>
               
               <View style={styles.chatInfo}>
                 <View style={styles.chatHeader}>
                   <View style={styles.chatNameContainer}>
                     <Text style={styles.chatName}>{chat.name}</Text>
                     {chat.isPinned && (
-                      <Text style={{ 
-                        color: tokens.colors.secondary, 
-                        fontSize: 12, 
-                        marginLeft: 4,
-                        fontWeight: '400'
-                      }}>★</Text>
+                      <View style={[styles.starIconContainer, { backgroundColor: getIconBackgroundColor('pin') }]}>
+                        <MaterialIcon 
+                          name="pin" 
+                          size={12} 
+                          color="#FFFFFF" 
+                        />
+                      </View>
                     )}
                   </View>
                   <Text style={styles.timestamp}>{chat.timestamp}</Text>
@@ -687,6 +698,9 @@ export const ChatsListScreen: React.FC = () => {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [chats, setChats] = useState(mockChats);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showContactActionsModal, setShowContactActionsModal] = useState(false);
+  const [selectedChat, setSelectedChat] = useState<any>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
 
   // Add listener to track scroll offset for dynamic header
@@ -722,6 +736,29 @@ export const ChatsListScreen: React.FC = () => {
 
   const handleNewChatPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Show contact actions modal with options
+    setShowContactActionsModal(true);
+  };
+
+  const handleAddContact = () => {
+    setShowContactActionsModal(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Navigate to AddContact screen - use root navigation to switch stacks
+    const parentNav = navigation.getParent();
+    if (parentNav) {
+      parentNav.navigate('CallsStack', { screen: 'AddContact' });
+    }
+  };
+
+  const handleImportContacts = () => {
+    setShowContactActionsModal(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate('ImportContacts');
+  };
+
+  const handleCreateGroup = () => {
+    setShowContactActionsModal(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Navigate to CreateGroup screen for new chat/group creation
     navigation.navigate('CreateGroup');
   };
@@ -761,6 +798,12 @@ export const ChatsListScreen: React.FC = () => {
     );
   };
 
+  const handleAvatarPress = (chat: any) => {
+    setSelectedChat(chat);
+    setShowAvatarModal(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   const renderChatRow = (chat: typeof mockChats[0]) => (
     <ChatRowItem
       key={chat.id}
@@ -769,6 +812,7 @@ export const ChatsListScreen: React.FC = () => {
       onPin={handlePinChat}
       onArchive={handleArchiveChat}
       onDelete={handleDeleteChat}
+      onAvatarPress={handleAvatarPress}
     />
   );
 
@@ -960,6 +1004,162 @@ export const ChatsListScreen: React.FC = () => {
           </View>
         )}
       </Animated.ScrollView>
+
+      {/* Avatar Modal - WhatsApp style */}
+      <Modal
+        visible={showAvatarModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowAvatarModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          {/* Header */}
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowAvatarModal(false)}
+            >
+              <MaterialIcon name="close" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{selectedChat?.name || ''}</Text>
+            <View style={styles.modalHeaderSpacer} />
+          </View>
+
+          {/* Avatar Image */}
+          <View style={styles.modalImageContainer}>
+            {selectedChat?.avatar ? (
+              <Image
+                source={{ uri: selectedChat.avatar }}
+                style={styles.modalImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={styles.modalPlaceholder}>
+                <Text style={styles.modalPlaceholderText}>
+                  {selectedChat?.name.charAt(0).toUpperCase() || ''}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.modalActions}>
+            <TouchableOpacity
+              style={styles.modalActionButton}
+              onPress={() => {
+                setShowAvatarModal(false);
+                if (selectedChat) {
+                  handleChatPress(selectedChat.id, selectedChat.name);
+                }
+              }}
+            >
+              <MaterialIcon name="message" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.modalActionButton}
+              onPress={() => {
+                setShowAvatarModal(false);
+                // Handle call action
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }}
+            >
+              <MaterialIcon name="phone" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.modalActionButton}
+              onPress={() => {
+                setShowAvatarModal(false);
+                // Handle video call action
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }}
+            >
+              <MaterialIcon name="videocam" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Contact Actions Modal */}
+      <Modal
+        visible={showContactActionsModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowContactActionsModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          {/* Background Overlay */}
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowContactActionsModal(false)}
+          />
+          
+          {/* Modal Content */}
+          <View style={styles.contactActionsModal}>
+            <View style={styles.contactActionsHeader}>
+              <Text style={styles.contactActionsTitle}>Add Contacts</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowContactActionsModal(false)}
+              >
+                <MaterialIcon name="close" size={24} color={tokens.colors.onSurface60} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.contactActionsContent}>
+              {/* Add Contact */}
+              <TouchableOpacity
+                style={styles.contactActionItem}
+                onPress={handleAddContact}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.contactActionIcon, { backgroundColor: '#34C759' }]}>
+                  <MaterialIcon name="person_add" size={24} color="#FFFFFF" />
+                </View>
+                <View style={styles.contactActionText}>
+                  <Text style={styles.contactActionTitle}>Add Contact</Text>
+                  <Text style={styles.contactActionSubtitle}>Add a new contact manually or by QR code</Text>
+                </View>
+                <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface38} />
+              </TouchableOpacity>
+
+              {/* Import Contacts */}
+              <TouchableOpacity
+                style={styles.contactActionItem}
+                onPress={handleImportContacts}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.contactActionIcon, { backgroundColor: '#007AFF' }]}>
+                  <MaterialIcon name="download" size={24} color="#FFFFFF" />
+                </View>
+                <View style={styles.contactActionText}>
+                  <Text style={styles.contactActionTitle}>Import Contacts</Text>
+                  <Text style={styles.contactActionSubtitle}>Import from phone, email, or social accounts</Text>
+                </View>
+                <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface38} />
+              </TouchableOpacity>
+
+              {/* Create Group */}
+              <TouchableOpacity
+                style={styles.contactActionItem}
+                onPress={handleCreateGroup}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.contactActionIcon, { backgroundColor: '#FF9500' }]}>
+                  <MaterialIcon name="account-multiple-plus" size={24} color="#FFFFFF" />
+                </View>
+                <View style={styles.contactActionText}>
+                  <Text style={styles.contactActionTitle}>Create Group</Text>
+                  <Text style={styles.contactActionSubtitle}>Start a new group chat with multiple contacts</Text>
+                </View>
+                <MaterialIcon name="chevron_right" size={20} color={tokens.colors.onSurface38} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1227,7 +1427,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: tokens.colors.surface2,
+    // backgroundColor removed - now handled by swipeIconContainer
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: tokens.spacing.s,
@@ -1236,7 +1436,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#4CAF50',
+    // backgroundColor removed - now handled by swipeIconContainer
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: tokens.spacing.s,
@@ -1245,7 +1445,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F44336',
+    // backgroundColor removed - now handled by swipeIconContainer
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: tokens.spacing.s,
@@ -1261,5 +1461,157 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  starIconContainer: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
+  },
+  // Modal styles - WhatsApp-like avatar viewer
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 50,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    zIndex: 1,
+  },
+  modalCloseButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    ...tokens.typography.h2,
+    color: '#FFFFFF',
+    flex: 1,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  modalHeaderSpacer: {
+    width: 40,
+  },
+  modalImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  modalImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').width,
+    maxHeight: Dimensions.get('window').height * 0.7,
+  },
+  modalPlaceholder: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: tokens.colors.surface1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalPlaceholderText: {
+    ...tokens.typography.h1,
+    color: tokens.colors.onSurface,
+    fontSize: 64,
+    fontWeight: '300',
+  },
+  modalActions: {
+    position: 'absolute',
+    bottom: 50,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 32,
+  },
+  modalActionButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Contact Actions Modal styles
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  contactActionsModal: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: tokens.colors.surface1,
+    borderTopLeftRadius: tokens.radius.l,
+    borderTopRightRadius: tokens.radius.l,
+    paddingBottom: 34, // Safe area padding for iPhone
+    maxHeight: '70%',
+  },
+  contactActionsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: tokens.spacing.m,
+    paddingVertical: tokens.spacing.m,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.separator,
+  },
+  contactActionsTitle: {
+    ...tokens.typography.h3,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+  },
+  contactActionsContent: {
+    padding: tokens.spacing.m,
+  },
+  contactActionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: tokens.spacing.m,
+    paddingHorizontal: tokens.spacing.s,
+    marginBottom: tokens.spacing.s,
+    borderRadius: tokens.radius.m,
+    backgroundColor: tokens.colors.surface2,
+  },
+  contactActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: tokens.spacing.m,
+  },
+  contactActionText: {
+    flex: 1,
+  },
+  contactActionTitle: {
+    ...tokens.typography.headline,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  contactActionSubtitle: {
+    ...tokens.typography.footnote,
+    color: tokens.colors.onSurface60,
   },
 });
