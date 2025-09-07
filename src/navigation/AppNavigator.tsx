@@ -93,8 +93,6 @@ const ChatsStackNavigator = () => {
       }}
     >
       <ChatsStack.Screen name="ChatsList" component={ChatsListScreen} />
-      <ChatsStack.Screen name="ChatRoom" component={ChatRoomScreen} />
-      <ChatsStack.Screen name="ContactBioEdit" component={ContactBioEditScreen} />
       <ChatsStack.Screen name="Groups" component={GroupsScreen} />
       <ChatsStack.Screen name="GroupDetails" component={GroupDetailsScreen} />
       <ChatsStack.Screen name="CreateGroup" component={CreateGroupScreen} />
@@ -277,6 +275,8 @@ export const AppNavigator = () => {
         <Stack.Screen name="PhoneAuth" component={PhoneAuthScreen} />
         <Stack.Screen name="ProfileCreate" component={ProfileCreateScreen} />
         <Stack.Screen name="Home" component={HomeTabNavigator} />
+        <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
+        <Stack.Screen name="ContactBioEdit" component={ContactBioEditScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

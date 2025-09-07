@@ -51,10 +51,10 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { tokens } from '../theme/tokens';
-import { ChatsStackParamList } from '../navigation/types';
+import { RootStackParamList } from '../navigation/types';
 
-type ChatRoomScreenRouteProp = RouteProp<ChatsStackParamList, 'ChatRoom'>;
-type ChatRoomScreenNavigationProp = StackNavigationProp<ChatsStackParamList, 'ChatRoom'>;
+type ChatRoomScreenRouteProp = RouteProp<RootStackParamList, 'ChatRoom'>;
+type ChatRoomScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ChatRoom'>;
 
 interface Props {
   route: ChatRoomScreenRouteProp;
@@ -280,7 +280,7 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
   const [message, setMessage] = useState('');
   const [showEmojiKeyboard, setShowEmojiKeyboard] = useState(false);
   const [showStickerPack, setShowStickerPack] = useState(false);
-  const [keyboardMode, setKeyboardMode] = useState<'text' | 'emoji' | 'sticker'>('text');
+  const [keyboardMode, setKeyboardMode] = useState<'text' | 'emoji' | 'sticker' | 'upload'>('text');
   const [showUploadMenu, setShowUploadMenu] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -409,15 +409,30 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
   // Upload functions
   const toggleUploadMenu = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setShowUploadMenu(!showUploadMenu);
-    setShowEmojiKeyboard(false);
-    setShowStickerPack(false);
+    if (keyboardMode === 'upload') {
+      // Hide upload menu and show regular keyboard
+      setShowUploadMenu(false);
+      setShowEmojiKeyboard(false);
+      setShowStickerPack(false);
+      setKeyboardMode('text');
+      textInputRef.current?.focus();
+    } else {
+      // Hide regular keyboard and show upload menu
+      Keyboard.dismiss();
+      setTimeout(() => {
+        setShowUploadMenu(true);
+        setShowEmojiKeyboard(false);
+        setShowStickerPack(false);
+        setKeyboardMode('upload');
+      }, 100);
+    }
   };
 
   const handleImagePicker = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setShowUploadMenu(false);
+      setKeyboardMode('text');
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -447,6 +462,7 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setShowUploadMenu(false);
+      setKeyboardMode('text');
 
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
@@ -481,6 +497,7 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setShowUploadMenu(false);
+      setKeyboardMode('text');
 
       const result = await DocumentPicker.getDocumentAsync({
         type: '*/*',
@@ -503,6 +520,38 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
     } catch (error) {
       Alert.alert('Error', 'Failed to pick document');
     }
+  };
+
+  const handleFileShare = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowUploadMenu(false);
+    setKeyboardMode('text');
+    Alert.alert('File Share', 'Share files with this contact');
+  };
+
+  const handleDisappearingMessageToggle = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowUploadMenu(false);
+    setKeyboardMode('text');
+    setIsDisappearingEnabled(!isDisappearingEnabled);
+    Alert.alert(
+      'Disappearing Messages',
+      isDisappearingEnabled ? 'Disappearing messages turned off' : 'Disappearing messages turned on'
+    );
+  };
+
+  const handleLocationShare = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowUploadMenu(false);
+    setKeyboardMode('text');
+    Alert.alert('Location', 'Share your current location');
+  };
+
+  const handleContactShare = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowUploadMenu(false);
+    setKeyboardMode('text');
+    Alert.alert('Contact', 'Share a contact');
   };
 
   // Voice recording functions
@@ -1446,9 +1495,7 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
         <View style={styles.inputContainer}>
           <View style={styles.inputRow}>
             <TouchableOpacity style={styles.attachButton} onPress={toggleUploadMenu}>
-              <View style={styles.headerIconContainer}>
-                <MaterialIcon name="add" size={18} color="#007AFF" />
-              </View>
+              <MaterialIcon name="add" size={20} color="#007AFF" />
             </TouchableOpacity>
 
             <View style={styles.inputWrapper}>
@@ -1570,39 +1617,90 @@ const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
         </View>
 
         {showUploadMenu && (
-          <>
-            <TouchableWithoutFeedback onPress={toggleUploadMenu}>
-              <View style={styles.uploadOverlay} />
-            </TouchableWithoutFeedback>
-            <MotiView
-              from={{ opacity: 0, scale: 0.8, translateY: 20 }}
-              animate={{ opacity: 1, scale: 1, translateY: 0 }}
-              exit={{ opacity: 0, scale: 0.8, translateY: 20 }}
-              transition={{ duration: 200 }}
-              style={styles.uploadMenu}
-            >
-              <TouchableOpacity style={styles.uploadOption} onPress={handleCamera}>
-                <View style={styles.headerIconContainer}>
-                  <MaterialIcon name="camera" size={24} color="#007AFF" />
-                </View>
-                <Text style={styles.uploadOptionText}>Camera</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.uploadOption} onPress={handleImagePicker}>
-                <View style={styles.headerIconContainer}>
-                  <MaterialIcon name="image" size={24} color="#007AFF" />
-                </View>
-                <Text style={styles.uploadOptionText}>Gallery</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.uploadOption} onPress={handleDocumentPicker}>
-                <View style={styles.headerIconContainer}>
-                  <MaterialIcon name="file-document" size={24} color="#007AFF" />
-                </View>
-                <Text style={styles.uploadOptionText}>Document</Text>
-              </TouchableOpacity>
-            </MotiView>
-          </>
+          <PanGestureHandler onGestureEvent={keyboardSwipeGestureHandler}>
+            <Animated.View style={keyboardSwipeStyle}>
+              <BlurView
+                intensity={80}
+                tint="dark"
+                style={styles.uploadKeyboard}
+              >
+                <MotiView
+                  from={{ opacity: 0, translateY: 20 }}
+                  animate={{ opacity: 1, translateY: 0 }}
+                  exit={{ opacity: 0, translateY: 20 }}
+                  transition={{ duration: 200 }}
+                  style={styles.uploadKeyboardContent}
+                >
+                  <View style={styles.uploadHeader}>
+                    <Text style={styles.uploadHeaderText}>Attachments</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowUploadMenu(false);
+                        setKeyboardMode('text');
+                      }}
+                      style={styles.uploadCloseButton}
+                    >
+                      <View style={styles.headerIconContainer}>
+                        <MaterialIcon name="keyboard" size={20} color="#007AFF" />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.uploadOptions}>
+                    <View style={styles.uploadGrid}>
+                      <TouchableOpacity style={styles.uploadGridItem} onPress={handleCamera}>
+                        <View style={[styles.uploadIcon, { backgroundColor: '#34C759' }]}>
+                          <MaterialIcon name="camera" size={24} color="#FFFFFF" />
+                        </View>
+                        <Text style={styles.uploadGridText}>Camera</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity style={styles.uploadGridItem} onPress={handleImagePicker}>
+                        <View style={[styles.uploadIcon, { backgroundColor: '#FF9500' }]}>
+                          <MaterialIcon name="image" size={24} color="#FFFFFF" />
+                        </View>
+                        <Text style={styles.uploadGridText}>Gallery</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity style={styles.uploadGridItem} onPress={handleDocumentPicker}>
+                        <View style={[styles.uploadIcon, { backgroundColor: '#007AFF' }]}>
+                          <MaterialIcon name="file-document" size={24} color="#FFFFFF" />
+                        </View>
+                        <Text style={styles.uploadGridText}>Document</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity style={styles.uploadGridItem} onPress={handleFileShare}>
+                        <View style={[styles.uploadIcon, { backgroundColor: '#5856D6' }]}>
+                          <MaterialIcon name="folder" size={24} color="#FFFFFF" />
+                        </View>
+                        <Text style={styles.uploadGridText}>File</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity style={styles.uploadGridItem} onPress={handleDisappearingMessageToggle}>
+                        <View style={[styles.uploadIcon, { backgroundColor: '#AF52DE' }]}>
+                          <MaterialIcon name="auto_delete" size={24} color="#FFFFFF" />
+                        </View>
+                        <Text style={styles.uploadGridText}>Disappearing</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity style={styles.uploadGridItem} onPress={handleLocationShare}>
+                        <View style={[styles.uploadIcon, { backgroundColor: '#FF3B30' }]}>
+                          <MaterialIcon name="location_on" size={24} color="#FFFFFF" />
+                        </View>
+                        <Text style={styles.uploadGridText}>Location</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity style={styles.uploadGridItem} onPress={handleContactShare}>
+                        <View style={[styles.uploadIcon, { backgroundColor: '#32D74B' }]}>
+                          <MaterialIcon name="contacts" size={24} color="#FFFFFF" />
+                        </View>
+                        <Text style={styles.uploadGridText}>Contact</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </MotiView>
+              </BlurView>
+            </Animated.View>
+          </PanGestureHandler>
         )}
 
         {showEmojiKeyboard && (
@@ -2613,12 +2711,14 @@ const styles = StyleSheet.create({
     minHeight: 30, // Reduced iOS Messages height
   },
   attachButton: {
-    // Removed all styling - now handled by headerIconContainer
     width: 30, // iOS plus button size
     height: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8, // Space between plus and input
+    borderRadius: 15, // Round border (half of width/height)
+    borderWidth: 1,
+    borderColor: '#007AFF', // iOS blue border color
   },
   textInput: {
     flex: 1,
@@ -3141,6 +3241,68 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 1998,
+  },
+  // Upload keyboard styles (like emoji keyboard)
+  uploadKeyboard: {
+    height: 240,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: tokens.colors.surface2,
+    overflow: 'hidden',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  uploadKeyboardContent: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  uploadHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: tokens.colors.surface2,
+  },
+  uploadHeaderText: {
+    ...tokens.typography.h3,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+  },
+  uploadCloseButton: {
+    padding: 4,
+  },
+  uploadOptions: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  uploadGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    paddingVertical: 8,
+  },
+  uploadGridItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '22%',
+    marginVertical: 8,
+  },
+  uploadIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  uploadGridText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface,
+    fontSize: 11,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   uploadMenu: {
     position: 'absolute',

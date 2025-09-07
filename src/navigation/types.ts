@@ -5,6 +5,12 @@ export type RootStackParamList = {
   PhoneAuth: undefined;
   ProfileCreate: undefined;
   Home: undefined;
+  ChatRoom: { chatId: string; userName: string };
+  ContactBioEdit: { 
+    contactName: string; 
+    initialBio: string; 
+    onBioChange: (bio: string) => void; 
+  };
   // Modals
   Search: undefined;
   EmojiPicker: { onEmojiSelect: (emoji: string) => void };
@@ -21,17 +27,11 @@ export type HomeTabParamList = {
 
 export type ChatsStackParamList = {
   ChatsList: undefined;
-  ChatRoom: { chatId: string; userName: string };
   MediaViewer: { mediaUri: string; type: 'image' | 'video' };
   Groups: undefined;
   GroupDetails: { groupId: string; groupName: string };
   CreateGroup: undefined;
   ImportContacts: undefined;
-  ContactBioEdit: { 
-    contactName: string; 
-    initialBio: string; 
-    onBioChange: (bio: string) => void; 
-  };
 };
 
 export type CallsStackParamList = {
