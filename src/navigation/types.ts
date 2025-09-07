@@ -72,6 +72,7 @@ export type SettingsStackParamList = {
   ChatsSettings: undefined;
   NotificationSettings: undefined;
   PrivacySettings: undefined;
+  DisappearingMessages: undefined;
   HelpSettings: undefined;
   ContactSettings: undefined;
   InviteFriends: undefined;

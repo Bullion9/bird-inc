@@ -92,7 +92,14 @@ export const PrivacySettingsScreen: React.FC = () => {
 
   const handleActionPress = (action: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    console.log(`Action pressed: ${action}`);
+    
+    switch (action) {
+      case 'disappearing-messages':
+        navigation.navigate('DisappearingMessages');
+        break;
+      default:
+        console.log(`Action pressed: ${action}`);
+    }
   };
 
   return (

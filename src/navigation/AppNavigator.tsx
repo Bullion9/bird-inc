@@ -36,6 +36,7 @@ import { StorageAndDataScreen } from '../screens/StorageAndDataScreen';
 import { ChatsSettingsScreen } from '../screens/ChatsSettingsScreen';
 import { NotificationSettingsScreen } from '../screens/NotificationSettingsScreen';
 import { PrivacySettingsScreen } from '../screens/PrivacySettingsScreen';
+import { DisappearingMessagesScreen } from '../screens/DisappearingMessagesScreen';
 import { HelpSettingsScreen } from '../screens/HelpSettingsScreen';
 import { ContactSettingsScreen } from '../screens/ContactSettingsScreen';
 import { InviteFriendsScreen } from '../screens/InviteFriendsScreen';
@@ -198,6 +199,7 @@ const SettingsStackNavigator = () => {
       <SettingsStack.Screen name="ChatsSettings" component={ChatsSettingsScreen} />
       <SettingsStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
       <SettingsStack.Screen name="PrivacySettings" component={PrivacySettingsScreen} />
+      <SettingsStack.Screen name="DisappearingMessages" component={DisappearingMessagesScreen} />
       <SettingsStack.Screen name="HelpSettings" component={HelpSettingsScreen} />
       <SettingsStack.Screen name="ContactSettings" component={ContactSettingsScreen} />
       <SettingsStack.Screen name="InviteFriends" component={InviteFriendsScreen} />

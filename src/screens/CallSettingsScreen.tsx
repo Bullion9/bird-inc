@@ -44,6 +44,7 @@ export const CallSettingsScreen: React.FC = () => {
     autoRejectCalls: false,
     recordCalls: false,
     callForwarding: false,
+    disappearingMessages: false,
   });
 
   const updateSetting = (key: string, value: boolean) => {
@@ -143,6 +144,15 @@ export const CallSettingsScreen: React.FC = () => {
       onToggle: (value) => updateSetting('recordCalls', value),
     },
     {
+      id: 'disappearing_messages',
+      title: 'Disappearing Messages',
+      subtitle: 'Auto-delete messages after calls',
+      icon: 'auto_delete',
+      type: 'toggle',
+      value: settings.disappearingMessages,
+      onToggle: (value) => updateSetting('disappearingMessages', value),
+    },
+    {
       id: 'blocked_numbers',
       title: 'Blocked Numbers',
       subtitle: 'Manage blocked contacts',
@@ -191,6 +201,7 @@ export const CallSettingsScreen: React.FC = () => {
       'visibility_off': '#8E8E93',     // iOS Gray
       'forward': '#007AFF',            // Strong iOS Blue (for call forwarding)
       'mic': '#FF3B30',                // Strong iOS Red
+      'auto_delete': '#5856D6',        // Strong iOS Purple (for disappearing messages)
       'settings': '#5856D6',           // Strong iOS Purple (for call quality)
       'chart-line': '#34C759',         // Strong iOS Green (for data usage)
     };
@@ -255,11 +266,11 @@ export const CallSettingsScreen: React.FC = () => {
     },
     {
       title: 'Privacy & Security',
-      items: settingsData.slice(8, 10),
+      items: settingsData.slice(8, 11),
     },
     {
       title: 'Data & Quality',
-      items: settingsData.slice(10, 12),
+      items: settingsData.slice(11, 13),
     },
   ];
 
@@ -294,6 +305,7 @@ export const CallSettingsScreen: React.FC = () => {
                         autoRejectCalls: false,
                         recordCalls: false,
                         callForwarding: false,
+                        disappearingMessages: false,
                       });
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
                     }
