@@ -724,7 +724,11 @@ export const ChatsListScreen: React.FC = () => {
 
   const handleChatPress = (chatId: string, chatName: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('ChatRoom', { chatId, userName: chatName });
+    // Navigate to ChatRoom in the RootStack
+    const rootNavigation = navigation.getParent()?.getParent();
+    if (rootNavigation) {
+      rootNavigation.navigate('ChatRoom', { chatId, userName: chatName });
+    }
   };
 
   const handleSearchPress = () => {

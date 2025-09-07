@@ -6,11 +6,11 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import * as Haptics from 'expo-haptics';
 
 import { tokens } from '../theme/tokens';
-import { ChatsStackParamList } from '../navigation/types';
+import { RootStackParamList } from '../navigation/types';
 import { DynamicHeader, AnimatedFloatingLabel } from '../components';
 
-type ContactBioEditNavigationProp = StackNavigationProp<ChatsStackParamList, 'ContactBioEdit'>;
-type ContactBioEditRouteProp = RouteProp<ChatsStackParamList, 'ContactBioEdit'>;
+type ContactBioEditNavigationProp = StackNavigationProp<RootStackParamList, 'ContactBioEdit'>;
+type ContactBioEditRouteProp = RouteProp<RootStackParamList, 'ContactBioEdit'>;
 
 export const ContactBioEditScreen: React.FC = () => {
   const navigation = useNavigation<ContactBioEditNavigationProp>();
