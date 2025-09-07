@@ -273,7 +273,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
       </Animated.View>
     </PanGestureHandler>
   );
-};const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
+};
+
+const ChatRoomScreen: React.FC<Props> = ({ route, navigation }) => {
   const { userName, chatId } = route.params;
   const [message, setMessage] = useState('');
   const [showEmojiKeyboard, setShowEmojiKeyboard] = useState(false);
@@ -607,38 +609,25 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
   };
 
   const toggleEmojiKeyboard = () => {
-    if (keyboardMode === 'emoji') {
-      // Hide emoji keyboard and show regular keyboard
-      setShowEmojiKeyboard(false);
-      setShowStickerPack(false);
-      setKeyboardMode('text');
-      textInputRef.current?.focus();
-    } else {
-      // Hide regular keyboard and show emoji keyboard
+    if (keyboardMode === 'text') {
+      // Show emoji keyboard
       Keyboard.dismiss();
       setTimeout(() => {
         setShowEmojiKeyboard(true);
         setShowStickerPack(false);
         setKeyboardMode('emoji');
       }, 100);
-    }
-  };
-
-  const toggleStickerPack = () => {
-    if (keyboardMode === 'sticker') {
-      // Hide sticker pack and show regular keyboard
+    } else if (keyboardMode === 'emoji') {
+      // Show sticker pack
+      setShowEmojiKeyboard(false);
+      setShowStickerPack(true);
+      setKeyboardMode('sticker');
+    } else {
+      // Back to regular keyboard
       setShowEmojiKeyboard(false);
       setShowStickerPack(false);
       setKeyboardMode('text');
       textInputRef.current?.focus();
-    } else {
-      // Hide regular keyboard and show sticker pack
-      Keyboard.dismiss();
-      setTimeout(() => {
-        setShowEmojiKeyboard(false);
-        setShowStickerPack(true);
-        setKeyboardMode('sticker');
-      }, 100);
     }
   };
 
@@ -1355,83 +1344,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
             }
           />
 
-          {/* Disappearing Messages Active Banner */}
-          {isDisappearingEnabled && (
-            <MotiView
-              from={{ opacity: 0, translateY: -20, scale: 0.95 }}
-              animate={{ opacity: 1, translateY: 0, scale: 1 }}
-              exit={{ opacity: 0, translateY: -20, scale: 0.95 }}
-              transition={{ 
-                type: 'spring',
-                damping: 15,
-                stiffness: 300
-              }}
-              style={styles.disappearingBanner}
-            >
-              <View style={styles.disappearingBannerContent}>
-                <View style={styles.disappearingBannerLeft}>
-                  <View style={styles.disappearingBannerIcon}>
-                    <MaterialIcon name="auto_delete" size={16} color="#FFFFFF" />
-                  </View>
-                  <View style={styles.disappearingBannerText}>
-                    <Text style={styles.disappearingBannerTitle}>Disappearing Messages</Text>
-                    <Text style={styles.disappearingBannerSubtitle}>
-                      Messages disappear after {getTimerLabel(disappearingTimer)}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity 
-                  style={styles.disappearingBannerButton}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    Alert.alert(
-                      'Disappearing Messages',
-                      `Messages in this chat will automatically disappear after ${getTimerLabel(disappearingTimer)}.`,
-                      [
-                        { 
-                          text: 'Change Timer', 
-                          onPress: () => {
-                            Alert.alert(
-                              'Change Timer',
-                              'Choose when messages should disappear',
-                              [
-                                { text: 'Cancel', onPress: () => {} },
-                                { text: '5 seconds', onPress: () => setDisappearingTimer(5) },
-                                { text: '30 seconds', onPress: () => setDisappearingTimer(30) },
-                                { text: '1 minute', onPress: () => setDisappearingTimer(60) },
-                                { text: '5 minutes', onPress: () => setDisappearingTimer(300) },
-                                { text: '30 minutes', onPress: () => setDisappearingTimer(1800) },
-                                { text: '1 hour', onPress: () => setDisappearingTimer(3600) },
-                                { text: 'Turn Off', onPress: () => setIsDisappearingEnabled(false) }
-                              ]
-                            );
-                          }
-                        },
-                        { text: 'OK', onPress: () => {} }
-                      ]
-                    );
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.disappearingBannerButtonText}>Settings</Text>
-                </TouchableOpacity>
-              </View>
-              
-              {/* Animated gradient background */}
-              <MotiView
-                from={{ opacity: 0.3 }}
-                animate={{ opacity: [0.3, 0.6, 0.3] }}
-                transition={{
-                  type: 'timing',
-                  duration: 3000,
-                  loop: true,
-                  repeatReverse: true,
-                }}
-                style={styles.disappearingBannerGradient}
-              />
-            </MotiView>
-          )}
-
           {replyToMessage && (
             <MotiView
               from={{ opacity: 0, translateY: -10 }}
@@ -1461,6 +1373,76 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
             </MotiView>
           )}
 
+        {/* Disappearing Messages Active Banner */}
+        {isDisappearingEnabled && (
+          <MotiView
+            from={{ opacity: 0, translateY: -20, scale: 0.95 }}
+            animate={{ opacity: 1, translateY: 0, scale: 1 }}
+            exit={{ opacity: 0, translateY: -20, scale: 0.95 }}
+            transition={{ 
+              type: 'spring',
+              damping: 15,
+              stiffness: 300
+            }}
+            style={styles.disappearingBanner}
+          >
+            <View style={styles.disappearingBannerContent}>
+              <View style={styles.disappearingBannerLeft}>
+                <View style={styles.disappearingBannerIcon}>
+                  <MaterialIcon name="auto_delete" size={16} color="#FFFFFF" />
+                </View>
+                <View style={styles.disappearingBannerText}>
+                  <Text style={styles.disappearingBannerTitle}>Disappearing Messages</Text>
+                  <Text style={styles.disappearingBannerSubtitle}>
+                    Messages disappear after {getTimerLabel(disappearingTimer)}
+                  </Text>
+                </View>
+                <View style={styles.timerIconContainer}>
+                  <MaterialIcon name="timer" size={16} color="#5856D6" />
+                  <Text style={styles.timerText}>
+                    {disappearingTimer < 60 ? `${disappearingTimer}s` : disappearingTimer < 3600 ? `${Math.floor(disappearingTimer / 60)}m` : `${Math.floor(disappearingTimer / 3600)}h`}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.disappearingBannerButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  Alert.alert(
+                    'Disappearing Messages',
+                    `Messages in this chat will automatically disappear after ${getTimerLabel(disappearingTimer)}.`,
+                    [
+                      { 
+                        text: 'Change Timer', 
+                        onPress: () => {
+                          Alert.alert(
+                            'Change Timer',
+                            'Choose when messages should disappear',
+                            [
+                              { text: 'Cancel', onPress: () => {} },
+                              { text: '5 seconds', onPress: () => setDisappearingTimer(5) },
+                              { text: '30 seconds', onPress: () => setDisappearingTimer(30) },
+                              { text: '1 minute', onPress: () => setDisappearingTimer(60) },
+                              { text: '5 minutes', onPress: () => setDisappearingTimer(300) },
+                              { text: '30 minutes', onPress: () => setDisappearingTimer(1800) },
+                              { text: '1 hour', onPress: () => setDisappearingTimer(3600) },
+                              { text: 'Turn Off', onPress: () => setIsDisappearingEnabled(false) }
+                            ]
+                          );
+                        }
+                      },
+                      { text: 'OK', onPress: () => {} }
+                    ]
+                  );
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.disappearingBannerButtonText}>Settings</Text>
+              </TouchableOpacity>
+            </View>
+          </MotiView>
+        )}
+
         <View style={styles.inputContainer}>
           <View style={styles.inputRow}>
             <TouchableOpacity style={styles.attachButton} onPress={toggleUploadMenu}>
@@ -1489,58 +1471,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
               }}
             />
 
-            {/* Disappearing Messages Timer Indicator */}
-            {isDisappearingEnabled && (
-              <TouchableOpacity 
-                style={styles.timerButton}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  Alert.alert(
-                    'Disappearing Timer',
-                    `Messages will disappear after ${getTimerLabel(disappearingTimer)}`,
-                    [
-                      { text: 'Change Timer', onPress: () => {
-                        Alert.alert(
-                          'Change Timer',
-                          'Choose when messages should disappear',
-                          [
-                            { text: 'Cancel', onPress: () => {} },
-                            { text: '5 seconds', onPress: () => setDisappearingTimer(5) },
-                            { text: '30 seconds', onPress: () => setDisappearingTimer(30) },
-                            { text: '1 minute', onPress: () => setDisappearingTimer(60) },
-                            { text: '5 minutes', onPress: () => setDisappearingTimer(300) },
-                            { text: '30 minutes', onPress: () => setDisappearingTimer(1800) },
-                            { text: '1 hour', onPress: () => setDisappearingTimer(3600) },
-                            { text: 'Turn Off', onPress: () => setIsDisappearingEnabled(false) }
-                          ]
-                        );
-                      }},
-                      { text: 'OK', onPress: () => {} }
-                    ]
-                  );
-                }}
-              >
-                <View style={styles.timerIconContainer}>
-                  <MaterialIcon name="timer" size={16} color="#5856D6" />
-                  <Text style={styles.timerText}>{disappearingTimer < 60 ? `${disappearingTimer}s` : disappearingTimer < 3600 ? `${Math.floor(disappearingTimer / 60)}m` : `${Math.floor(disappearingTimer / 3600)}h`}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-
-            <TouchableOpacity 
-              style={styles.emojiButton}
-              onPress={toggleStickerPack}
-              activeOpacity={0.7}
-            >
-              <View style={styles.headerIconContainer}>
-                <MaterialIcon 
-                  name={keyboardMode === 'sticker' ? "keyboard" : "sticker-emoji"} 
-                  size={24} 
-                  color="#007AFF" 
-                />
-              </View>
-            </TouchableOpacity>
-
             <TouchableOpacity 
               style={styles.emojiButton}
               onPress={toggleEmojiKeyboard}
@@ -1548,7 +1478,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
             >
               <View style={styles.headerIconContainer}>
                 <MaterialIcon 
-                  name={keyboardMode === 'emoji' ? "keyboard" : "emoticon-outline"} 
+                  name={
+                    keyboardMode === 'emoji' ? "sticker-emoji" : 
+                    keyboardMode === 'sticker' ? "keyboard" : 
+                    "emoticon-outline"
+                  } 
                   size={24} 
                   color="#007AFF" 
                 />
@@ -2894,23 +2828,10 @@ const styles = StyleSheet.create({
   },
   // Disappearing Messages Banner styles
   disappearingBanner: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(88, 86, 214, 0.95)', // Purple with transparency
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     marginHorizontal: 8,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-    overflow: 'hidden',
+    marginBottom: 4,
   },
   disappearingBannerContent: {
     flexDirection: 'row',
@@ -2927,7 +2848,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(88, 86, 214, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -2938,21 +2859,21 @@ const styles = StyleSheet.create({
   disappearingBannerTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#5856D6', // Purple color
     marginBottom: 2,
   },
   disappearingBannerSubtitle: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: 'rgba(88, 86, 214, 0.8)', // Purple with transparency
     lineHeight: 16,
   },
   disappearingBannerButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(88, 86, 214, 0.8)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(88, 86, 214, 0.9)',
   },
   disappearingBannerButtonText: {
     fontSize: 13,
@@ -2966,8 +2887,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(116, 79, 245, 0.3)', // Lighter purple overlay
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: 12,
   },
   // Toast Notification styles
   toastNotification: {
