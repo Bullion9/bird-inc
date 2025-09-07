@@ -204,20 +204,16 @@ export const StoriesListScreen: React.FC = () => {
 
   const StoryAvatar = ({ story }: { story: StoryItem }) => (
     <View style={styles.avatarContainer}>
-      <View style={[
-        styles.avatarBorder,
-        {
-          borderColor: story.isViewed ? 'rgba(156, 163, 175, 0.6)' : '#3B82F6',
-          borderWidth: 2,
-        }
-      ]}>
-        <View style={{ transform: [{ scale: 1.15 }] }}>
-          <Avatar
-            source={story.userAvatar}
-            name={story.userName}
-            size={56}
-          />
-        </View>
+      <View style={styles.avatarWrapper}>
+        <Avatar
+          source={story.userAvatar}
+          name={story.userName}
+          size={56}
+        />
+        {/* Simple status indicator */}
+        {!story.isViewed && (
+          <View style={styles.statusIndicator} />
+        )}
       </View>
     </View>
   );
@@ -283,6 +279,7 @@ export const StoriesListScreen: React.FC = () => {
         title="Stories"
         scrollY={scrollOffset}
         showBackButton={false}
+        titleSize={20}
       />
       
       <Animated.ScrollView 
@@ -296,16 +293,8 @@ export const StoriesListScreen: React.FC = () => {
         scrollEventThrottle={16}
       >
         {/* Large Title */}
-        <View style={styles.largeTitleContainer}>
-          <MotiView
-            animate={{
-              opacity: Math.max(0, Math.min(1, (60 - scrollOffset) / 20)),
-              translateY: Math.min(20, scrollOffset / 3),
-            }}
-            transition={{ type: 'timing', duration: 200 }}
-          >
-            <Text style={styles.largeTitle}>Stories</Text>
-          </MotiView>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>Stories</Text>
         </View>
 
         {/* My Story Section */}
@@ -337,8 +326,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 100, // Space for header
+    paddingTop: 100, // Space for header - same as other screens
     paddingBottom: 100, // Space for bottom
+  },
+  titleSection: {
+    paddingHorizontal: tokens.spacing.s,
+    paddingTop: tokens.spacing.xl,
+    paddingBottom: tokens.spacing.m,
+  },
+  pageTitle: {
+    ...tokens.typography.largeTitle, // iOS Large Title style
+    fontSize: 36,
+    fontWeight: '700',
+    color: tokens.colors.onSurface,
+    letterSpacing: -0.5,
+    marginTop: tokens.spacing.m,
+    marginBottom: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   largeTitleContainer: {
     paddingHorizontal: tokens.spacing.s,
@@ -397,6 +402,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarWrapper: {
+    position: 'relative',
+    width: 56,
+    height: 56,
+  },
+  statusIndicator: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    backgroundColor: tokens.colors.secondary, // Green color
+    borderRadius: 6, // Perfect circle
+    borderWidth: 2,
+    borderColor: tokens.colors.bg,
+  },
   storyInfo: {
     flex: 1,
     gap: tokens.spacing.xs,
@@ -409,11 +430,6 @@ const styles = StyleSheet.create({
   timestamp: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
-  },
-  avatarBorder: {
-    borderRadius: 30,
-    padding: 2,
-    backgroundColor: 'transparent',
   },
   listSeparator: {
     height: 1,

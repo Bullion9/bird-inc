@@ -1,5 +1,5 @@
-import React, { useRef, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent, TouchableOpacity } from 'react-native';
+import React, { useRef, useCallback, useState } from 'react';
+import { View, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent, TouchableOpacity, TextInput } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -23,6 +23,7 @@ export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<SettingsNavigationProp>();
   const scrollY = useRef(0);
   const [scrollPosition, setScrollPosition] = React.useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const currentScrollY = event.nativeEvent.contentOffset.y;
@@ -30,7 +31,7 @@ export const SettingsScreen: React.FC = () => {
     setScrollPosition(currentScrollY);
   }, []);
 
-  const handleNavigation = (screen: 'EditProfile' | 'StorageAndData' | 'ChatsSettings' | 'NotificationSettings' | 'PrivacySettings' | 'HelpSettings') => {
+  const handleNavigation = (screen: 'EditProfile' | 'StorageAndData' | 'ChatsSettings' | 'NotificationSettings' | 'PrivacySettings' | 'HelpSettings' | 'ContactSettings' | 'InviteFriends' | 'Notes' | 'ManageFolders' | 'StickerMarket' | 'DesktopApp') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate(screen);
   };
@@ -71,6 +72,40 @@ export const SettingsScreen: React.FC = () => {
       ]
     },
     {
+      id: 'organize',
+      items: [
+        {
+          id: 'folders',
+          title: 'Manage Folders',
+          icon: 'folder',
+          onPress: () => handleNavigation('ManageFolders'),
+        },
+        {
+          id: 'notes',
+          title: 'Notes',
+          icon: 'note',
+          onPress: () => handleNavigation('Notes'),
+        },
+      ]
+    },
+    {
+      id: 'social',
+      items: [
+        {
+          id: 'invite',
+          title: 'Invite Friends',
+          icon: 'person_add',
+          onPress: () => handleNavigation('InviteFriends'),
+        },
+        {
+          id: 'stickers',
+          title: 'Sticker Market',
+          icon: 'emoji_emotions',
+          onPress: () => handleNavigation('StickerMarket'),
+        },
+      ]
+    },
+    {
       id: 'security',
       items: [
         {
@@ -78,6 +113,17 @@ export const SettingsScreen: React.FC = () => {
           title: 'Privacy',
           icon: 'lock',
           onPress: () => handleNavigation('PrivacySettings'),
+        },
+      ]
+    },
+    {
+      id: 'apps',
+      items: [
+        {
+          id: 'desktop',
+          title: 'Get Bird for Desktop',
+          icon: 'laptop',
+          onPress: () => handleNavigation('DesktopApp'),
         },
       ]
     },
@@ -90,9 +136,23 @@ export const SettingsScreen: React.FC = () => {
           icon: 'help',
           onPress: () => handleNavigation('HelpSettings'),
         },
+        {
+          id: 'contact',
+          title: 'Contact Us',
+          icon: 'headset',
+          onPress: () => handleNavigation('ContactSettings'),
+        },
       ]
     }
   ];
+
+  // Filter settings based on search query
+  const filteredGroups = settingsGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })).filter(group => group.items.length > 0);
 
   return (
     <View style={styles.container}>
@@ -100,6 +160,7 @@ export const SettingsScreen: React.FC = () => {
         title="Settings"
         showBackButton={false}
         scrollY={scrollPosition}
+        titleSize={20}
       />
       
       <ScrollView 
@@ -110,20 +171,53 @@ export const SettingsScreen: React.FC = () => {
         scrollEventThrottle={16}
       >
         {/* Large title at the top */}
-        <MotiView
-          animate={{
-            opacity: scrollPosition < 40 ? 1 : Math.max(0, (60 - scrollPosition) / 20),
-            translateY: scrollPosition < 40 ? 0 : Math.min(scrollPosition * 0.3, 20),
-          }}
-          transition={{
-            type: 'timing',
-            duration: 200,
-          }}
-        >
-          <Text style={styles.largeTitle}>Settings</Text>
-        </MotiView>
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>Settings</Text>
+        </View>
+
+        {/* Search Bar - iOS Style */}
+        <View style={styles.searchSection}>
+          <View style={styles.searchContainer}>
+            <MaterialIcon name="search" size={20} color="rgba(142, 142, 147, 1)" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search"
+              placeholderTextColor="rgba(142, 142, 147, 1)"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+          </View>
+        </View>
+
+        {/* User Profile Card - iOS Style */}
+        <View style={styles.settingsGroup}>
+          <View style={styles.iosCard}>
+            <TouchableOpacity
+              style={styles.profileCardItem}
+              onPress={() => handleNavigation('EditProfile')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.profileAvatarContainer}>
+                <View style={styles.profileAvatar}>
+                  <Text style={styles.profileInitials}>JD</Text>
+                </View>
+              </View>
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>John Doe</Text>
+                <Text style={styles.profileSubtitle}>Edit Profile, Privacy & Status</Text>
+              </View>
+              <MaterialIcon 
+                name="chevron_right" 
+                size={20} 
+                color="rgba(142, 142, 147, 1)" 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
         
-        {settingsGroups.map((group) => (
+        {filteredGroups.map((group) => (
           <View key={group.id} style={styles.settingsGroup}>
             <View style={styles.iosCard}>
               {group.items.map((item, index) => (
@@ -136,8 +230,8 @@ export const SettingsScreen: React.FC = () => {
                     <View style={styles.iconContainer}>
                       <MaterialIcon 
                         name={item.icon} 
-                        size={24} 
-                        color={tokens.colors.primary} 
+                        size={20} 
+                        color="#FFFFFF" 
                       />
                     </View>
                     <Text style={styles.iosCardText}>{item.title}</Text>
@@ -193,7 +287,23 @@ const styles = StyleSheet.create({
   content: {
     padding: tokens.spacing.m,
     paddingBottom: tokens.spacing.xl,
-    paddingTop: 120, // Space for the large title under the header
+    paddingTop: 100, // Space for header - same as other screens
+  },
+  titleSection: {
+    paddingHorizontal: tokens.spacing.s,
+    paddingTop: tokens.spacing.xl,
+    paddingBottom: tokens.spacing.m,
+  },
+  pageTitle: {
+    ...tokens.typography.largeTitle, // iOS Large Title style
+    fontSize: 36,
+    fontWeight: '700',
+    color: tokens.colors.onSurface,
+    letterSpacing: -0.5,
+    marginTop: tokens.spacing.m,
+    marginBottom: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   largeTitle: {
     ...tokens.typography.h1,
@@ -212,9 +322,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   iconContainer: {
-    marginRight: tokens.spacing.m,
-    width: 24,
+    marginRight: 12, // iOS standard spacing
+    width: 28,
+    height: 28,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6, // Rounded icon background
+    backgroundColor: tokens.colors.primary,
   },
   settingsTitle: {
     ...tokens.typography.body,
@@ -239,33 +353,106 @@ const styles = StyleSheet.create({
   },
   // iOS-style settings cards
   settingsGroup: {
-    marginBottom: tokens.spacing.m,
+    marginBottom: 35, // iOS standard group spacing
+    marginHorizontal: 8, // Reduced side margins for wider cards
   },
   iosCard: {
-    backgroundColor: tokens.colors.surface1,
-    borderRadius: 12,
-    borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: tokens.colors.cardBackground, // iOS card background from tokens
+    borderRadius: tokens.radius.m, // iOS corner radius from tokens
+    borderWidth: 0,
+    ...tokens.elevation.small, // iOS shadow from tokens
+    marginHorizontal: 0,
     overflow: 'hidden',
   },
   iosCardItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    minHeight: 48,
+    minHeight: 44, // Standard iOS cell height
+    backgroundColor: 'transparent',
   },
   iosCardText: {
-    ...tokens.typography.body,
-    color: tokens.colors.onSurface,
-    marginLeft: tokens.spacing.m,
+    ...tokens.typography.body, // iOS body text style from tokens
+    color: '#FFFFFF',
+    marginLeft: 12,
     flex: 1,
-    fontWeight: '500',
+    fontWeight: '400', // iOS Settings weight
+    fontFamily: 'System',
   },
   iosCardSeparator: {
-    height: 0.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    marginLeft: 56, // Align with text
+    height: 0.33, // iOS standard separator thickness
+    backgroundColor: tokens.colors.separator, // iOS separator color from tokens
+    marginLeft: 52, // Align with text, accounting for icon
+  },
+  // Search Bar Styles
+  searchSection: {
+    marginHorizontal: 8,
+    marginBottom: 20,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(118, 118, 128, 0.12)',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    minHeight: 32,
+  },
+  searchPlaceholder: {
+    fontSize: 17,
+    color: 'rgba(142, 142, 147, 1)',
+    marginLeft: 8,
+    fontFamily: 'System',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginLeft: 6,
+    fontFamily: 'System',
+    paddingVertical: 0, // Remove default padding
+  },
+  // Profile Card Styles
+  profileCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    minHeight: 76,
+    backgroundColor: 'transparent',
+  },
+  profileAvatarContainer: {
+    marginRight: 12,
+  },
+  profileAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileInitials: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    fontFamily: 'System',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 17,
+    fontWeight: '400',
+    color: '#FFFFFF',
+    marginBottom: 2,
+    fontFamily: 'System',
+  },
+  profileSubtitle: {
+    fontSize: 13,
+    color: 'rgba(142, 142, 147, 1)',
+    fontFamily: 'System',
   },
   appCopyrightContainer: {
     alignItems: 'center',

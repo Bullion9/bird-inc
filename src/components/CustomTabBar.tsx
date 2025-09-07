@@ -2,15 +2,15 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { MotiView } from 'moti';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '../theme/tokens';
 import { MaterialIcon } from './MaterialIcon';
 
 const iconMap: { [key: string]: string } = {
-  ChatsStack: 'message-text',
+  ChatsStack: 'viber',
   CallsStack: 'phone', 
-  StoriesStack: 'book-open-variant',
-  SettingsStack: 'cog',
+  StoriesStack: 'camera', // Camera for stories
+  SettingsStack: 'settings',
 };
 
 const labelMap: { [key: string]: string } = {
@@ -25,8 +25,10 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
   descriptors, 
   navigation 
 }) => {
+  const insets = useSafeAreaInsets();
+  
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <View style={styles.divider} />
       <View style={styles.tabBar}>
         {state.routes.map((route, index) => {
@@ -51,28 +53,15 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
           return (
             <TouchableOpacity
               key={route.key}
-              activeOpacity={0.7}
+              activeOpacity={0.6} // iOS standard opacity
               onPress={onPress}
               style={styles.tabItem}
             >
               <View style={styles.tabContent}>
-                {/* Top indicator pill */}
-                <MotiView
-                  style={styles.indicator}
-                  animate={{
-                    opacity: isFocused ? 1 : 0,
-                    scaleX: isFocused ? 1 : 0.5,
-                  }}
-                  transition={{
-                    type: 'timing',
-                    duration: 200,
-                  }}
-                />
-                
                 {/* Icon */}
                 <MaterialIcon
                   name={iconName}
-                  size={24}
+                  size={32} // Increased from 28 to 32
                   color={isFocused ? tokens.colors.primary : tokens.colors.onSurface38}
                   active={isFocused}
                 />
@@ -95,44 +84,42 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokens.colors.surface1,
+    backgroundColor: tokens.colors.cardBackground, // iOS tab bar background
+    paddingBottom: 0, // Remove extra padding for iOS style
   },
   divider: {
-    height: 1,
-    backgroundColor: tokens.colors.surface3,
+    height: 0.33, // iOS separator thickness
+    backgroundColor: tokens.colors.separator, // iOS separator color
   },
   tabBar: {
     flexDirection: 'row',
-    height: 80,
+    height: 83, // iOS tab bar height (49px + safe area)
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingTop: tokens.spacing.s, // iOS spacing
+    paddingBottom: tokens.spacing.m, // iOS spacing
+    paddingHorizontal: 0,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6, // iOS tab item padding
+    minHeight: 49, // iOS minimum tab height
   },
   tabContent: {
     alignItems: 'center',
     position: 'relative',
     height: '100%',
-    justifyContent: 'space-between',
+    justifyContent: 'center', // Center content for iOS style
+    gap: 2, // iOS gap between icon and label
   },
   indicator: {
-    position: 'absolute',
-    top: 0,
-    width: 20,
-    height: 3,
-    backgroundColor: tokens.colors.primary,
-    borderRadius: 1.5,
+    display: 'none', // Remove custom indicator for clean iOS look
   },
   label: {
-    fontSize: 12,
-    lineHeight: 14,
-    fontWeight: '400',
-    fontFamily: 'System',
-    marginTop: 4,
+    ...tokens.typography.caption2, // iOS Caption 2 style
+    color: 'inherit', // Will be overridden by parent color
+    marginTop: 1, // Tight iOS spacing
     marginBottom: 0,
   },
 });

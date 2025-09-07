@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     flex: 1,
-    backgroundColor: 'rgba(138, 43, 226, 0.02)', // Very subtle purple tint
+    backgroundColor: `${tokens.colors.primary}08`, // Very subtle iOS blue tint
   },
   backgroundPattern: {
     flex: 1,

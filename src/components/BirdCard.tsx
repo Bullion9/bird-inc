@@ -109,14 +109,7 @@ const styles = StyleSheet.create({
     padding: tokens.spacing.m,
     marginVertical: tokens.spacing.s,
     minHeight: 64,
-    elevation: tokens.elevation.card,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    ...tokens.elevation.medium, // Use medium elevation with full shadow properties
   },
   content: {
     flexDirection: 'row',

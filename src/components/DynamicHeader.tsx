@@ -64,23 +64,21 @@ export const DynamicHeader: React.FC<DynamicHeaderProps> = ({
       <View style={styles.header}>
         {showBackButton && (
           <MotiView 
-            style={[
-              styles.leftContainer,
-              showBackButtonBackground && styles.backButtonBackground
-            ]}
+            style={styles.leftContainer}
             animate={{
-              opacity: showBackButtonBackground ? 1 : backgroundOpacity > 0.1 ? 1 : 0.7,
+              opacity: backgroundOpacity > 0.1 ? 1 : 0.7,
             }}
             transition={{
               type: 'timing',
               duration: 200,
             }}
           >
-            <Appbar.BackAction
-              iconColor={tokens.colors.onSurface}
+            <TouchableOpacity
               onPress={onBackPress}
               style={styles.backButton}
-            />
+            >
+              <Text style={styles.iosBackArrow}>‹</Text>
+            </TouchableOpacity>
           </MotiView>
         )}
         
@@ -142,7 +140,7 @@ export const DynamicHeader: React.FC<DynamicHeaderProps> = ({
               key={index}
               name={icon.icon}
               size={24}
-              color="#9C27B0"
+              color={tokens.colors.primary}
               onPress={icon.onPress}
             />
           ))}
@@ -160,7 +158,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1000,
     overflow: 'hidden',
-    // Removed shadow effects to eliminate separator line
+    // Clean iOS style without border
   },
   glassyBackground: {
     position: 'absolute',
@@ -168,16 +166,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // White tint for glassy effect
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.2)', // Subtle border
+    backgroundColor: tokens.colors.cardBackground, // iOS card background
+    borderBottomWidth: StyleSheet.hairlineWidth, // More visible separator
+    borderBottomColor: tokens.colors.separator, // iOS separator color
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 64,
-    paddingHorizontal: 16,
+    height: 64, // iOS navigation bar height
+    paddingHorizontal: tokens.spacing.m, // iOS standard spacing
     position: 'relative',
     zIndex: 1,
   },
@@ -188,14 +186,23 @@ const styles = StyleSheet.create({
   },
   backButton: {
     margin: 0,
+    padding: 8,
+  },
+  iosBackArrow: {
+    fontSize: 40,
+    fontWeight: '300',
+    color: tokens.colors.primary,
+    lineHeight: 40,
+    textAlign: 'center',
+    transform: [{ scaleX: 1.2 }], // Make it wider/longer
   },
   backButtonBackground: {
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 24,
-    marginLeft: -8,
-    paddingLeft: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: tokens.radius.m, // iOS corner radius
+    marginLeft: -tokens.spacing.s,
+    paddingLeft: tokens.spacing.s,
+    borderWidth: 0.33, // iOS border thickness
+    borderColor: tokens.colors.separator,
   },
   titleContainer: {
     position: 'absolute',
@@ -205,12 +212,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 16,
-    fontWeight: '400',
+    ...tokens.typography.largeTitle, // iOS Large Title style like ChatsListScreen
     color: tokens.colors.onSurface,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    fontSize: 36,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+    textAlign: 'center',
   },
   titleTouchable: {
     paddingVertical: tokens.spacing.s,
@@ -219,10 +226,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subtitle: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: tokens.colors.onSurface60,
-    marginTop: 2,
+    ...tokens.typography.body, // Match ChatsListScreen subtext
+    color: tokens.colors.onSurface38, // Match ChatsListScreen subtext color
+    marginTop: tokens.spacing.xs, // Match ChatsListScreen spacing
     textAlign: 'center',
   },
   staticContentContainer: {

@@ -32,6 +32,12 @@ import { ChatsSettingsScreen } from '../screens/ChatsSettingsScreen';
 import { NotificationSettingsScreen } from '../screens/NotificationSettingsScreen';
 import { PrivacySettingsScreen } from '../screens/PrivacySettingsScreen';
 import { HelpSettingsScreen } from '../screens/HelpSettingsScreen';
+import { ContactSettingsScreen } from '../screens/ContactSettingsScreen';
+import { InviteFriendsScreen } from '../screens/InviteFriendsScreen';
+import { NotesScreen } from '../screens/NotesScreen';
+import { ManageFoldersScreen } from '../screens/ManageFoldersScreen';
+import { StickerMarketScreen } from '../screens/StickerMarketScreen';
+import { DesktopAppScreen } from '../screens/DesktopAppScreen';
 import { BioEditScreen } from '../screens/BioEditScreen';
 import { NameEditScreen } from '../screens/NameEditScreen';
 import { UsernameEditScreen } from '../screens/UsernameEditScreen';
@@ -177,6 +183,12 @@ const SettingsStackNavigator = () => {
       <SettingsStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
       <SettingsStack.Screen name="PrivacySettings" component={PrivacySettingsScreen} />
       <SettingsStack.Screen name="HelpSettings" component={HelpSettingsScreen} />
+      <SettingsStack.Screen name="ContactSettings" component={ContactSettingsScreen} />
+      <SettingsStack.Screen name="InviteFriends" component={InviteFriendsScreen} />
+      <SettingsStack.Screen name="Notes" component={NotesScreen} />
+      <SettingsStack.Screen name="ManageFolders" component={ManageFoldersScreen} />
+      <SettingsStack.Screen name="StickerMarket" component={StickerMarketScreen} />
+      <SettingsStack.Screen name="DesktopApp" component={DesktopAppScreen} />
       <SettingsStack.Screen name="BioEdit" component={BioEditScreen} />
       <SettingsStack.Screen name="NameEdit" component={NameEditScreen} />
       <SettingsStack.Screen name="UsernameEdit" component={UsernameEditScreen} />

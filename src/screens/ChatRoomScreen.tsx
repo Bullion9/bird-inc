@@ -46,7 +46,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { MaterialIcon } from '../components/MaterialIcon';
-import { DynamicHeader } from '../components/DynamicHeader';
 import { tokens } from '../theme/tokens';
 import { ChatsStackParamList } from '../navigation/types';
 
@@ -207,11 +206,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
                         {message.isSent && (
                           <View style={styles.statusContainer}>
                             {message.isRead ? (
-                              <MaterialIcon name="check-all" size={12} color={tokens.colors.primary} />
+                              <MaterialIcon name="done_all" size={12} color="#007AFF" />
                             ) : message.isDelivered ? (
-                              <MaterialIcon name="check-all" size={12} color={tokens.colors.onSurface60} />
+                              <MaterialIcon name="done_all" size={12} color="rgba(142, 142, 147, 1)" />
                             ) : (
-                              <MaterialIcon name="check" size={12} color={tokens.colors.onSurface60} />
+                              <MaterialIcon name="done" size={12} color="rgba(142, 142, 147, 1)" />
                             )}
                           </View>
                         )}
@@ -852,45 +851,58 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaView style={styles.container}>
-        <DynamicHeader
-          title={userName}
-          subtitle="Online • Last seen recently"
-          showBackButton={true}
-          onBackPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            navigation.goBack();
-          }}
-          onTitlePress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            handleContactInfo();
-          }}
-          rightIcons={[
-            {
-              icon: "video",
-              onPress: () => {
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.goBack();
+              }}
+            >
+              <Text style={styles.iosBackArrow}>‹</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.headerCenter}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              handleContactInfo();
+            }}
+          >
+            <Text style={styles.headerTitle}>{userName}</Text>
+            <Text style={styles.headerSubtitle}>Online • Last seen recently</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.headerRight}>
+            <MaterialIcon 
+              name="videocam" 
+              size={24} 
+              color={tokens.colors.primary}
+              onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 Alert.alert('Video Call', `Start video call with ${userName}?`, [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Call', onPress: () => console.log('Video call started') }
                 ]);
-              }
-            },
-            {
-              icon: "phone", 
-              onPress: () => {
+              }}
+            />
+            
+            <MaterialIcon 
+              name="call" 
+              size={22} 
+              color={tokens.colors.primary}
+              onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 Alert.alert('Voice Call', `Call ${userName}?`, [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Call', onPress: () => console.log('Voice call started') }
                 ]);
-              }
-            },
-            {
-              icon: showHeaderDropdown ? "keyboard_arrow_up" : "keyboard_arrow_down",
-              onPress: toggleHeaderDropdown
-            }
-          ]}
-        />
+              }}
+            />
+          </View>
+        </View>
 
         {showHeaderDropdown && (
           <>
@@ -984,20 +996,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
           )}
 
         <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
+          <View style={styles.inputRow}>
             <TouchableOpacity style={styles.attachButton} onPress={toggleUploadMenu}>
-              <MaterialIcon name="attachment" size={24} color={tokens.colors.onSurface60} />
+              <MaterialIcon name="add" size={18} color="#8E8E93" />
             </TouchableOpacity>
 
-            <TextInput
-              ref={textInputRef}
-              style={styles.textInput}
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Message"
-              placeholderTextColor={tokens.colors.onSurface60}
-              multiline
-              maxLength={1000}
+            <View style={styles.inputWrapper}>
+              <TextInput
+                ref={textInputRef}
+                style={styles.textInput}
+                value={message}
+                onChangeText={setMessage}
+                placeholder="Text Message"
+                placeholderTextColor="#8E8E93" // iOS Messages exact placeholder color
+                multiline
+                maxLength={1000}
               returnKeyType="default"
               enablesReturnKeyAutomatically
               onFocus={() => {
@@ -1031,21 +1044,23 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
                 color={keyboardMode === 'emoji' ? tokens.colors.primary : tokens.colors.onSurface60} 
               />
             </TouchableOpacity>
+            </View>
 
-            {message.trim() ? (
+            {/* Send Button - Right side of input row */}
+            {message.trim() && (
               <TouchableOpacity 
-                style={styles.sendButton} 
+                style={styles.sendButtonOutside} 
                 onPress={sendMessage}
                 activeOpacity={0.7}
               >
-                <MaterialIcon name="send" size={20} color={tokens.colors.onSurface} />
+                <MaterialIcon name="send" size={24} color="#FFFFFF" />
               </TouchableOpacity>
-            ) : (
+            )}
+
+            {/* Mic Button - Right side of input row when not typing */}
+            {!message.trim() && !isRecording && (
               <TouchableOpacity 
-                style={[
-                  styles.micButton,
-                  isRecording && styles.micButtonRecording
-                ]}
+                style={styles.micButtonOutside}
                 onPressIn={startRecording}
                 onPressOut={stopRecording}
                 delayPressIn={0}
@@ -1053,66 +1068,58 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
                 activeOpacity={0.7}
               >
                 <MaterialIcon 
-                  name={isRecording ? "stop" : "microphone"} 
+                  name="microphone" 
                   size={24} 
-                  color={isRecording ? tokens.colors.error : tokens.colors.onSurface60} 
+                  color={tokens.colors.onSurface60} 
                 />
               </TouchableOpacity>
             )}
+
+            {/* Recording Indicator - Right side of input row */}
+            {isRecording && (
+              <MotiView
+                from={{ opacity: 0, translateY: 10 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                exit={{ opacity: 0, translateY: 10 }}
+                transition={{ duration: 200 }}
+                style={styles.recordingIndicatorInline}
+              >
+                <View style={styles.recordingWaveInline}>
+                  <MotiView
+                    from={{ scaleY: 0.3 }}
+                    animate={{ scaleY: [0.3, 1, 0.3] }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 800,
+                      delay: 0,
+                    }}
+                    style={styles.waveBarSmall}
+                  />
+                  <MotiView
+                    from={{ scaleY: 0.5 }}
+                    animate={{ scaleY: [0.5, 1.2, 0.5] }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 800,
+                      delay: 200,
+                    }}
+                    style={styles.waveBarSmall}
+                  />
+                  <MotiView
+                    from={{ scaleY: 0.3 }}
+                    animate={{ scaleY: [0.3, 0.8, 0.3] }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 800,
+                      delay: 400,
+                    }}
+                    style={styles.waveBarSmall}
+                  />
+                </View>
+              </MotiView>
+            )}
           </View>
         </View>
-
-        {isRecording && (
-          <MotiView
-            from={{ opacity: 0, translateY: 10 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            exit={{ opacity: 0, translateY: 10 }}
-            transition={{ duration: 200 }}
-            style={styles.recordingIndicator}
-          >
-            <View style={styles.recordingWave}>
-              <MotiView
-                from={{ scaleY: 0.3 }}
-                animate={{ scaleY: [0.3, 1, 0.3] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 800,
-                  delay: 0,
-                }}
-                style={styles.waveBar}
-              />
-              <MotiView
-                from={{ scaleY: 0.5 }}
-                animate={{ scaleY: [0.5, 1.2, 0.5] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 800,
-                  delay: 200,
-                }}
-                style={styles.waveBar}
-              />
-              <MotiView
-                from={{ scaleY: 0.3 }}
-                animate={{ scaleY: [0.3, 0.8, 0.3] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 800,
-                  delay: 400,
-                }}
-                style={styles.waveBar}
-              />
-            </View>
-            <Text style={styles.recordingText}>
-              Recording... {formatDuration(recordingDuration)}
-            </Text>
-            <TouchableOpacity 
-              style={styles.cancelRecordingButton}
-              onPress={cancelRecording}
-            >
-              <MaterialIcon name="close" size={20} color={tokens.colors.error} />
-            </TouchableOpacity>
-          </MotiView>
-        )}
 
         {showUploadMenu && (
           <>
@@ -1286,10 +1293,72 @@ const stickerPacks = [
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokens.colors.surface1,
+    backgroundColor: '#000000', // iOS Messages dark background
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 64,
+    backgroundColor: '#000000', // Same as main background
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: tokens.colors.separator,
+    paddingHorizontal: 16,
+    position: 'relative',
+  },
+  headerLeft: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
+  },
+  headerCenter: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 0,
+  },
+  simpleDropdown: {
+    position: 'absolute',
+    right: 70,
+    top: 20,
+    padding: 8,
+  },
+  headerRight: {
+    position: 'absolute',
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    padding: 8,
+  },
+  iosBackArrow: {
+    fontSize: 40,
+    fontWeight: '300',
+    color: tokens.colors.primary,
+    lineHeight: 40,
+    textAlign: 'center',
+    transform: [{ scaleX: 1.2 }], // Make it wider/longer
+  },
+  headerAction: {
+    padding: 12,
+    marginLeft: 8,
+  },
+  headerTitle: {
+    ...tokens.typography.headline,
+    color: tokens.colors.onSurface,
+    fontWeight: '600',
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: tokens.colors.onSurface60,
+    marginTop: 1,
   },
   content: {
     flex: 1,
+    backgroundColor: '#000000', // iOS Messages content background
   },
   headerButton: {
     padding: 8,
@@ -1297,53 +1366,58 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8, // iOS Messages horizontal padding
   },
   messagesContent: {
-    paddingVertical: 16,
+    paddingVertical: 8, // iOS Messages vertical padding
     flexGrow: 1,
     justifyContent: 'flex-end',
   },
   messageContainer: {
-    marginVertical: 4,
-    maxWidth: screenWidth * 0.75,
+    marginVertical: 2, // iOS Messages tight spacing
+    maxWidth: screenWidth * 0.65, // iOS Messages max width (slightly narrower)
+    paddingHorizontal: 8, // iOS Messages side padding
   },
   sentMessage: {
     alignSelf: 'flex-end',
+    marginLeft: screenWidth * 0.25, // iOS asymmetric margins
   },
   receivedMessage: {
     alignSelf: 'flex-start',
+    marginRight: screenWidth * 0.25, // iOS asymmetric margins
   },
   messageBubble: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
+    paddingHorizontal: 14, // iOS Messages padding
+    paddingVertical: 8, // iOS Messages padding
+    borderRadius: 18, // iOS Messages corner radius
     maxWidth: '100%',
+    minHeight: 34, // iOS minimum bubble height
   },
   sentBubble: {
-    backgroundColor: tokens.colors.primary,
-    borderBottomRightRadius: 6,
+    backgroundColor: tokens.colors.primary, // iOS blue
+    borderBottomRightRadius: 4, // iOS tail corner
   },
   receivedBubble: {
-    backgroundColor: tokens.colors.surface2,
-    borderBottomLeftRadius: 6,
+    backgroundColor: 'rgba(142, 142, 147, 0.12)', // iOS gray bubble
+    borderBottomLeftRadius: 4, // iOS tail corner
   },
   messageText: {
-    fontSize: tokens.typography.body.fontSize,
-    lineHeight: tokens.typography.body.lineHeight,
-    fontFamily: tokens.typography.body.fontFamily,
+    fontSize: 16, // iOS Messages font size
+    lineHeight: 20, // iOS Messages line height
+    fontFamily: 'System', // iOS system font
+    fontWeight: '400',
   },
   sentText: {
-    color: tokens.colors.onSurface,
+    color: '#FFFFFF', // White text on blue background
   },
   receivedText: {
-    color: tokens.colors.onSurface,
+    color: tokens.colors.onSurface, // Dark text on light background
   },
   messageInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
-    paddingHorizontal: 4,
+    marginTop: 2, // Tighter spacing like iOS
+    paddingHorizontal: 2,
   },
   sentInfo: {
     justifyContent: 'flex-end',
@@ -1352,58 +1426,101 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   timeText: {
-    fontSize: 11,
-    color: tokens.colors.onSurface60,
-    fontFamily: tokens.typography.caption.fontFamily,
+    fontSize: 11, // iOS timestamp size
+    color: 'rgba(142, 142, 147, 1)', // iOS secondary label color
+    fontFamily: 'System', // iOS system font
+    fontWeight: '400',
   },
   statusContainer: {
     marginLeft: 4,
   },
   inputContainer: {
-    backgroundColor: tokens.colors.surface1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: tokens.colors.surface2,
+    backgroundColor: '#000000', // Pure black like iOS Messages
+    paddingTop: 8, // iOS Messages top padding
+    paddingBottom: 8, // Minimal safe area bottom padding
+    borderTopWidth: StyleSheet.hairlineWidth, // Thin separator line
+    borderTopColor: '#38383A', // Subtle gray separator
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center', // Center align all items
+    paddingHorizontal: 8, // iOS horizontal padding
   },
   inputWrapper: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: tokens.colors.surface2,
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: 48,
+    backgroundColor: '#38383A', // iOS Messages actual input color
+    borderRadius: 25, // More curved iOS Messages radius
+    paddingLeft: 14, // iOS Messages left padding
+    paddingRight: 6, // iOS Messages right padding (less for send button)
+    paddingTop: 4, // Top padding
+    paddingBottom: 2, // Reduced bottom padding
+    minHeight: 30, // Reduced iOS Messages height
   },
   attachButton: {
-    padding: 4,
-    marginRight: 8,
+    backgroundColor: 'transparent', // Remove background
+    borderWidth: 1, // Add border line
+    borderColor: '#8E8E93', // iOS gray border
+    borderRadius: 15, // Perfect circle (30px diameter / 2)
+    width: 30, // iOS plus button size
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8, // Space between plus and input
   },
   textInput: {
     flex: 1,
-    fontSize: tokens.typography.body.fontSize,
-    fontFamily: tokens.typography.body.fontFamily,
-    color: tokens.colors.onSurface,
-    maxHeight: 100,
-    paddingVertical: 8,
+    fontSize: 17, // iOS Messages exact font size
+    fontFamily: 'System',
+    fontWeight: '400',
+    color: '#FFFFFF', 
+    paddingVertical: 7, // iOS Messages exact padding
+    paddingHorizontal: 0,
     textAlignVertical: 'center',
-  },
-  emojiButton: {
-    padding: 4,
-    marginLeft: 8,
+    lineHeight: 22,
+    minHeight: 22, // iOS Messages line height
+    maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: tokens.colors.primary,
-    borderRadius: 20,
-    width: 40,
+    backgroundColor: '#007AFF', // iOS blue
+    borderRadius: 12, // iOS Messages send button radius
+    width: 24, // iOS Messages send button exact size
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 6, // iOS spacing
+    marginBottom: 1, // Slight alignment adjustment
+  },
+  sendButtonOutside: {
+    backgroundColor: '#007AFF', // iOS blue
+    borderRadius: 20, // Even larger round button
+    width: 40, // Even larger button size
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
+    marginLeft: 8, // iOS spacing
+    alignSelf: 'center', // Center align with input
+  },
+  micButtonOutside: {
+    borderRadius: 20, // Even larger round button
+    width: 40, // Even larger button size
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8, // iOS spacing
+    alignSelf: 'center', // Center align with input
+    borderWidth: 1,
+    borderColor: '#8E8E93',
+    backgroundColor: 'transparent',
+  },
+  emojiButton: {
+    padding: 2, // Minimal iOS padding
+    marginLeft: 8, // iOS spacing
   },
   micButton: {
-    padding: 4,
-    marginLeft: 8,
+    padding: 2, // Minimal iOS padding
+    marginLeft: 8, // iOS spacing
   },
   // Emoji keyboard styles
   emojiKeyboard: {
@@ -1715,6 +1832,21 @@ const styles = StyleSheet.create({
     height: 16,
     backgroundColor: tokens.colors.error,
     borderRadius: 1.5,
+  },
+  recordingIndicatorInline: {
+    marginLeft: 8,
+    alignSelf: 'center',
+  },
+  recordingWaveInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  waveBarSmall: {
+    width: 2,
+    height: 8,
+    backgroundColor: tokens.colors.error,
+    borderRadius: 1,
   },
   recordingText: {
     flex: 1,

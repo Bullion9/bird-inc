@@ -50,7 +50,7 @@ src/
 - **Surface 1**: `#121212`
 - **Surface 2**: `#1E1E1E`
 - **Surface 3**: `#252525`
-- **Primary**: `#BB86FC`
+- **Primary**: `#007AFF` (iOS Blue)
 - **Secondary**: `#03DAC6`
 
 ### Typography

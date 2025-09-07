@@ -93,8 +93,10 @@ const iconMap: Record<string, string> = {
   // Interface Elements
   'insert_emoticon': 'emoticon-happy',
   'forum': 'forum',
+  'bubble_chart': 'forum',
   'circle': 'circle',
   'radio_button_checked': 'radiobox-marked',
+  'radio_button_unchecked': 'radiobox-blank',
   'check_circle': 'check-circle',
   'keyboard_arrow_up': 'chevron-up',
   'keyboard_arrow_down': 'chevron-down',
@@ -107,6 +109,7 @@ const iconMap: Record<string, string> = {
   'help': 'help-circle-outline',
   'cleaning_services': 'broom',
   'chat_bubble': 'chat',
+  'viber': 'chat-processing',
   'schedule': 'clock-outline',
   'palette': 'palette',
   'format_size': 'format-size',

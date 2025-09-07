@@ -58,6 +58,12 @@ export type SettingsStackParamList = {
   NotificationSettings: undefined;
   PrivacySettings: undefined;
   HelpSettings: undefined;
+  ContactSettings: undefined;
+  InviteFriends: undefined;
+  Notes: undefined;
+  ManageFolders: undefined;
+  StickerMarket: undefined;
+  DesktopApp: undefined;
   BioEdit: { initialBio: string; onBioChange: (bio: string) => void };
   NameEdit: { initialName: string; onNameChange: (name: string) => void };
   UsernameEdit: { initialUsername: string; onUsernameChange: (username: string) => void };

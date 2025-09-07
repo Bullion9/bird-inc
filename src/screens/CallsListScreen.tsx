@@ -292,20 +292,6 @@ export const CallsListScreen: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   };
 
-  const renderHeader = () => (
-    <View style={styles.largeTitleContainer}>
-      <MotiView
-        animate={{
-          opacity: Math.max(0, Math.min(1, (60 - scrollOffset) / 20)),
-          translateY: Math.min(20, scrollOffset / 3),
-        }}
-        transition={{ type: 'timing', duration: 200 }}
-      >
-        <Text style={styles.largeTitle}>Calls</Text>
-      </MotiView>
-    </View>
-  );
-
   const renderCallItem = ({ item, index }: { item: CallItem; index: number }) => {
     const icon = getCallIcon(item.type);
     
@@ -322,20 +308,16 @@ export const CallsListScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <View style={styles.leftSection}>
-              <View style={[
-                styles.avatarBorder,
-                item.hasStory && {
-                  borderColor: item.storyViewed ? 'rgba(156, 163, 175, 0.6)' : '#3B82F6',
-                  borderWidth: 2,
-                }
-              ]}>
-                <View style={{ transform: [{ scale: 1.15 }] }}>
-                  <Avatar
-                    source={item.avatar}
-                    name={item.name}
-                    size={48}
-                  />
-                </View>
+              <View style={styles.avatarContainer}>
+                <Avatar
+                  source={item.avatar}
+                  name={item.name}
+                  size={48}
+                />
+                {/* Simple green dot for unviewed stories */}
+                {item.hasStory && !item.storyViewed && (
+                  <View style={styles.storyIndicator} />
+                )}
               </View>
             </View>
             
@@ -427,9 +409,10 @@ export const CallsListScreen: React.FC = () => {
 
       {/* Header */}
       <DynamicHeader 
-        title="Calls"
+        title="Recent"
         scrollY={scrollOffset}
         showBackButton={false}
+        titleSize={20}
         rightIcons={[
           {
             icon: 'phone',
@@ -448,19 +431,28 @@ export const CallsListScreen: React.FC = () => {
         ]}
       />
       
-      <Animated.FlatList
-        data={calls}
-        renderItem={renderCallItem}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
+      <Animated.ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
         )}
         scrollEventThrottle={16}
-      />
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Large Title - Rewritten */}
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>Recent</Text>
+        </View>
+
+        {/* Call List */}
+        {calls.map((item, index) => (
+          <React.Fragment key={item.id}>
+            {renderCallItem({ item, index })}
+          </React.Fragment>
+        ))}
+      </Animated.ScrollView>
     </View>
   );
 };
@@ -470,22 +462,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.colors.bg,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: tokens.spacing.xs,
+    paddingTop: 100, // Space for header - same as ChatsListScreen
+    paddingBottom: tokens.spacing.xl, // Bottom padding
+  },
   largeTitleContainer: {
     paddingHorizontal: tokens.spacing.s,
-    paddingTop: tokens.spacing.m,
-    paddingBottom: tokens.spacing.s,
+    paddingTop: tokens.spacing.xl,
+    paddingBottom: tokens.spacing.m,
+    marginTop: 20, // Extra top margin to push text down
   },
   largeTitle: {
     ...tokens.typography.h1,
     color: tokens.colors.onSurface,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: 36,
+    fontWeight: '700',
     letterSpacing: -0.5,
+    marginTop: 30, // Even more top margin
   },
-  listContainer: {
+  titleSection: {
     paddingHorizontal: tokens.spacing.s,
-    paddingTop: 100, // Space for header
-    paddingBottom: 100, // Space for bottom
+    paddingTop: tokens.spacing.xl,
+    paddingBottom: tokens.spacing.m,
+  },
+  pageTitle: {
+    ...tokens.typography.largeTitle, // iOS Large Title style
+    fontSize: 36,
+    fontWeight: '700',
+    color: tokens.colors.onSurface,
+    letterSpacing: -0.5,
+    marginTop: tokens.spacing.m,
+    marginBottom: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   callRow: {
     flexDirection: 'row',
@@ -539,10 +552,20 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: tokens.radius.m,
   },
-  avatarBorder: {
-    borderRadius: 24,
-    padding: 2,
-    backgroundColor: 'transparent',
+  avatarContainer: {
+    position: 'relative',
+    transform: [{ scale: 1.15 }],
+  },
+  storyIndicator: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    backgroundColor: tokens.colors.secondary, // Green color
+    borderRadius: 6, // Perfect circle
+    borderWidth: 2,
+    borderColor: tokens.colors.bg,
   },
   listSeparator: {
     height: 1,

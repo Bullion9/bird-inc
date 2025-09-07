@@ -595,16 +595,16 @@ const ChatRowItem: React.FC<{
             delayLongPress={500}
           >
             <View style={styles.chatContent}>
-              <View style={[
-                styles.avatarContainer,
-                chat.hasStory && !chat.storyViewed && styles.storyRingNew,
-                chat.hasStory && chat.storyViewed && styles.storyRingViewed,
-              ]}>
+              <View style={styles.avatarContainer}>
                 <Avatar
                   source={chat.avatar}
                   name={chat.name}
                   size={56}
                 />
+                {/* Simple green dot for unviewed stories */}
+                {chat.hasStory && !chat.storyViewed && (
+                  <View style={styles.storyIndicator} />
+                )}
               </View>
               
               <View style={styles.chatInfo}>
@@ -806,8 +806,9 @@ export const ChatsListScreen: React.FC = () => {
 
       {/* Header */}
       <DynamicHeader
-        title="Chats"
+        title="Messages"
         scrollY={scrollOffset}
+        titleSize={20}
         rightIcons={[
           { 
             icon: 'magnify', 
@@ -861,7 +862,7 @@ export const ChatsListScreen: React.FC = () => {
             duration: 200,
           }}
         >
-          <Text style={styles.largeTitle}>Chats</Text>
+          <Text style={styles.largeTitle}>Messages</Text>
         </MotiView>
 
         {/* Filter Navigation */}
@@ -1018,19 +1019,19 @@ const styles = StyleSheet.create({
     padding: tokens.spacing.s,
   },
   avatarContainer: {
+    position: 'relative',
     transform: [{ scale: 1.15 }], // Enlarge avatar by 15%
   },
-  storyRingNew: {
+  storyIndicator: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    backgroundColor: tokens.colors.secondary, // Green color
+    borderRadius: 6, // Perfect circle
     borderWidth: 2,
-    borderColor: tokens.colors.primary,
-    borderRadius: 50,
-    padding: 2,
-  },
-  storyRingViewed: {
-    borderWidth: 2,
-    borderColor: tokens.colors.onSurface38,
-    borderRadius: 50,
-    padding: 2,
+    borderColor: tokens.colors.bg,
   },
   chatInfo: {
     flex: 1,
@@ -1112,15 +1113,16 @@ const styles = StyleSheet.create({
   },
   largeTitleContainer: {
     paddingHorizontal: tokens.spacing.s,
-    paddingTop: tokens.spacing.l,
+    paddingTop: tokens.spacing.xl,
     paddingBottom: tokens.spacing.m,
   },
   largeTitle: {
-    ...tokens.typography.h1,
+    ...tokens.typography.largeTitle, // iOS Large Title style
     color: tokens.colors.onSurface,
-    fontSize: 12,
+    fontSize: 36,
     fontWeight: '700',
     letterSpacing: -0.5,
+    marginTop: tokens.spacing.m,
   },
   filterContainer: {
     paddingVertical: tokens.spacing.s,
