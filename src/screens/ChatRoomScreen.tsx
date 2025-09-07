@@ -305,6 +305,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
   const [forwardedMessages, setForwardedMessages] = useState<string[]>([]);
   const [showHeaderDropdown, setShowHeaderDropdown] = useState(false);
   const [showProfileSheet, setShowProfileSheet] = useState(false);
+  const [showNameDropdown, setShowNameDropdown] = useState(false);
+  
+  // Bio and contact state
+  const [contactBio, setContactBio] = useState('');
+  const [isContactSaved, setIsContactSaved] = useState(false);
+  const [isNewContact, setIsNewContact] = useState(true); // Simulate new contact
   
   // Animated values for gestures
   const pullToRefreshY = useSharedValue(0);
@@ -316,6 +322,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
       flatListRef.current.scrollToEnd({ animated: true });
     }
   }, [messages]);
+
+  useEffect(() => {
+    // Initialize bio for demo purposes when profile sheet opens
+    if (showProfileSheet && !contactBio && isNewContact) {
+      // Simulate fetching bio from user's profile or previous messages
+      setTimeout(() => {
+        setContactBio("Software developer passionate about mobile apps and user experience. Love to travel and explore new technologies! 🚀");
+      }, 500);
+    }
+  }, [showProfileSheet]);
 
   useEffect(() => {
     // Listen for keyboard events
@@ -790,15 +806,26 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
     setShowHeaderDropdown(!showHeaderDropdown);
   };
 
+  const toggleNameDropdown = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowNameDropdown(!showNameDropdown);
+    // Close other dropdowns when opening name dropdown
+    if (!showNameDropdown) {
+      setShowHeaderDropdown(false);
+    }
+  };
+
   const handleContactInfo = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowHeaderDropdown(false);
+    setShowNameDropdown(false);
     setShowProfileSheet(true);
   };
 
   const handleMuteChat = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowHeaderDropdown(false);
+    setShowNameDropdown(false);
     Alert.alert(
       'Mute Chat',
       'Mute notifications for this chat?',
@@ -814,6 +841,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
   const handleBlockUser = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setShowHeaderDropdown(false);
+    setShowNameDropdown(false);
     Alert.alert(
       'Block User',
       `Block ${userName}? They won't be able to send you messages.`,
@@ -827,6 +855,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
   const handleClearChat = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setShowHeaderDropdown(false);
+    setShowNameDropdown(false);
     Alert.alert(
       'Clear Chat',
       'Delete all messages in this chat?',
@@ -908,11 +937,27 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
             style={styles.headerCenter}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              handleContactInfo();
+              toggleNameDropdown();
             }}
           >
-            <Text style={styles.headerTitle}>{userName}</Text>
-            <Text style={styles.headerSubtitle}>Online • Last seen recently</Text>
+            <View style={styles.headerCenterContent}>
+              <View style={styles.headerNameContainer}>
+                <Text style={styles.headerTitle}>{userName}</Text>
+                <MaterialIcon 
+                  name={showNameDropdown ? "expand-less" : "expand-more"} 
+                  size={20} 
+                  color={tokens.colors.onSurface60} 
+                />
+              </View>
+              <View style={styles.headerSubtitleContainer}>
+                <Text style={styles.headerSubtitle}>Online • Last seen recently</Text>
+                {isNewContact && !isContactSaved && (
+                  <View style={styles.newContactIndicator}>
+                    <MaterialIcon name="person-add" size={12} color={tokens.colors.primary} />
+                  </View>
+                )}
+              </View>
+            </View>
           </TouchableOpacity>
           
           <View style={styles.headerRight}>
@@ -986,6 +1031,117 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
               <TouchableOpacity style={styles.dropdownItem} onPress={handleBlockUser}>
                 <View style={styles.headerIconContainer}>
                   <MaterialIcon name="block" size={20} color="#007AFF" />
+                </View>
+                <Text style={[styles.dropdownText, { color: tokens.colors.error }]}>Block User</Text>
+              </TouchableOpacity>
+            </MotiView>
+          </>
+        )}
+
+        {showNameDropdown && (
+          <>
+            <TouchableWithoutFeedback onPress={toggleNameDropdown}>
+              <View style={styles.dropdownOverlay} />
+            </TouchableWithoutFeedback>
+            <MotiView
+              from={{ opacity: 0, translateY: -10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              exit={{ opacity: 0, translateY: -10 }}
+              transition={{ duration: 200 }}
+              style={styles.nameDropdown}
+            >
+              <TouchableOpacity style={styles.dropdownItem} onPress={handleContactInfo}>
+                <View style={styles.headerIconContainer}>
+                  <MaterialIcon name="account-circle" size={20} color="#007AFF" />
+                </View>
+                <Text style={styles.dropdownText}>Contact Info</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowNameDropdown(false);
+                Alert.alert('Audio Call', `Call ${userName}?`, [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Call', onPress: () => console.log('Audio call started') }
+                ]);
+              }}>
+                <View style={styles.headerIconContainer}>
+                  <MaterialIcon name="phone" size={20} color="#34C759" />
+                </View>
+                <Text style={styles.dropdownText}>Audio Call</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowNameDropdown(false);
+                Alert.alert('Video Call', `Start video call with ${userName}?`, [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Call', onPress: () => console.log('Video call started') }
+                ]);
+              }}>
+                <View style={styles.headerIconContainer}>
+                  <MaterialIcon name="videocam" size={20} color="#007AFF" />
+                </View>
+                <Text style={styles.dropdownText}>Video Call</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowNameDropdown(false);
+                Alert.alert('Search Chat', 'Search in conversation...');
+              }}>
+                <View style={styles.headerIconContainer}>
+                  <MaterialIcon name="search" size={20} color="#FF9500" />
+                </View>
+                <Text style={styles.dropdownText}>Search Chat</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowNameDropdown(false);
+                Alert.alert('Media Gallery', 'View shared photos and videos');
+              }}>
+                <View style={styles.headerIconContainer}>
+                  <MaterialIcon name="photo-library" size={20} color="#5856D6" />
+                </View>
+                <Text style={styles.dropdownText}>Media & Files</Text>
+              </TouchableOpacity>
+              
+              <View style={styles.dropdownSeparator} />
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={handleMuteChat}>
+                <View style={styles.headerIconContainer}>
+                  <MaterialIcon name="volume-off" size={20} color="#8E8E93" />
+                </View>
+                <Text style={styles.dropdownText}>Mute Notifications</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowNameDropdown(false);
+                Alert.alert('Pin Chat', 'Pin this chat to the top of your conversations?', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Pin', onPress: () => console.log('Chat pinned') }
+                ]);
+              }}>
+                <View style={styles.headerIconContainer}>
+                  <MaterialIcon name="push-pin" size={20} color="#FF9500" />
+                </View>
+                <Text style={styles.dropdownText}>Pin Chat</Text>
+              </TouchableOpacity>
+              
+              <View style={styles.dropdownSeparator} />
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={handleClearChat}>
+                <View style={styles.headerIconContainer}>
+                  <MaterialIcon name="delete-sweep" size={20} color="#FF9500" />
+                </View>
+                <Text style={styles.dropdownText}>Clear Chat</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.dropdownItem} onPress={handleBlockUser}>
+                <View style={styles.headerIconContainer}>
+                  <MaterialIcon name="block" size={20} color={tokens.colors.error} />
                 </View>
                 <Text style={[styles.dropdownText, { color: tokens.colors.error }]}>Block User</Text>
               </TouchableOpacity>
@@ -1342,7 +1498,56 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
               </View>
               <Text style={styles.profileSheetName}>{userName}</Text>
               <Text style={styles.profileSheetStatus}>Online • Last seen recently</Text>
+              
+              {/* New Contact Notice */}
+              {isNewContact && !isContactSaved && (
+                <MotiView
+                  from={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  style={styles.newContactNotice}
+                >
+                  <MaterialIcon name="person-add" size={16} color={tokens.colors.primary} />
+                  <Text style={styles.newContactNoticeText}>New Contact</Text>
+                </MotiView>
+              )}
+              
+              {/* Bio Section */}
+              {contactBio && (
+                <View style={styles.bioSection}>
+                  <Text style={styles.bioText}>{contactBio}</Text>
+                </View>
+              )}
             </View>
+
+            {/* Save Contact Banner for New Users */}
+            {isNewContact && !isContactSaved && (
+              <MotiView
+                from={{ opacity: 0, translateY: -20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                style={styles.saveContactBanner}
+              >
+                <View style={styles.saveContactContent}>
+                  <View style={styles.saveContactInfo}>
+                    <MaterialIcon name="person-add" size={20} color={tokens.colors.primary} />
+                    <Text style={styles.saveContactTitle}>Save {userName} to Contacts?</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.saveContactButton}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      setIsContactSaved(true);
+                      Alert.alert(
+                        'Contact Saved',
+                        `${userName} has been saved to your contacts.`,
+                        [{ text: 'OK' }]
+                      );
+                    }}
+                  >
+                    <Text style={styles.saveContactButtonText}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </MotiView>
+            )}
 
             {/* Action Buttons */}
             <View style={styles.profileSheetActions}>
@@ -1388,10 +1593,97 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
 
             {/* Info Sections */}
             <ScrollView style={styles.profileSheetScroll} showsVerticalScrollIndicator={false}>
+              {/* Chat Actions */}
+              <View style={styles.profileSheetSection}>
+                <Text style={styles.profileSheetSectionTitle}>Chat Actions</Text>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Media Gallery', 'View shared photos and videos');
+                  }}
+                >
+                  <MaterialIcon name="photo-library" size={20} color={tokens.colors.primary} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Media, Links & Docs</Text>
+                    <Text style={styles.profileSheetInfoSubtext}>142 shared items</Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Search Chat', 'Search in conversation...');
+                  }}
+                >
+                  <MaterialIcon name="search" size={20} color={tokens.colors.primary} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Search in Chat</Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Starred Messages', 'View starred messages');
+                  }}
+                >
+                  <MaterialIcon name="star" size={20} color="#FFD700" />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Starred Messages</Text>
+                    <Text style={styles.profileSheetInfoSubtext}>5 messages</Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Contact Details */}
+              <View style={styles.profileSheetSection}>
+                <Text style={styles.profileSheetSectionTitle}>About</Text>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setShowProfileSheet(false);
+                    // Navigate to ContactBioEdit screen
+                    setTimeout(() => {
+                      navigation.navigate('ContactBioEdit', {
+                        contactName: userName,
+                        initialBio: contactBio,
+                        onBioChange: (newBio: string) => {
+                          setContactBio(newBio);
+                        }
+                      });
+                    }, 300);
+                  }}
+                >
+                  <MaterialIcon name="edit" size={20} color={tokens.colors.onSurface60} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Bio</Text>
+                    <Text style={styles.profileSheetInfoValue}>
+                      {contactBio || 'Add a bio for this contact...'}
+                    </Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+              </View>
+
               {/* Contact Details */}
               <View style={styles.profileSheetSection}>
                 <Text style={styles.profileSheetSectionTitle}>Contact Details</Text>
-                <TouchableOpacity style={styles.profileSheetInfoItem}>
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Call', `Call ${userName}?`);
+                  }}
+                >
                   <MaterialIcon name="phone" size={20} color={tokens.colors.onSurface60} />
                   <View style={styles.profileSheetInfoContent}>
                     <Text style={styles.profileSheetInfoLabel}>Phone</Text>
@@ -1399,27 +1691,304 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onLongPress, onD
                   </View>
                 </TouchableOpacity>
                 
-                <TouchableOpacity style={styles.profileSheetInfoItem}>
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Email', 'Send email?');
+                  }}
+                >
                   <MaterialIcon name="email" size={20} color={tokens.colors.onSurface60} />
                   <View style={styles.profileSheetInfoContent}>
                     <Text style={styles.profileSheetInfoLabel}>Email</Text>
                     <Text style={styles.profileSheetInfoValue}>john@example.com</Text>
                   </View>
                 </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Location', 'View location details');
+                  }}
+                >
+                  <MaterialIcon name="location-on" size={20} color={tokens.colors.onSurface60} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Location</Text>
+                    <Text style={styles.profileSheetInfoValue}>San Francisco, CA</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Preferences */}
+              <View style={styles.profileSheetSection}>
+                <Text style={styles.profileSheetSectionTitle}>Chat Preferences</Text>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    Alert.alert(
+                      'Mute Notifications',
+                      'Mute notifications for this chat?',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: '15 minutes', onPress: () => console.log('Mute 15 min') },
+                        { text: '1 hour', onPress: () => console.log('Mute 1 hour') },
+                        { text: '8 hours', onPress: () => console.log('Mute 8 hours') },
+                        { text: 'Until I turn it back on', onPress: () => console.log('Mute indefinitely') }
+                      ]
+                    );
+                  }}
+                >
+                  <MaterialIcon name="notifications-off" size={20} color={tokens.colors.onSurface60} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Mute Notifications</Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Custom Ringtone', 'Choose a ringtone for this contact');
+                  }}
+                >
+                  <MaterialIcon name="music-note" size={20} color={tokens.colors.onSurface60} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Custom Ringtone</Text>
+                    <Text style={styles.profileSheetInfoSubtext}>Default</Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Wallpaper', 'Set chat wallpaper');
+                  }}
+                >
+                  <MaterialIcon name="wallpaper" size={20} color={tokens.colors.onSurface60} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Wallpaper</Text>
+                    <Text style={styles.profileSheetInfoSubtext}>None</Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Security */}
+              <View style={styles.profileSheetSection}>
+                <Text style={styles.profileSheetSectionTitle}>Security</Text>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Encryption', 'Messages are end-to-end encrypted. Tap to learn more.');
+                  }}
+                >
+                  <MaterialIcon name="security" size={20} color="#34C759" />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Encryption</Text>
+                    <Text style={styles.profileSheetInfoSubtext}>Messages are secure</Text>
+                  </View>
+                  <MaterialIcon name="info" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Disappearing Messages', 'Set messages to disappear after a certain time');
+                  }}
+                >
+                  <MaterialIcon name="timer" size={20} color={tokens.colors.onSurface60} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Disappearing Messages</Text>
+                    <Text style={styles.profileSheetInfoSubtext}>Off</Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Export & Backup */}
+              <View style={styles.profileSheetSection}>
+                <Text style={styles.profileSheetSectionTitle}>Data & Storage</Text>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Export Chat', 'Export chat history to email or save to files');
+                  }}
+                >
+                  <MaterialIcon name="download" size={20} color={tokens.colors.primary} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Export Chat</Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    Alert.alert(
+                      'Clear Chat',
+                      'Delete all messages in this chat?',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Clear Chat', style: 'destructive', onPress: () => setMessages([]) }
+                      ]
+                    );
+                  }}
+                >
+                  <MaterialIcon name="delete-sweep" size={20} color="#FF9500" />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Clear Chat</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Contact Management */}
+              <View style={styles.profileSheetSection}>
+                <Text style={styles.profileSheetSectionTitle}>Contact Management</Text>
+                
+                {!isContactSaved ? (
+                  // Show "Add to Contacts" for new contacts
+                  <TouchableOpacity 
+                    style={styles.profileSheetInfoItem}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      Alert.alert(
+                        'Add to Contacts',
+                        `Save ${userName} to your contacts?`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { 
+                            text: 'Add Contact', 
+                            onPress: () => {
+                              setIsContactSaved(true);
+                              setIsNewContact(false);
+                              Alert.alert('Contact Added', `${userName} has been saved to your contacts.`);
+                            }
+                          }
+                        ]
+                      );
+                    }}
+                  >
+                    <MaterialIcon name="person-add" size={20} color={tokens.colors.primary} />
+                    <View style={styles.profileSheetInfoContent}>
+                      <Text style={styles.profileSheetInfoLabel}>Add to Contacts</Text>
+                      <Text style={styles.profileSheetInfoSubtext}>Save this contact to your address book</Text>
+                    </View>
+                    <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                  </TouchableOpacity>
+                ) : (
+                  // Show "Edit Contact" for saved contacts
+                  <TouchableOpacity 
+                    style={styles.profileSheetInfoItem}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      Alert.alert('Edit Contact', 'Edit contact information and settings');
+                    }}
+                  >
+                    <MaterialIcon name="edit" size={20} color={tokens.colors.onSurface60} />
+                    <View style={styles.profileSheetInfoContent}>
+                      <Text style={styles.profileSheetInfoLabel}>Edit Contact</Text>
+                      <Text style={styles.profileSheetInfoSubtext}>Modify contact details</Text>
+                    </View>
+                    <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                  </TouchableOpacity>
+                )}
+                
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    Alert.alert('Share Contact', 'Share this contact with others');
+                  }}
+                >
+                  <MaterialIcon name="share" size={20} color={tokens.colors.primary} />
+                  <View style={styles.profileSheetInfoContent}>
+                    <Text style={styles.profileSheetInfoLabel}>Share Contact</Text>
+                    <Text style={styles.profileSheetInfoSubtext}>Send contact info to others</Text>
+                  </View>
+                  <MaterialIcon name="chevron-right" size={16} color={tokens.colors.onSurface60} />
+                </TouchableOpacity>
+                
+                {isContactSaved && (
+                  <TouchableOpacity 
+                    style={styles.profileSheetInfoItem}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                      Alert.alert(
+                        'Remove from Contacts',
+                        `Remove ${userName} from your contacts?`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { 
+                            text: 'Remove', 
+                            style: 'destructive',
+                            onPress: () => {
+                              setIsContactSaved(false);
+                              setIsNewContact(true);
+                              Alert.alert('Contact Removed', `${userName} has been removed from your contacts.`);
+                            }
+                          }
+                        ]
+                      );
+                    }}
+                  >
+                    <MaterialIcon name="person-remove" size={20} color={tokens.colors.error} />
+                    <View style={styles.profileSheetInfoContent}>
+                      <Text style={[styles.profileSheetInfoLabel, { color: tokens.colors.error }]}>Remove from Contacts</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Privacy Settings */}
               <View style={styles.profileSheetSection}>
                 <Text style={styles.profileSheetSectionTitle}>Privacy & Support</Text>
                 
-                <TouchableOpacity style={styles.profileSheetInfoItem}>
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                    Alert.alert(
+                      'Block Contact',
+                      `Block ${userName}? They won't be able to send you messages or call you.`,
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Block', style: 'destructive', onPress: () => console.log('User blocked') }
+                      ]
+                    );
+                  }}
+                >
                   <MaterialIcon name="block" size={20} color={tokens.colors.error} />
                   <View style={styles.profileSheetInfoContent}>
                     <Text style={[styles.profileSheetInfoLabel, { color: tokens.colors.error }]}>Block Contact</Text>
                   </View>
                 </TouchableOpacity>
                 
-                <TouchableOpacity style={styles.profileSheetInfoItem}>
+                <TouchableOpacity 
+                  style={styles.profileSheetInfoItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                    Alert.alert(
+                      'Report Contact',
+                      'Report this contact for spam, abuse, or other issues?',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Report', style: 'destructive', onPress: () => console.log('User reported') }
+                      ]
+                    );
+                  }}
+                >
                   <MaterialIcon name="report" size={20} color={tokens.colors.error} />
                   <View style={styles.profileSheetInfoContent}>
                     <Text style={[styles.profileSheetInfoLabel, { color: tokens.colors.error }]}>Report Contact</Text>
@@ -1559,6 +2128,24 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: tokens.colors.onSurface60,
     marginTop: 1,
+  },
+  headerCenterContent: {
+    alignItems: 'center',
+  },
+  headerNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerSubtitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  newContactIndicator: {
+    marginLeft: 4,
+    backgroundColor: tokens.colors.primary + '20',
+    borderRadius: 8,
+    padding: 2,
   },
   content: {
     flex: 1,
@@ -1938,6 +2525,22 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     zIndex: 1000,
   },
+  nameDropdown: {
+    position: 'absolute',
+    top: 80,
+    left: '50%',
+    transform: [{ translateX: -90 }], // Center the dropdown (half of 180px width)
+    backgroundColor: tokens.colors.surface2,
+    borderRadius: 12,
+    paddingVertical: 8,
+    minWidth: 180,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    zIndex: 1000,
+  },
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2202,6 +2805,74 @@ const styles = StyleSheet.create({
   profileSheetInfoValue: {
     ...tokens.typography.caption,
     color: tokens.colors.onSurface60,
+  },
+  profileSheetInfoSubtext: {
+    ...tokens.typography.caption,
+    color: tokens.colors.onSurface60,
+    fontSize: 13,
+  },
+  // Bio and Save Contact Styles
+  newContactNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: tokens.colors.primary + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  newContactNoticeText: {
+    ...tokens.typography.caption,
+    color: tokens.colors.primary,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  bioSection: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  bioText: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface60,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    lineHeight: 20,
+  },
+  saveContactBanner: {
+    backgroundColor: tokens.colors.primary + '10',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: tokens.colors.primary + '20',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  saveContactContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  saveContactInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  saveContactTitle: {
+    ...tokens.typography.body,
+    color: tokens.colors.onSurface,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  saveContactButton: {
+    backgroundColor: tokens.colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  saveContactButtonText: {
+    ...tokens.typography.body,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 });
 

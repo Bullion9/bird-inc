@@ -27,6 +27,11 @@ export type ChatsStackParamList = {
   GroupDetails: { groupId: string; groupName: string };
   CreateGroup: undefined;
   ImportContacts: undefined;
+  ContactBioEdit: { 
+    contactName: string; 
+    initialBio: string; 
+    onBioChange: (bio: string) => void; 
+  };
 };
 
 export type CallsStackParamList = {

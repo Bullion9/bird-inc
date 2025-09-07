@@ -44,6 +44,7 @@ const iconMap: Record<string, string> = {
   'pause': 'pause',
   'volume_up': 'volume-high',
   'photo_library': 'image-multiple',
+  'photo-library': 'image-multiple',
   
   // Messaging
   'send': 'send',
@@ -51,6 +52,9 @@ const iconMap: Record<string, string> = {
   'attach_file': 'attachment',
   'emoji_emotions': 'emoticon-happy',
   'emoticon-outline': 'emoticon-happy-outline',
+  'sticker-emoji': 'sticker-emoji',
+  'microphone': 'microphone',
+  'keyboard': 'keyboard',
   'message': 'message-text',
   'message-text': 'message-text',
   
@@ -69,6 +73,8 @@ const iconMap: Record<string, string> = {
   
   // User & Social
   'person_add': 'account-plus',
+  'person-add': 'account-plus',
+  'person-remove': 'account-remove',
   'login': 'login',
   'account_circle': 'account-circle',
   'group': 'account-group',
@@ -78,10 +84,12 @@ const iconMap: Record<string, string> = {
   // Actions
   'delete': 'delete',
   'delete-outline': 'trash-can',
+  'delete-sweep': 'delete-sweep',
   'add': 'plus',
   'share': 'share-variant',
   'download': 'download',
   'file_download': 'download',
+  'file-document': 'file-document',
   'backup': 'backup-restore',
   'archive': 'archive',
   'archive-outline': 'inbox-arrow-down',
@@ -111,11 +119,17 @@ const iconMap: Record<string, string> = {
   'check_circle': 'check-circle',
   'keyboard_arrow_up': 'chevron-up',
   'keyboard_arrow_down': 'chevron-down',
+  'chevron-right': 'chevron-right',
+  'chevron-left': 'chevron-left',
+  'expand-less': 'chevron-up',
+  'expand-more': 'chevron-down',
   
   // Settings & Configuration
   'settings': 'cog',
   'notifications': 'bell',
   'notifications_active': 'bell-ring',
+  'notifications-off': 'bell-off',
+  'timer': 'timer-outline',
   'storage': 'database',
   'help': 'help-circle-outline',
   'headset': 'headset',
@@ -139,11 +153,14 @@ const iconMap: Record<string, string> = {
   'info': 'information',
   'auto_delete': 'clock-outline',
   'location_on': 'map-marker',
+  'location-on': 'map-marker',
   'screen_lock_portrait': 'cellphone-lock',
   'fingerprint': 'fingerprint',
   'verified_user': 'shield-check',
   'assessment': 'chart-line',
   'block': 'block-helper',
+  'report': 'flag',
+  'email': 'email',
   
   // Video & Tutorials
   'play_circle': 'play-circle',
@@ -168,14 +185,6 @@ export const MaterialIcon: React.FC<MaterialIconProps> = ({
   const iconColor = color || (active ? tokens.colors.primary : tokens.colors.onSurface60);
   const mappedIconName = iconMap[name] || name;
   const iconWeight = active ? 600 : weight;
-
-  // Debug log to see what icons are being rendered
-  console.log(`🔍 MaterialIcon: ${name} -> ${mappedIconName} | Color: ${iconColor} | Size: ${size}`);
-  
-  // Special debug for headset icon
-  if (name === 'headset') {
-    console.log(`🎧 HEADSET ICON FOUND! Mapped to: ${mappedIconName} | Color: ${iconColor} | Size: ${size}`);
-  }
 
   // Use IconButton for pressable icons
   if (onPress) {

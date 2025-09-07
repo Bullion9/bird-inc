@@ -44,6 +44,7 @@ import { ManageFoldersScreen } from '../screens/ManageFoldersScreen';
 import { StickerMarketScreen } from '../screens/StickerMarketScreen';
 import { DesktopAppScreen } from '../screens/DesktopAppScreen';
 import { BioEditScreen } from '../screens/BioEditScreen';
+import { ContactBioEditScreen } from '../screens/ContactBioEditScreen';
 import { NameEditScreen } from '../screens/NameEditScreen';
 import { UsernameEditScreen } from '../screens/UsernameEditScreen';
 import { PhoneNumberViewScreen } from '../screens/PhoneNumberViewScreen';
@@ -92,6 +93,7 @@ const ChatsStackNavigator = () => {
     >
       <ChatsStack.Screen name="ChatsList" component={ChatsListScreen} />
       <ChatsStack.Screen name="ChatRoom" component={ChatRoomScreen} />
+      <ChatsStack.Screen name="ContactBioEdit" component={ContactBioEditScreen} />
       <ChatsStack.Screen name="Groups" component={GroupsScreen} />
       <ChatsStack.Screen name="GroupDetails" component={GroupDetailsScreen} />
       <ChatsStack.Screen name="CreateGroup" component={CreateGroupScreen} />
